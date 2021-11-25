@@ -17,7 +17,3 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-test_that("function_name works", {
-  expect_true(1 + 1 == 2)
-  expect_identical(1, 2 - 1)
-})

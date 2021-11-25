@@ -17,23 +17,7 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-#' Title of function
-#'
-#' Short description
-#' @param arg1 text
-#' @rdname title123
-#' @export
-#' @importFrom dplyr summarise n_distinct
-#' @examples
-#' a <- "example1"
-#' b <- "example2"
-abc <- function() {
-
-}
-
-#' @param d text
-#' @rdname title123
-#' @export
-def <- function(d) {
-
-}
+test_that("ML works", {
+  expect_true(1 + 1 == 2)
+  expect_identical(1, 2 - 1)
+})
