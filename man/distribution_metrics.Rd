@@ -52,5 +52,7 @@ These are the functions:
 \section{Default values of \code{na.rm}}{
 
 This package supports a global default setting for \code{na.rm} in many mathematical functions. This can be set with \code{options(na.rm = TRUE)} or \code{options(na.rm = FALSE)}.
+
+For \code{\link[=quantile]{quantile()}} and \code{\link[=IQR]{IQR()}}, this also applies to the \code{type} argument. The default, \code{type = 7} is the default of base \R. Use \code{type = 6} to comply with SPSS.
 }
 

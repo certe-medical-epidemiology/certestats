@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 0.0.3
+Version: 0.0.4
 Authors@R: c(
   person(given = c("Erwin"),
          family = "Dijkstra", 
@@ -39,6 +39,7 @@ Imports:
   yaml (>= 2.2.0),
   yardstick (>= 0.0.8)
 Suggests: 
+  e1071,
   testthat (>= 2.0.0)
 License: GPL-2
 Encoding: UTF-8

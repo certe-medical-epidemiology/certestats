@@ -232,7 +232,7 @@ ml_nearest_neighbour <- function(.data,
                                  scale = TRUE,
                                  engine = "kknn",
                                  mode = c("classification", "regression", "unknown"),
-                                 neighbours = 5,
+                                 neighbors = 5,
                                  weight_func = "triangular",
                                  ...) {
   ml_exec(FUN = parsnip::nearest_neighbor,
@@ -247,7 +247,7 @@ ml_nearest_neighbour <- function(.data,
           scale = scale,
           engine = engine,
           mode = mode[1L],
-          neighbors = neighbours,
+          neighbors = neighbors,
           weight_func = weight_func,
           ...)
 }
@@ -466,7 +466,7 @@ ml_exec <- function(FUN,
     generics::fit(outcome ~ ., data = df_training)
   
   metrics <- mdl %>%
-    predict(df_testing) %>%
+    stats::predict(df_testing) %>%
     bind_cols(df_testing) %>%
     yardstick::metrics(truth = outcome, estimate = .pred_class)
   

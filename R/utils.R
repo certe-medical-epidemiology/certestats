@@ -17,6 +17,18 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
+globalVariables(c(".",
+                  ".pred_class",
+                  "model",
+                  "name",
+                  "neg_pred_value",
+                  "pos_pred_value",
+                  "sensitivity",
+                  "specificity",
+                  "t_diff",
+                  "value",
+                  "where"))
+
 #' @importFrom dplyr `%>%`
 #' @export
 dplyr::`%>%`

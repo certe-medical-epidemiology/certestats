@@ -24,14 +24,13 @@
 #' @param na.rm a [logical] to indicate whether empty must be removed from `x`
 #' @details These are the functions:
 #' * [se()] (standard error): sd / square root of length
-#' @section Default values of `na.rm`:
-#' This package supports a global default setting for `na.rm` in many mathematical functions. This can be set with `options(na.rm = TRUE)` or `options(na.rm = FALSE)`.
+#' @inheritSection math_functions Default values of `na.rm`
 #' @rdname distribution_metrics
 #' @name distribution_metrics
 #' @export
 se <- function(x, na.rm = getOption("na.rm", FALSE)) {
   if (na.rm == TRUE) {
-    n <- length(na.omit(x))
+    n <- length(stats::na.omit(x))
   } else {
     n <- length(x)
   }

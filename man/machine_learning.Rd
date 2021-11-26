@@ -92,7 +92,7 @@ ml_nearest_neighbour(
   scale = TRUE,
   engine = "kknn",
   mode = c("classification", "regression", "unknown"),
-  neighbours = 5,
+  neighbors = 5,
   weight_func = "triangular",
   ...
 )
@@ -168,6 +168,10 @@ apply_model_to(ml_model, data, only_prediction = FALSE)
 amount of regularization (specific engines only).}
 
 \item{epochs}{An integer for the number of training iterations.}
+
+\item{neighbors}{A single integer for the number of neighbors
+to consider (often called \code{k}). For \pkg{kknn}, a value of 5
+is used if \code{neighbors} is not specified.}
 
 \item{weight_func}{A \emph{single} character for the type of kernel function used
 to weight distances between samples. Valid choices are: \code{"rectangular"},
