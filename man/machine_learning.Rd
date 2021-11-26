@@ -197,27 +197,27 @@ To predict \strong{regression} (numeric values), any model can be used.
 
 To predict \strong{classifications} (character values), the functions \code{\link[=ml_linear_regression]{ml_linear_regression()}} and \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
 
-The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):\preformatted{                         .data
-                           |
-                 rsample::initial_split()
-                     /              \\
-      rsample::training()            \\
-             |                        \\
-recipe::recipe(outcome ~ predictors)   |
-             |                         |
-       recipe::step_corr()             |
-             |                         |
-      recipe::step_center()            |
-             |                         |
-      recipe::step_scale()             |
-             |                         |
-         recipe::prep()                |
-         /           \\                 |
-recipes::bake()   recipes::bake(rsample::testing())
-       |                            |
-generics::fit()            yardstick::metrics()
-       |                            |
-    output                  attributes(output)
+The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):\preformatted{                       .data
+                         |
+               rsample::initial_split()
+                     /        \\
+     rsample::training()   rsample::testing()
+              |                |
+        recipe::recipe()       |
+             |                 |
+       recipe::step_corr()     |
+             |                 |
+      recipe::step_center()    |
+             |                 |
+      recipe::step_scale()     |
+             |                 |
+         recipe::prep()        |
+         /            \\        |
+recipes::bake()        recipes::bake()
+       |                       |
+generics::fit()       yardstick::metrics()
+       |                       |
+    output            attributes(output)
 }
 }
 \section{Model Functions}{
@@ -238,12 +238,12 @@ model1 <- iris \%>\% ml_random_forest(Species, where(is.double))
 model2 <- iris \%>\% ml_decision_trees(Species, where(is.double))
 model3 <- iris \%>\% ml_neural_network(Species, where(is.double))
 
-model1 \%>\% metrics()
-model2 \%>\% metrics()
+model1 \%>\% yardstick::metrics()
+model2 \%>\% yardstick::metrics()
 
 model1 \%>\% apply_model_to(iris)
 model1 \%>\% ggplot2::autoplot()
-model1 \%>\% confusionMatrix()
+model1 \%>\% caret::confusionMatrix()
 
 \dontrun{
 esbl \%>\%

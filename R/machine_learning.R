@@ -47,27 +47,27 @@
 #' The workflow of the `ml_*()` functions is basically like this (thus saving a lot of `tidymodels` functions to type):
 #' 
 #' ```
-#'                          .data
-#'                            |
-#'                  rsample::initial_split()
-#'                      /              \
-#'       rsample::training()            \
-#'              |                        \
-#' recipe::recipe(outcome ~ predictors)   |
-#'              |                         |
-#'        recipe::step_corr()             |
-#'              |                         |
-#'       recipe::step_center()            |
-#'              |                         |
-#'       recipe::step_scale()             |
-#'              |                         |
-#'          recipe::prep()                |
-#'          /           \                 |
-#' recipes::bake()   recipes::bake(rsample::testing())
-#'        |                            |
-#' generics::fit()            yardstick::metrics()
-#'        |                            |
-#'     output                  attributes(output)
+#'                        .data
+#'                          |
+#'                rsample::initial_split()
+#'                      /        \
+#'      rsample::training()   rsample::testing()
+#'               |                |
+#'         recipe::recipe()       |
+#'              |                 |
+#'        recipe::step_corr()     |
+#'              |                 |
+#'       recipe::step_center()    |
+#'              |                 |
+#'       recipe::step_scale()     |
+#'              |                 |
+#'          recipe::prep()        |
+#'          /            \        |
+#' recipes::bake()        recipes::bake()
+#'        |                       |
+#' generics::fit()       yardstick::metrics()
+#'        |                       |
+#'     output            attributes(output)
 #' ```
 #' @section Model Functions:
 #' These are the called functions from the `parsnip` package. Arguments set in `...` will be passed on to these `parsnip` functions:
@@ -86,12 +86,12 @@
 #' model2 <- iris %>% ml_decision_trees(Species, where(is.double))
 #' model3 <- iris %>% ml_neural_network(Species, where(is.double))
 #'
-#' model1 %>% metrics()
-#' model2 %>% metrics()
+#' model1 %>% yardstick::metrics()
+#' model2 %>% yardstick::metrics()
 #'
 #' model1 %>% apply_model_to(iris)
 #' model1 %>% ggplot2::autoplot()
-#' model1 %>% confusionMatrix()
+#' model1 %>% caret::confusionMatrix()
 #'
 #' \dontrun{
 #' esbl %>%
