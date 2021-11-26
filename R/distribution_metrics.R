@@ -16,6 +16,7 @@
 #  research and it was publicly released in the hope that it will be    #
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
+
 #' Distribution Metrics
 #' 
 #' These are simple distribution metric functions.
@@ -23,10 +24,12 @@
 #' @param na.rm a [logical] to indicate whether empty must be removed from `x`
 #' @details These are the functions:
 #' * [se()] (standard error): sd / square root of length
+#' @section Default values of `na.rm`:
+#' This package supports a global default setting for `na.rm` in many mathematical functions. This can be set with `options(na.rm = TRUE)` or `options(na.rm = FALSE)`.
 #' @rdname distribution_metrics
 #' @name distribution_metrics
 #' @export
-se <- function(x, na.rm = TRUE) {
+se <- function(x, na.rm = getOption("na.rm", FALSE)) {
   if (na.rm == TRUE) {
     n <- length(na.omit(x))
   } else {
@@ -38,30 +41,30 @@ se <- function(x, na.rm = TRUE) {
 #' @rdname distribution_metrics
 #' @details * [cv()] (coefficient of variation): standard deviation / mean
 #' @export
-cv <- function(x, na.rm = TRUE) {
+cv <- function(x, na.rm = getOption("na.rm", FALSE)) {
   sd(x, na.rm = na.rm) / abs(mean(x, na.rm = na.rm))
 }
 
 #' @rdname distribution_metrics
 #' @details * [cqv()] (coefficient of quartile variation): (Q3 - Q1) / (Q3 + Q1)
 #' @export
-cqv <- function(x, na.rm = TRUE) {
+cqv <- function(x, na.rm = getOption("na.rm", FALSE)) {
   cqv.x <-
-    (quantile(x, 0.75, info = FALSE, na.rm = na.rm) - quantile(x, 0.25, info = FALSE, na.rm = na.rm)) /
-    (quantile(x, 0.75, info = FALSE, na.rm = na.rm) + quantile(x, 0.25, info = FALSE, na.rm = na.rm))
+    (quantile(x, 0.75, na.rm = na.rm) - quantile(x, 0.25, na.rm = na.rm)) /
+    (quantile(x, 0.75, na.rm = na.rm) + quantile(x, 0.25, na.rm = na.rm))
   unname(cqv.x)
 }
 
 #' @rdname distribution_metrics
-#' @details * [z_score()]: (x - mean) / sd
+#' @details * [z_score()] (number of standard deviations from the mean): (x - mean) / sd
 #' @export
-z_score <- function(x, na.rm = TRUE) {
+z_score <- function(x, na.rm = getOption("na.rm", FALSE)) {
   (x - mean(x, na.rm = na.rm)) / sd(x, na.rm = na.rm)
 }
 
 #' @rdname distribution_metrics
-#' @details * [midhinge()]: (Q1 + Q3) / 2
+#' @details * [midhinge()] (mean of interquartile range): (Q1 + Q3) / 2
 #' @export
-midhinge <- function(x, na.rm = TRUE) {
-  unname((quantile(x, 0.25, info = FALSE, na.rm = na.rm) + quantile(x, 0.75, info = FALSE, na.rm = na.rm)) / 2)
+midhinge <- function(x, na.rm = getOption("na.rm", FALSE)) {
+  unname((quantile(x, 0.25, na.rm = na.rm) + quantile(x, 0.75, na.rm = na.rm)) / 2)
 }

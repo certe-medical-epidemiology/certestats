@@ -9,15 +9,15 @@
 \alias{midhinge}
 \title{Distribution Metrics}
 \usage{
-se(x, na.rm = TRUE)
+se(x, na.rm = getOption("na.rm", FALSE))
 
-cv(x, na.rm = TRUE)
+cv(x, na.rm = getOption("na.rm", FALSE))
 
-cqv(x, na.rm = TRUE)
+cqv(x, na.rm = getOption("na.rm", FALSE))
 
-z_score(x, na.rm = TRUE)
+z_score(x, na.rm = getOption("na.rm", FALSE))
 
-midhinge(x, na.rm = TRUE)
+midhinge(x, na.rm = getOption("na.rm", FALSE))
 }
 \arguments{
 \item{x}{value}
@@ -29,6 +29,9 @@ These are simple distribution metric functions.
 }
 \details{
 These are the functions:
+\itemize{
+\item \code{\link[=se]{se()}} (standard error): sd / square root of length
+}
 
 \itemize{
 \item \code{\link[=cv]{cv()}} (coefficient of variation): standard deviation / mean
@@ -39,10 +42,15 @@ These are the functions:
 }
 
 \itemize{
-\item \code{\link[=z_score]{z_score()}}: (x - mean) / sd
+\item \code{\link[=z_score]{z_score()}} (number of standard deviations from the mean): (x - mean) / sd
 }
 
 \itemize{
-\item \code{\link[=midhinge]{midhinge()}}: (Q1 + Q3) / 2
+\item \code{\link[=midhinge]{midhinge()}} (mean of interquartile range): (Q1 + Q3) / 2
 }
 }
+\section{Default values of \code{na.rm}}{
+
+This package supports a global default setting for \code{na.rm} in many mathematical functions. This can be set with \code{options(na.rm = TRUE)} or \code{options(na.rm = FALSE)}.
+}
+
