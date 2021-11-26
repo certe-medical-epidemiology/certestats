@@ -4,6 +4,15 @@
     <loc>https://certe-medical-epidemiology.github.io/certestats/index.html</loc>
   </url>
   <url>
+    <loc>https://certe-medical-epidemiology.github.io/certestats/reference/different_means.html</loc>
+  </url>
+  <url>
     <loc>https://certe-medical-epidemiology.github.io/certestats/reference/distribution_metrics.html</loc>
+  </url>
+  <url>
+    <loc>https://certe-medical-epidemiology.github.io/certestats/reference/machine_learning.html</loc>
+  </url>
+  <url>
+    <loc>https://certe-medical-epidemiology.github.io/certestats/reference/reexports.html</loc>
   </url>
 </urlset>
