@@ -82,7 +82,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.0.4</span>
       </span>
     </div>
 
@@ -223,7 +223,7 @@
   scale <span class='op'>=</span> <span class='cn'>TRUE</span>,
   engine <span class='op'>=</span> <span class='st'>"kknn"</span>,
   mode <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"classification"</span>, <span class='st'>"regression"</span>, <span class='st'>"unknown"</span><span class='op'>)</span>,
-  neighbours <span class='op'>=</span> <span class='fl'>5</span>,
+  neighbors <span class='op'>=</span> <span class='fl'>5</span>,
   weight_func <span class='op'>=</span> <span class='st'>"triangular"</span>,
   <span class='va'>...</span>
 <span class='op'>)</span>
@@ -335,6 +335,12 @@ amount of regularization (specific engines only).</p></td>
     <tr>
       <th>epochs</th>
       <td><p>An integer for the number of training iterations.</p></td>
+    </tr>
+    <tr>
+      <th>neighbors</th>
+      <td><p>A single integer for the number of neighbors
+to consider (often called <code>k</code>). For <span class="pkg">kknn</span>, a value of 5
+is used if <code>neighbors</code> is not specified.</p></td>
     </tr>
     <tr>
       <th>weight_func</th>
