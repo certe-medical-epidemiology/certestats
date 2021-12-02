@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://certe-medical-epidemiology.github.io/certestats/404.html</loc>
+  </url>
+  <url>
+    <loc>https://certe-medical-epidemiology.github.io/certestats/LICENSE.html</loc>
+  </url>
+  <url>
+    <loc>https://certe-medical-epidemiology.github.io/certestats/authors.html</loc>
+  </url>
+  <url>
     <loc>https://certe-medical-epidemiology.github.io/certestats/index.html</loc>
+  </url>
+  <url>
+    <loc>https://certe-medical-epidemiology.github.io/certestats/reference/certestats-package.html</loc>
   </url>
   <url>
     <loc>https://certe-medical-epidemiology.github.io/certestats/reference/different_means.html</loc>
   </url>
   <url>
     <loc>https://certe-medical-epidemiology.github.io/certestats/reference/distribution_metrics.html</loc>
+  </url>
+  <url>
+    <loc>https://certe-medical-epidemiology.github.io/certestats/reference/index.html</loc>
   </url>
   <url>
     <loc>https://certe-medical-epidemiology.github.io/certestats/reference/machine_learning.html</loc>
