@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.5</span>
       </span>
     </div>
 
@@ -75,7 +75,10 @@
     <p>These are simple distribution metric functions.</p>
     </div>
 
-    <div id="ref-usage">Usage,<div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">se</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
+    <div id="ref-usage">
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">se</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu">sum_of_squares</span><span class="op">(</span><span class="va">x</span>, correct_mean <span class="op">=</span> <span class="cn">TRUE</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
 
 <span class="fu">cv</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
 
@@ -83,29 +86,45 @@
 
 <span class="fu">z_score</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
 
-<span class="fu">midhinge</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></code></pre></div></div>
+<span class="fu">midhinge</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu">ewma</span><span class="op">(</span><span class="va">x</span>, <span class="va">lambda</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu">rr_ewma</span><span class="op">(</span><span class="va">x</span>, <span class="va">lambda</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+    </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
-<dd><p>value</p></dd>
+<dd><p>values</p></dd>
 <dt>na.rm</dt>
 <dd><p>a <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether empty must be removed from <code>x</code></p></dd>
+<dt>correct_mean</dt>
+<dd><p>with <code>TRUE</code> (the default) correct for the mean will be applied, by summing each square of <code>x</code> after the mean of <code>x</code> has been subtracted, so that this says something about <code>x</code>. With <code>FALSE</code>, all <code>x^2</code> are simply added together, so this says something about <code>x</code>'s location in the data.</p></dd>
+<dt>lambda</dt>
+<dd><p>smoothing parameter, must be less than one. Under that condition, instead of equal weights, each squared return is weighted by a multiplier.</p></dd>
 </dl></div>
     <div id="details">
     <h2>Details</h2>
-    <p>These are the functions:</p><ul><li><p><code>se()</code> (standard error): sd / square root of length</p></li>
+    <p>These are the explanations of the functions:</p><ul><li><p><code>se()</code> (standard error): sd / square root of length</p></li>
+</ul><ul><li><p><code>sum_of_squares()</code>: sum of (x - mean(x)) ^ 2</p></li>
 </ul><ul><li><p><code>cv()</code> (coefficient of variation): standard deviation / mean</p></li>
 </ul><ul><li><p><code>cqv()</code> (coefficient of quartile variation): (Q3 - Q1) / (Q3 + Q1)</p></li>
 </ul><ul><li><p><code>z_score()</code> (number of standard deviations from the mean): (x - mean) / sd</p></li>
 </ul><ul><li><p><code>midhinge()</code> (mean of interquartile range): (Q1 + Q3) / 2</p></li>
+</ul><ul><li><p><code>ewma()</code> (exponentially weighted moving average)</p></li>
+</ul><ul><li><p><code>rr_ewma()</code> (reversed-recombined exponentially weighted moving average)</p></li>
 </ul></div>
     <div id="default-values-of-na-rm">
     <h2>Default values of <code>na.rm</code></h2>
     
 
-<p>This package supports a global default setting for <code>na.rm</code> in many mathematical functions. This can be set with <code>options(na.rm = TRUE)</code> or <code>options(na.rm = FALSE)</code>.</p>
-<p>For <code><a href="math_functions.html">quantile()</a></code> and <code><a href="math_functions.html">IQR()</a></code>, this also applies to the <code>type</code> argument. The default, <code>type = 7</code> is the default of base <span style="R">R</span>. Use <code>type = 6</code> to comply with SPSS.</p>
+<p>This 'certestats' package supports a global default setting for <code>na.rm</code> in many mathematical functions. This can be set with <code>options(na.rm = TRUE)</code> or <code>options(na.rm = FALSE)</code>.</p>
+<p>For <code><a href="math_functions.html">quantile()</a></code> and <code><a href="math_functions.html">IQR()</a></code>, this also applies to the <code>type</code> argument. The default, <code>type = 7</code>, is the default of base <span style="R">R</span>. Use <code>type = 6</code> to comply with SPSS.</p>
+    </div>
+    <div id="see-also">
+    <h2>See also</h2>
+    <div class="dont-index"><p>For the sum of squares: <a href="https://www.thoughtco.com/sum-of-squares-formula-shortcut-3126266" class="external-link">https://www.thoughtco.com/sum-of-squares-formula-shortcut-3126266</a></p></div>
     </div>
 
   </div>
@@ -120,7 +139,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
 </div>
 
       </footer></div>

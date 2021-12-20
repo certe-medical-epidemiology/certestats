@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.5</span>
       </span>
     </div>
 
@@ -75,7 +75,8 @@
     <p>These functions call their original base <span style="R">R</span> namesake, but with a global settable <code>na.rm</code> argument.</p>
     </div>
 
-    <div id="ref-usage">Usage,<div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">any</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
+    <div id="ref-usage">
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">any</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
 
 <span class="fu">all</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
 
@@ -115,7 +116,8 @@
   <span class="va">...</span>,
   na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span>,
   type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"quantile.type"</span>, <span class="fl">7</span><span class="op">)</span>
-<span class="op">)</span></code></pre></div></div>
+<span class="op">)</span></code></pre></div>
+    </div>
 
     <div id="source">
     <h2>Source</h2>
@@ -158,8 +160,8 @@
     <h2>Default values of <code>na.rm</code></h2>
     
 
-<p>This package supports a global default setting for <code>na.rm</code> in many mathematical functions. This can be set with <code>options(na.rm = TRUE)</code> or <code>options(na.rm = FALSE)</code>.</p>
-<p>For <code>quantile()</code> and <code>IQR()</code>, this also applies to the <code>type</code> argument. The default, <code>type = 7</code> is the default of base <span style="R">R</span>. Use <code>type = 6</code> to comply with SPSS.</p>
+<p>This 'certestats' package supports a global default setting for <code>na.rm</code> in many mathematical functions. This can be set with <code>options(na.rm = TRUE)</code> or <code>options(na.rm = FALSE)</code>.</p>
+<p>For <code>quantile()</code> and <code>IQR()</code>, this also applies to the <code>type</code> argument. The default, <code>type = 7</code>, is the default of base <span style="R">R</span>. Use <code>type = 6</code> to comply with SPSS.</p>
     </div>
 
   </div>
@@ -174,7 +176,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
 </div>
 
       </footer></div>
