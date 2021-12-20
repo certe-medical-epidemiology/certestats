@@ -3,13 +3,18 @@
 \name{distribution_metrics}
 \alias{distribution_metrics}
 \alias{se}
+\alias{sum_of_squares}
 \alias{cv}
 \alias{cqv}
 \alias{z_score}
 \alias{midhinge}
+\alias{ewma}
+\alias{rr_ewma}
 \title{Distribution Metrics}
 \usage{
 se(x, na.rm = getOption("na.rm", FALSE))
+
+sum_of_squares(x, correct_mean = TRUE, na.rm = getOption("na.rm", FALSE))
 
 cv(x, na.rm = getOption("na.rm", FALSE))
 
@@ -18,19 +23,31 @@ cqv(x, na.rm = getOption("na.rm", FALSE))
 z_score(x, na.rm = getOption("na.rm", FALSE))
 
 midhinge(x, na.rm = getOption("na.rm", FALSE))
+
+ewma(x, lambda, na.rm = getOption("na.rm", FALSE))
+
+rr_ewma(x, lambda, na.rm = getOption("na.rm", FALSE))
 }
 \arguments{
-\item{x}{value}
+\item{x}{values}
 
 \item{na.rm}{a \link{logical} to indicate whether empty must be removed from \code{x}}
+
+\item{correct_mean}{with \code{TRUE} (the default) correct for the mean will be applied, by summing each square of \code{x} after the mean of \code{x} has been subtracted, so that this says something about \code{x}. With \code{FALSE}, all \code{x^2} are simply added together, so this says something about \code{x}'s location in the data.}
+
+\item{lambda}{smoothing parameter, must be less than one. Under that condition, instead of equal weights, each squared return is weighted by a multiplier.}
 }
 \description{
 These are simple distribution metric functions.
 }
 \details{
-These are the functions:
+These are the explanations of the functions:
 \itemize{
 \item \code{\link[=se]{se()}} (standard error): sd / square root of length
+}
+
+\itemize{
+\item \code{\link[=sum_of_squares]{sum_of_squares()}}: sum of (x - mean(x)) ^ 2
 }
 
 \itemize{
@@ -48,11 +65,22 @@ These are the functions:
 \itemize{
 \item \code{\link[=midhinge]{midhinge()}} (mean of interquartile range): (Q1 + Q3) / 2
 }
+
+\itemize{
+\item \code{\link[=ewma]{ewma()}} (exponentially weighted moving average)
+}
+
+\itemize{
+\item \code{\link[=rr_ewma]{rr_ewma()}} (reversed-recombined exponentially weighted moving average)
+}
 }
 \section{Default values of \code{na.rm}}{
 
-This package supports a global default setting for \code{na.rm} in many mathematical functions. This can be set with \code{options(na.rm = TRUE)} or \code{options(na.rm = FALSE)}.
+This 'certestats' package supports a global default setting for \code{na.rm} in many mathematical functions. This can be set with \code{options(na.rm = TRUE)} or \code{options(na.rm = FALSE)}.
 
-For \code{\link[=quantile]{quantile()}} and \code{\link[=IQR]{IQR()}}, this also applies to the \code{type} argument. The default, \code{type = 7} is the default of base \R. Use \code{type = 6} to comply with SPSS.
+For \code{\link[=quantile]{quantile()}} and \code{\link[=IQR]{IQR()}}, this also applies to the \code{type} argument. The default, \code{type = 7}, is the default of base \R. Use \code{type = 6} to comply with SPSS.
 }
 
+\seealso{
+For the sum of squares: \url{https://www.thoughtco.com/sum-of-squares-formula-shortcut-3126266}
+}

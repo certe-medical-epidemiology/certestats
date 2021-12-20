@@ -20,9 +20,9 @@
 #' Distribution Metrics
 #' 
 #' These are simple distribution metric functions.
-#' @param x value
+#' @param x values
 #' @param na.rm a [logical] to indicate whether empty must be removed from `x`
-#' @details These are the functions:
+#' @details These are the explanations of the functions:
 #' * [se()] (standard error): sd / square root of length
 #' @inheritSection math_functions Default values of `na.rm`
 #' @rdname distribution_metrics
@@ -35,6 +35,19 @@ se <- function(x, na.rm = getOption("na.rm", FALSE)) {
     n <- length(x)
   }
   sd(x, na.rm = na.rm) / sqrt(n)
+}
+
+#' @rdname distribution_metrics
+#' @param correct_mean with `TRUE` (the default) correct for the mean will be applied, by summing each square of `x` after the mean of `x` has been subtracted, so that this says something about `x`. With `FALSE`, all `x^2` are simply added together, so this says something about `x`'s location in the data.
+#' @details * [sum_of_squares()]: sum of (x - mean(x)) ^ 2
+#' @seealso For the sum of squares: <https://www.thoughtco.com/sum-of-squares-formula-shortcut-3126266>
+#' @export
+sum_of_squares <- function(x, correct_mean = TRUE, na.rm = getOption("na.rm", FALSE)) {
+  if (isTRUE(correct_mean)) {
+    sum((x - mean(x, na.rm = na.rm)) ^ 2, na.rm = na.rm)
+  } else {
+    sum(x ^ 2, na.rm = na.rm)
+  }
 }
 
 #' @rdname distribution_metrics
@@ -66,4 +79,32 @@ z_score <- function(x, na.rm = getOption("na.rm", FALSE)) {
 #' @export
 midhinge <- function(x, na.rm = getOption("na.rm", FALSE)) {
   unname((quantile(x, 0.25, na.rm = na.rm) + quantile(x, 0.75, na.rm = na.rm)) / 2)
+}
+
+#' @rdname distribution_metrics
+#' @details * [ewma()] (exponentially weighted moving average)
+#' @param lambda smoothing parameter, must be less than one. Under that condition, instead of equal weights, each squared return is weighted by a multiplier.
+#' @export
+ewma <- function(x, lambda, na.rm = getOption("na.rm", FALSE)) {
+  x <- as.double(x)
+  res <- mean(x)
+  res.s <- vapply(X = x,
+                  FUN = function(xs) res <<- res * lambda + xs * (1 - lambda),
+                  FUN.VALUE = 0)
+  res.s
+}
+
+
+#' @rdname distribution_metrics
+#' @details * [rr_ewma()] (reversed-recombined exponentially weighted moving average)
+#' @export
+rr_ewma <- function(x, lambda, na.rm = getOption("na.rm", FALSE)) {
+  # Reversed-Recombined EWMA
+  # http://connor-johnson.com/2014/02/01/smoothing-with-exponentially-weighted-moving-averages/
+  mapply(FUN = base::sum,
+         # from 1 to end:
+         ewma(x = x, lambda = lambda, na.rm = na.rm),
+         # from end to 1:
+         ewma(x = rev(x), lambda = lambda, na.rm = na.rm),
+         na.rm = na.rm) / 2
 }

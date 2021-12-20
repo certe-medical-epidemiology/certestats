@@ -17,6 +17,10 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
+#' @importFrom dplyr `%>%`
+#' @export
+dplyr::`%>%`
+
 globalVariables(c(".",
                   ".pred_class",
                   "model",
@@ -28,7 +32,3 @@ globalVariables(c(".",
                   "t_diff",
                   "value",
                   "where"))
-
-#' @importFrom dplyr `%>%`
-#' @export
-dplyr::`%>%`

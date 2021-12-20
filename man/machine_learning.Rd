@@ -9,11 +9,11 @@
 \alias{ml_nearest_neighbour}
 \alias{ml_random_forest}
 \alias{bootstrap_ml}
-\alias{autoplot.certestats_ml_bootstrap}
 \alias{apply_model_to}
 \alias{confusionMatrix.certestats_ml}
 \alias{metrics.certestats_ml}
 \alias{autoplot.certestats_ml}
+\alias{autoplot.certestats_ml_bootstrap}
 \title{Create a Machine Learning (ML) Model}
 \usage{
 ml_decision_trees(
@@ -58,7 +58,7 @@ ml_logistic_regression(
   centre = TRUE,
   scale = TRUE,
   engine = "glm",
-  mode = "regression",
+  mode = "classification",
   penalty = 0.1,
   ...
 )
@@ -127,8 +127,6 @@ bootstrap_ml(
   mode = c("classification", "regression")
 )
 
-\method{autoplot}{certestats_ml_bootstrap}(object, all_cols = FALSE, ...)
-
 apply_model_to(ml_model, data, only_prediction = FALSE)
 
 \method{confusionMatrix}{certestats_ml}(ml_model)
@@ -136,6 +134,8 @@ apply_model_to(ml_model, data, only_prediction = FALSE)
 \method{metrics}{certestats_ml}(ml_model)
 
 \method{autoplot}{certestats_ml}(ml_model)
+
+\method{autoplot}{certestats_ml_bootstrap}(object, all_cols = FALSE, ...)
 }
 \arguments{
 \item{.data}{Data set to train}
@@ -183,15 +183,15 @@ the ensemble.}
 
 \item{times}{Number of times to run the model(s), defaults to \code{25}}
 
+\item{ml_model}{outcome of machine learning model}
+
+\item{data}{new input data that require prediction, having the same columns of the training data}
+
+\item{only_prediction}{only return predictions, without chances}
+
 \item{object}{a bootstrap object}
 
 \item{all_cols}{Include all columns, not only sensitivity, specificity, pos_pred_value, neg_pred_value.}
-
-\item{ml_model}{Uitkomst van \code{\link{ml_random_forest}}.}
-
-\item{data}{Nieuwe invoerdata die voorspelling nodig hebben.}
-
-\item{only_prediction}{Standaard is \code{FALSE}. Alleen voorspelling retourneren, zonder kansen.}
 }
 \description{
 Create a machine learning model based on different 'engines'. These function internally use the \code{tidymodels} packages by RStudio, which is the \code{tidyverse} variant for predictive modelling.

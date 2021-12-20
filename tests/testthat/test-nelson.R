@@ -17,7 +17,22 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-test_that("ML works", {
-  expect_true(1 + 1 == 2)
-  expect_identical(1, 2 - 1)
+test_that("nelson rules work", {
+  x <- rnorm(10000)
+  expect_gt(length(nelson_rule1(x)), 1)
+  expect_gt(length(nelson_rule2(x)), 1)
+  expect_gt(length(nelson_rule3(x)), 1)
+  expect_gt(length(nelson_rule4(x)), 1)
+  expect_gt(length(nelson_rule5(x)), 1)
+  expect_gt(length(nelson_rule6(x)), 1)
+  expect_gt(length(nelson_rule7(x)), 1)
+  expect_gt(length(nelson_rule8(x)), 1)
+  expect_true(is.character(nelson_text(1, 4)))
+  expect_true(is.character(nelson_text(2, 4)))
+  expect_true(is.character(nelson_text(3, 4)))
+  expect_true(is.character(nelson_text(4, 4)))
+  expect_true(is.character(nelson_text(5, 4)))
+  expect_true(is.character(nelson_text(6, 4)))
+  expect_true(is.character(nelson_text(7, 4)))
+  expect_true(is.character(nelson_text(8, 4)))
 })

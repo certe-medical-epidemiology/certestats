@@ -153,6 +153,7 @@ ml_linear_regression <- function(.data,
           centre = centre,
           scale = scale,
           engine = engine,
+          mode = mode,
           ...)
 }
 
@@ -168,7 +169,7 @@ ml_logistic_regression <- function(.data,
                                    centre = TRUE,
                                    scale = TRUE,
                                    engine = "glm",
-                                   mode = "regression",
+                                   mode = "classification",
                                    penalty = 0.1,
                                    ...) {
   ml_exec(FUN = parsnip::logistic_reg,
@@ -182,6 +183,7 @@ ml_logistic_regression <- function(.data,
           centre = centre,
           scale = scale,
           engine = engine,
+          mode = mode,
           penalty = penalty,
           ...)
 }
@@ -309,7 +311,9 @@ bootstrap_ml <- function(.data,
                structure(ml_random_forest, nm = "ml_random_forest"))
   if (mode[1L] == "regression") {
     funs <- c(funs,
-              structure(ml_linear_regression, nm = "ml_linear_regression"),
+              structure(ml_linear_regression, nm = "ml_linear_regression"))
+  } else if (mode[1L] == "classification") {
+    funs <- c(funs,
               structure(ml_logistic_regression, nm = "ml_logistic_regression"))
   }
   
@@ -360,6 +364,182 @@ bootstrap_ml <- function(.data,
   structure(df, class = c("certestats_ml_bootstrap", "data.frame"))
 }
 
+#' @importFrom dplyr `%>%` mutate select across filter everything bind_cols
+ml_exec <- function(FUN,
+                    .data,
+                    outcome,
+                    predictors,
+                    training_fraction,
+                    strata,
+                    max_na_fraction,
+                    correlation_filter,
+                    centre,
+                    scale,
+                    engine,
+                    ...) {
+  
+  if (missing(predictors)) {
+    stop("'predictors' is missing, use tidyselect code to choose them, such as 'where(is.double)'.")
+  }
+  
+  properties <- c(list(FUN = deparse(substitute(FUN)),
+                       engine = engine,
+                       training_fraction = training_fraction),
+                  list(...))
+  
+  # format data to work with it
+  df <- .data %>%
+    mutate(outcome = {{outcome}}) %>%
+    select(outcome, {{predictors}}) %>%
+    # force all predictors as double
+    mutate(across({{ predictors }}, as.double)) %>%
+    # remove columns that do not comply to max_na_fraction
+    select(where(~sum(is.na(.)) / length(.) <= max_na_fraction)) %>%
+    # remove rows that have NA in outcome or predictors
+    filter(across(everything(), ~ !is.na(.)))
+  
+  if (nrow(df) == 0) {
+    stop("No more rows left for analysis (max_na_fraction = ", max_na_fraction, "). Check column values.", call. = FALSE)
+  }
+  
+  df_split <- rsample::initial_split(df, strata = strata, prop = training_fraction)
+  
+  df_recipe <- df_split %>%
+    rsample::training() %>%
+    recipes::recipe(outcome ~ .)
+  
+  if (isTRUE(correlation_filter)) {
+    df_recipe <- df_recipe %>% recipes::step_corr(recipes::all_predictors())
+  }
+  if (isTRUE(centre)) {
+    df_recipe <- df_recipe %>% recipes::step_center(recipes::all_predictors(), -recipes::all_outcomes())
+  }
+  if (isTRUE(scale)) {
+    df_recipe <- df_recipe %>% recipes::step_scale(recipes::all_predictors(), -recipes::all_outcomes())
+  }
+  df_recipe <- df_recipe %>%
+    recipes::prep()
+  
+  # train
+  df_training <- df_recipe %>%
+    recipes::bake(new_data = NULL)
+  
+  # test
+  df_testing <- df_recipe %>%
+    recipes::bake(rsample::testing(df_split))
+  
+  mdl <- FUN(...) %>%
+    parsnip::set_engine(engine) %>%
+    generics::fit(outcome ~ ., data = df_training)
+  
+  metrics <- mdl %>%
+    stats::predict(df_testing) %>%
+    bind_cols(df_testing) %>% 
+    yardstick::metrics(truth = outcome, estimate = colnames(.)[1])
+  
+  structure(mdl,
+            class = c("certestats_ml", class(mdl)),
+            properties = properties,
+            recipe = df_recipe,
+            data_training = df_training,
+            data_testing = df_testing,
+            rows_training = sort(df_split$in_id),
+            rows_testing = seq_len(nrow(df))[!seq_len(nrow(df)) %in% df_split$in_id],
+            metrics = metrics,
+            correlation_filter = correlation_filter,
+            centre = centre,
+            scale = scale)
+}
+
+#' @method print certestats_ml
+#' @noRd
+#' @export
+print.certestats_ml <- function(x, ...) {
+  model_prop <- attributes(x)
+  cat("'certestats' Machine learning model\n\n",
+      paste0(format(names(model_prop$properties)), " : ", model_prop$properties, "\n"),
+      sep = "")
+  cat(strrep("-", options()$width -2), "\n", sep = "")
+  print(model_prop$recipe)
+  cat(strrep("-", options()$width -2), "\n", sep = "")
+  
+  # print the rest like it used to be
+  class(x) <- class(x)[class(x) != "certestats_ml"]
+  print(x)
+}
+
+#' @rdname machine_learning
+#' @param ml_model outcome of machine learning model
+#' @param data new input data that require prediction, having the same columns of the training data
+#' @param only_prediction only return predictions, without chances
+#' @export
+apply_model_to <- function(ml_model, data, only_prediction = FALSE) {
+  if (!inherits(ml_model, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
+  }
+  # test - transform data according to recipe
+  test_data <- recipes::bake(attributes(ml_model)$recipe, new_data = data)
+  
+  out <- bind_cols(stats::setNames(stats::predict(ml_model, test_data), "predicted"),
+                   stats::predict(ml_model, test_data, type = "prob"))
+  
+  if (isTRUE(only_prediction)) {
+    out$predicted
+  } else {
+    out
+  }
+}
+
+#' @importFrom caret confusionMatrix
+#' @method confusionMatrix certestats_ml
+#' @rdname machine_learning
+#' @export
+confusionMatrix.certestats_ml <- function(ml_model) {
+  # some package already have a confusion matrix, such as 'randomForest':
+  conf_mtrx <- attributes(ml_model)$model$fit$confusion
+  # create it self otherwise:
+  if (is.null(conf_mtrx)) {
+    conf_mtrx <- ml_model %>%
+      stats::predict(attributes(ml_model)$data_testing) %>%
+      bind_cols(outcome = attributes(ml_model)$data_testing$outcome) %>%
+      table()
+  }
+  conf_mtrx <- as.matrix(conf_mtrx)
+  # not more columns than rows
+  conf_mtrx <- conf_mtrx[, seq_len(NROW(conf_mtrx))]
+  caret::confusionMatrix(conf_mtrx)
+}
+
+#' @importFrom yardstick metrics
+#' @method metrics certestats_ml
+#' @rdname machine_learning
+#' @export
+metrics.certestats_ml <- function(ml_model) {
+  attributes(ml_model)$metrics
+}
+
+#' @method autoplot certestats_ml
+#' @rdname machine_learning
+#' @importFrom ggplot2 autoplot
+#' @importFrom dplyr `%>%` bind_cols
+#' @export
+autoplot.certestats_ml <- function(ml_model) {
+  model_prop <- attributes(ml_model)
+  
+  out <- ml_model %>%
+    stats::predict(model_prop$data_testing, type = "prob") %>%
+    bind_cols(model_prop$data_testing)
+  
+  pred <- colnames(out)[colnames(out) %like% "^.pred"]
+  if (length(pred) == 2) {
+    pred <- pred[1L]
+  }
+  
+  out %>%
+    yardstick::gain_curve("outcome", pred) %>%
+    autoplot()
+}
+
 #' @method autoplot certestats_ml_bootstrap
 #' @rdname machine_learning
 #' @importFrom ggplot2 autoplot
@@ -390,176 +570,8 @@ autoplot.certestats_ml_bootstrap <- function(object, all_cols = FALSE, ...) {
     ggplot2::ggplot(mapping = ggplot2::aes(x = class,
                                            y = value,
                                            colour = name)) +
-    # ggplot2::geom_violin() +
     ggplot2::geom_boxplot() +
     ggplot2::facet_wrap(facets = "model") +
     ggplot2::labs(title = "Model Properties",
                   colour = "Property")
-}
-
-#' @importFrom dplyr `%>%` mutate select across filter everything bind_cols
-ml_exec <- function(FUN,
-                    .data,
-                    outcome,
-                    predictors,
-                    training_fraction,
-                    strata,
-                    max_na_fraction,
-                    correlation_filter,
-                    centre,
-                    scale,
-                    engine,
-                    ...) {
-  
-  if (missing(predictors)) {
-    stop("'predictors' is missing, use tidyselect code to choose them, such as 'where(is.double)'.")
-  }
-  
-  properties <- c(list(FUN = deparse(substitute(FUN)),
-                       engine = engine,
-                       training_fraction = training_fraction),
-                  list(...))
-  
-  # data opmaken om te kunnen verwerken
-  df <- .data %>%
-    mutate(outcome = {{outcome}}) %>%
-    select(outcome, {{predictors}}) %>%
-    # alle predictors forceren als double
-    mutate(across({{ predictors }}, as.double)) %>%
-    # kolommen verwijderen die niet aan max_na_fraction voldoen
-    select(where(~sum(is.na(.)) / length(.) <= max_na_fraction)) %>%
-    # rijen verwijderen die NAs hebben in outcome of predictor
-    filter(across(everything(), ~ !is.na(.)))
-  
-  if (nrow(df) == 0) {
-    stop("No more rows left for analysis (max_na_fraction = ", max_na_fraction, "). Check column values.", call. = FALSE)
-  }
-  
-  df_split <- rsample::initial_split(df, strata = strata, prop = training_fraction)
-  
-  df_recipe <- df_split %>%
-    rsample::training() %>%
-    recipes::recipe(outcome ~ .)
-  
-  if (isTRUE(correlation_filter)) {
-    df_recipe <- df_recipe %>% recipes::step_corr(recipes::all_predictors())
-  }
-  if (isTRUE(centre)) {
-    df_recipe <- df_recipe %>% recipes::step_center(recipes::all_predictors(), -recipes::all_outcomes())
-  }
-  if (isTRUE(scale)) {
-    df_recipe <- df_recipe %>% recipes::step_scale(recipes::all_predictors(), -recipes::all_outcomes())
-  }
-  df_recipe <- df_recipe %>%
-    recipes::prep()
-  
-  # trainen
-  df_training <- df_recipe %>%
-    recipes::bake(new_data = NULL)
-  
-  # testen
-  df_testing <- df_recipe %>%
-    recipes::bake(rsample::testing(df_split))
-  
-  mdl <- FUN(...) %>%
-    parsnip::set_engine(engine) %>%
-    generics::fit(outcome ~ ., data = df_training)
-  
-  metrics <- mdl %>%
-    stats::predict(df_testing) %>%
-    bind_cols(df_testing) %>%
-    yardstick::metrics(truth = outcome, estimate = .pred_class)
-  
-  structure(mdl,
-            class = c("certestats_ml", class(mdl)),
-            properties = properties,
-            recipe = df_recipe,
-            data_training = df_training,
-            data_testing = df_testing,
-            rows_training = sort(df_split$in_id),
-            rows_testing = seq_len(nrow(df))[!seq_len(nrow(df)) %in% df_split$in_id],
-            metrics = metrics,
-            correlation_filter = correlation_filter,
-            centre = centre,
-            scale = scale)
-}
-
-#' @rdname machine_learning
-#' @param ml_model Uitkomst van \code{\link{ml_random_forest}}.
-#' @param data Nieuwe invoerdata die voorspelling nodig hebben.
-#' @param only_prediction Standaard is \code{FALSE}. Alleen voorspelling retourneren, zonder kansen.
-#' @export
-apply_model_to <- function(ml_model, data, only_prediction = FALSE) {
-  if (!inherits(ml_model, "certestats_ml")) {
-    stop("Only output from certetools::ml_model() can be used.")
-  }
-  # data op zelfde manier transformeren als inputdata
-  model_prop <- attributes(ml_model)
-  
-  # testen
-  test_data <- recipes::bake(model_prop$recipe, new_data = data)
-  
-  cat("Machine learning model\n\n",
-      paste0("- ", names(model_prop$properties), ": ", model_prop$properties, "\n"),
-      "\n", sep = "")
-  print(model_prop$recipe)
-  cat("\n")
-  
-  out <- bind_cols(stats::setNames(stats::predict(ml_model, test_data), "predicted"),
-                   stats::predict(ml_model, test_data, type = "prob"))
-  
-  if (isTRUE(only_prediction)) {
-    out$predicted
-  } else {
-    out
-  }
-}
-
-#' @importFrom caret confusionMatrix
-#' @method confusionMatrix certestats_ml
-#' @rdname machine_learning
-#' @export
-confusionMatrix.certestats_ml <- function(ml_model) {
-  # sommige packages hebben al een confusion matrix, zoals randomForest:
-  conf_mtrx <- attributes(ml_model)$model$fit$confusion
-  # maar anders zelf maken:
-  if (is.null(conf_mtrx)) {
-    conf_mtrx <- ml_model %>%
-      stats::predict(attributes(ml_model)$data_testing) %>%
-      bind_cols(outcome = attributes(ml_model)$data_testing$outcome) %>%
-      table()
-  }
-  conf_mtrx <- as.matrix(conf_mtrx)
-  # niet meer kolommen dan rijen
-  conf_mtrx <- conf_mtrx[, seq_len(NROW(conf_mtrx))]
-  caret::confusionMatrix(conf_mtrx)
-}
-
-#' @importFrom yardstick metrics
-#' @method metrics certestats_ml
-#' @rdname machine_learning
-#' @export
-metrics.certestats_ml <- function(ml_model) {
-  attributes(ml_model)$metrics
-}
-
-#' @method autoplot certestats_ml
-#' @rdname machine_learning
-#' @importFrom ggplot2 autoplot
-#' @importFrom dplyr `%>%` bind_cols
-#' @export
-autoplot.certestats_ml <- function(ml_model) {
-  model_prop <- attributes(ml_model)
-  
-  out <- ml_model %>%
-    stats::predict(model_prop$data_testing, type = "prob") %>%
-    bind_cols(model_prop$data_testing)
-  
-  pred <- colnames(out)[colnames(out) %like% ".pred"]
-  if (length(pred) == 2) {
-    pred <- pred[1L]
-  }
-  out %>%
-    yardstick::gain_curve("outcome", pred) %>%
-    autoplot()
 }

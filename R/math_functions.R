@@ -35,7 +35,7 @@ mean_harmonic <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
 #' @details The geometric mean is defined as the nth root of the product of n numbers.
 #' @export
 mean_geometric <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
-  exp(mean(log(x), ..., na.rm = na.rm))
+  exp(mean(log(abs(x)), ..., na.rm = na.rm))
   # or prod(x) ^ (1 / length(x))
 }
 
@@ -43,9 +43,9 @@ mean_geometric <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
 #' 
 #' These functions call their original base \R namesake, but with a global settable `na.rm` argument.
 #' @section Default values of `na.rm`:
-#' This package supports a global default setting for `na.rm` in many mathematical functions. This can be set with `options(na.rm = TRUE)` or `options(na.rm = FALSE)`.
+#' This 'certestats' package supports a global default setting for `na.rm` in many mathematical functions. This can be set with `options(na.rm = TRUE)` or `options(na.rm = FALSE)`.
 #' 
-#' For [quantile()] and [IQR()], this also applies to the `type` argument. The default, `type = 7` is the default of base \R. Use `type = 6` to comply with SPSS.
+#' For [quantile()] and [IQR()], this also applies to the `type` argument. The default, `type = 7`, is the default of base \R. Use `type = 6` to comply with SPSS.
 #' @rdname math_functions
 #' @name math_functions
 #' @inheritParams base::any
