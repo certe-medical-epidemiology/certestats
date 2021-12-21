@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.7</span>
       </span>
     </div>
 
@@ -82,7 +82,7 @@
 
 <span class="fu">nelson_rule3</span><span class="op">(</span><span class="va">x</span>, threshold <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>
 
-<span class="fu">nelson_rule4</span><span class="op">(</span><span class="va">x</span>, m <span class="op">=</span> <span class="fu"><a href="math_functions.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, threshold <span class="op">=</span> <span class="fl">14</span>, direction.mean <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
+<span class="fu">nelson_rule4</span><span class="op">(</span><span class="va">x</span>, m <span class="op">=</span> <span class="fu"><a href="math_functions.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, threshold <span class="op">=</span> <span class="fl">14</span>, direction_mean <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
 
 <span class="fu">nelson_rule5</span><span class="op">(</span><span class="va">x</span>, m <span class="op">=</span> <span class="fu"><a href="math_functions.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, s <span class="op">=</span> <span class="fu"><a href="math_functions.html">sd</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, threshold <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>
 
@@ -92,7 +92,9 @@
 
 <span class="fu">nelson_rule8</span><span class="op">(</span><span class="va">x</span>, m <span class="op">=</span> <span class="fu"><a href="math_functions.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, s <span class="op">=</span> <span class="fu"><a href="math_functions.html">sd</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, threshold <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>
 
-<span class="fu">nelson_text</span><span class="op">(</span><span class="va">rule</span>, <span class="va">threshold</span><span class="op">)</span></code></pre></div>
+<span class="fu">nelson_text</span><span class="op">(</span><span class="va">rule</span>, <span class="va">threshold</span><span class="op">)</span>
+
+<span class="fu">qc_test</span><span class="op">(</span><span class="va">x</span>, m <span class="op">=</span> <span class="fu"><a href="math_functions.html">mean</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, s <span class="op">=</span> <span class="fu"><a href="math_functions.html">sd</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, type <span class="op">=</span> <span class="st">"Nelson"</span><span class="op">)</span></code></pre></div>
     </div>
 
     <div id="source">
@@ -109,10 +111,12 @@
 <dd><p>standard deviation</p></dd>
 <dt>threshold</dt>
 <dd><p>minimal number of sequential values before rule is triggered (defaults to Nelson's)</p></dd>
-<dt>direction.mean</dt>
+<dt>direction_mean</dt>
 <dd><p>a logical to indicate whether <em>n</em> observations in a row must be tested for alternating in direction of the mean</p></dd>
 <dt>rule</dt>
 <dd><p>number of the rule</p></dd>
+<dt>type</dt>
+<dd><p>type of QC rules set, must be <code>"Nelson"</code>, <code>"Westgard"</code>, <code>"AIAG"</code>, <code>"Montgomery"</code>, or <code>"Healthcare"</code></p></dd>
 </dl></div>
     <div id="rules-list">
     <h2>Rules list</h2>
@@ -120,6 +124,50 @@
 <table class="table table"><tr><td>Rule</td><td>Rule explanation:</td><td>Nelson</td><td>Westgard</td><td>AIAG</td><td>Montg.</td><td>HC</td></tr><tr><td>#1</td><td>One point is more than 3 standard deviations from the mean</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td></tr><tr><td>#2</td><td><em>n</em> (or more) points in a row are on the same side of the mean</td><td>9</td><td>9</td><td>7</td><td>8</td><td>8</td></tr><tr><td>#3</td><td><em>n</em> (or more) points in a row are continually incr. or decr.</td><td>6</td><td>-</td><td>6</td><td>6</td><td>6</td></tr><tr><td>#4</td><td><em>n</em> (or more) points in a row alternate in direction, incr. then decr.</td><td>14</td><td>-</td><td>14</td><td>14</td><td>-</td></tr><tr><td>#5</td><td><em>n</em><code> - 1</code> out of <em>n</em> points in a row are &gt;2 sd from the mean</td><td>3</td><td>3</td><td>3</td><td>3</td><td>3</td></tr><tr><td>#6</td><td><em>n</em><code> - 1</code> out of <em>n</em> points in a row are &gt;1 sd from the mean</td><td>5</td><td>5</td><td>5</td><td>5</td><td>-</td></tr><tr><td>#7</td><td>&gt;=<em>n</em> points in a row are within 1 sd of the mean</td><td>15</td><td>-</td><td>15</td><td>15</td><td>15</td></tr><tr><td>#8</td><td>&gt;=<em>n</em> points in a row outside 1 sd of the mean, in both directions</td><td>8</td><td>-</td><td>8</td><td>8</td><td>-</td></tr></table><p><em>Montg.</em>: Montgomery, <em>HC</em>: Healthcare</p>
     </div>
 
+    <div id="ref-examples">
+    <h2>Examples</h2>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu">qc_test</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">250</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">x</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Quality Control Rules according to Nelson</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -----------------</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 1: One point is more than 3 standard deviations from the mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 2: 9 (or more) points in a row are on the same side of the mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 3: 6 (or more) points in a row are continually increasing or decreasing</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 4: 14 (or more) points in a row alternate in direction, increasing then decreasing</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 5: 2 out of 3 points in a row are &gt;2 sd from the mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 6: 4 out of 5 points in a row are &gt;1 sd from the mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violations on positions:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 219 220</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation values:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.4526439  1.2962707</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 7: &gt;= 15 points in a row are within 1 sd of the mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violations on positions:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 203 204 205</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation values:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  0.1481546 -0.6245761  0.4192292</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 8: &gt;= 8 points in a row outside 1 sd of the mean, in both directions</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-in"></span>
+<span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://certe-medical-epidemiology.github.io/certeplot2" class="external-link">"certeplot2"</a></span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span class="r-in">  <span class="fu"><a href="https://certe-medical-epidemiology.github.io/certeplot2/reference/plot2.html" class="external-link">plot2</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span class="r-in"><span class="op">}</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: certeplot2</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> `data` must be a data frame, or other object coercible by `fortify()`, not an S3 object with class qc_test/list.</span>
+</code></pre></div>
+    </div>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top"><h2 data-toc-skip>Contents</h2>
