@@ -24,7 +24,7 @@
 #' @param m mean
 #' @param s standard deviation
 #' @param threshold minimal number of sequential values before rule is triggered (defaults to Nelson's)
-#' @param direction.mean a logical to indicate whether *n* observations in a row must be tested for alternating in direction of the mean
+#' @param direction_mean a logical to indicate whether *n* observations in a row must be tested for alternating in direction of the mean
 #' @param rule number of the rule
 #' @section Rules list:
 #' 
@@ -80,12 +80,12 @@ nelson_rule3 <- function(x, threshold = 6) {
 
 #' @rdname nelson_rules
 #' @export
-nelson_rule4 <- function(x, m = mean(x), threshold = 14, direction.mean = FALSE) {
+nelson_rule4 <- function(x, m = mean(x), threshold = 14, direction_mean = FALSE) {
   if (length(x) < threshold) {
     return(integer(0))
   }
   n <- length(x)
-  if (direction.mean == TRUE) {
+  if (direction_mean == TRUE) {
     signs <- sign(x - m)
   } else {
     signs <- sign(c(x[-1],x[n]) - x)
@@ -181,4 +181,85 @@ nelson_text <- function(rule, threshold) {
   text <- gsub("{n-1}", threshold - 1, text, fixed = TRUE)
   text <- gsub("{n}", threshold, text, fixed = TRUE)
   text
+}
+
+#' @rdname nelson_rules
+#' @param type type of QC rules set, must be `"Nelson"`, `"Westgard"`, `"AIAG"`, `"Montgomery"`, or `"Healthcare"`
+#' @export
+#' @examples 
+#' x <- qc_test(rnorm(100))
+#' x
+#' 
+#' if (require("certeplot2")) {
+#'   plot2(x)
+#' }
+qc_test <- function(x, m = mean(x), s = sd(x), type = "Nelson") {
+  if (type == "Nelson") {
+    out <- list(rule_1 = nelson_rule1(x, m, s),
+                rule_2 = nelson_rule2(x, m, 9),
+                rule_3 = nelson_rule3(x, 6),
+                rule_4 = nelson_rule4(x, m, 14, FALSE),
+                rule_5 = nelson_rule5(x, m, s, 3),
+                rule_6 = nelson_rule6(x, m, s, 5),
+                rule_7 = nelson_rule7(x, m, s, 15),
+                rule_8 = nelson_rule8(x, m, s, 8))
+    attr(out, "threshold") <- c(0, 9, 6, 14, 3, 5, 15, 8)
+  } else if (type == "Westgard") {
+    out <- list(rule_1 = nelson_rule1(x, m, s),
+                rule_2 = nelson_rule2(x, m, 9),
+                rule_5 = nelson_rule5(x, m, s, 3),
+                rule_6 = nelson_rule6(x, m, s, 5))
+    attr(out, "threshold") <- c(0, 9, 3, 5)
+  } else if (type == "AIAG") {
+    out <- list(rule_1 = nelson_rule1(x, m, s),
+                rule_2 = nelson_rule2(x, m, 7),
+                rule_3 = nelson_rule3(x, 6),
+                rule_4 = nelson_rule4(x, m, 14, FALSE),
+                rule_5 = nelson_rule5(x, m, s, 3),
+                rule_6 = nelson_rule6(x, m, s, 5),
+                rule_7 = nelson_rule7(x, m, s, 15),
+                rule_8 = nelson_rule8(x, m, s, 8))
+    attr(out, "threshold") <- c(0, 7, 6, 14, 3, 5, 15, 8)
+  } else if (type == "Montgomery") {
+    out <- list(rule_1 = nelson_rule1(x, m, s),
+                rule_2 = nelson_rule2(x, m, 8),
+                rule_3 = nelson_rule3(x, 6),
+                rule_4 = nelson_rule4(x, m, 14, FALSE),
+                rule_5 = nelson_rule5(x, m, s, 3),
+                rule_6 = nelson_rule6(x, m, s, 5),
+                rule_7 = nelson_rule7(x, m, s, 15),
+                rule_8 = nelson_rule8(x, m, s, 8))
+    attr(out, "threshold") <- c(0, 8, 6, 14, 3, 5, 15, 8)
+  } else if (type == "Healthcare") {
+    out <- list(rule_1 = nelson_rule1(x, m, s),
+                rule_2 = nelson_rule2(x, m, 8),
+                rule_3 = nelson_rule3(x, 6),
+                rule_5 = nelson_rule5(x, m, s, 3),
+                rule_7 = nelson_rule7(x, m, s, 15))
+    attr(out, "threshold") <- c(0, 8, 6, 3, 15)
+  }
+  structure(out,
+            class = c("qc_test", "list"),
+            type = type,
+            values = x)
+}
+
+#' @method print qc_test
+#' @noRd
+#' @export
+print.qc_test <- function(x, ...) {
+  cat("Quality Control Rules according to ", attributes(x)$type, "\n", sep = "")
+  cat("-----------------\n")
+  for (i in seq_len(length(x))) {
+    rule <- as.integer(gsub("[^0-9]", "", names(x)[i]))
+    cat("\nQC Rule ", rule, ": ", nelson_text(rule, attributes(x)$threshold[i]), "\n", sep = "")
+    if (length(x[[i]]) == 0) {
+      cat("No violations\n")
+    } else {
+      cat("Violations on positions:\n")
+      print(x[[i]])
+      cat("Violation values:\n")
+      print(attributes(x)$values[x[[i]]])
+    }
+  }
 }

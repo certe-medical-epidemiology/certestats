@@ -11,6 +11,7 @@
 \alias{nelson_rule7}
 \alias{nelson_rule8}
 \alias{nelson_text}
+\alias{qc_test}
 \title{Nelson's Quality Control Rules}
 \source{
 Nelson LS. \strong{The Shewhart Control Chart—Tests for Special Causes}. Journal of Quality Technology \link{Internet}. Informa UK Limited; 1984 Oct;16(4):237–9. Available from: \url{http://dx.doi.org/10.1080/00224065.1984.11978921}
@@ -22,7 +23,7 @@ nelson_rule2(x, m = mean(x), threshold = 9)
 
 nelson_rule3(x, threshold = 6)
 
-nelson_rule4(x, m = mean(x), threshold = 14, direction.mean = FALSE)
+nelson_rule4(x, m = mean(x), threshold = 14, direction_mean = FALSE)
 
 nelson_rule5(x, m = mean(x), s = sd(x), threshold = 3)
 
@@ -33,6 +34,8 @@ nelson_rule7(x, m = mean(x), s = sd(x), threshold = 15)
 nelson_rule8(x, m = mean(x), s = sd(x), threshold = 8)
 
 nelson_text(rule, threshold)
+
+qc_test(x, m = mean(x), s = sd(x), type = "Nelson")
 }
 \arguments{
 \item{x}{vector with values}
@@ -43,9 +46,11 @@ nelson_text(rule, threshold)
 
 \item{threshold}{minimal number of sequential values before rule is triggered (defaults to Nelson's)}
 
-\item{direction.mean}{a logical to indicate whether \emph{n} observations in a row must be tested for alternating in direction of the mean}
+\item{direction_mean}{a logical to indicate whether \emph{n} observations in a row must be tested for alternating in direction of the mean}
 
 \item{rule}{number of the rule}
+
+\item{type}{type of QC rules set, must be \code{"Nelson"}, \code{"Westgard"}, \code{"AIAG"}, \code{"Montgomery"}, or \code{"Healthcare"}}
 }
 \description{
 These rules are used for quality control (QC). Default values are set for Nelson's criteria, but they also support Westgard, AIAG, Montgomery and Healthcare QC rules.
@@ -67,3 +72,11 @@ These rules are used for quality control (QC). Default values are set for Nelson
 \emph{Montg.}: Montgomery, \emph{HC}: Healthcare
 }
 
+\examples{
+x <- qc_test(rnorm(100))
+x
+
+if (require("certeplot2")) {
+  plot2(x)
+}
+}
