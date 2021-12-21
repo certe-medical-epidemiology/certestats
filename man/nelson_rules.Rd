@@ -73,7 +73,7 @@ These rules are used for quality control (QC). Default values are set for Nelson
 }
 
 \examples{
-x <- qc_test(rnorm(100))
+x <- qc_test(rnorm(250))
 x
 
 if (require("certeplot2")) {

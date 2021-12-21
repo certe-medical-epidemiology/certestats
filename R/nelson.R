@@ -187,7 +187,7 @@ nelson_text <- function(rule, threshold) {
 #' @param type type of QC rules set, must be `"Nelson"`, `"Westgard"`, `"AIAG"`, `"Montgomery"`, or `"Healthcare"`
 #' @export
 #' @examples 
-#' x <- qc_test(rnorm(100))
+#' x <- qc_test(rnorm(250))
 #' x
 #' 
 #' if (require("certeplot2")) {
@@ -203,13 +203,13 @@ qc_test <- function(x, m = mean(x), s = sd(x), type = "Nelson") {
                 rule_6 = nelson_rule6(x, m, s, 5),
                 rule_7 = nelson_rule7(x, m, s, 15),
                 rule_8 = nelson_rule8(x, m, s, 8))
-    attr(out, "threshold") <- c(0, 9, 6, 14, 3, 5, 15, 8)
+    attr(out, "threshold") <- c(1, 9, 6, 14, 3, 5, 15, 8)
   } else if (type == "Westgard") {
     out <- list(rule_1 = nelson_rule1(x, m, s),
                 rule_2 = nelson_rule2(x, m, 9),
                 rule_5 = nelson_rule5(x, m, s, 3),
                 rule_6 = nelson_rule6(x, m, s, 5))
-    attr(out, "threshold") <- c(0, 9, 3, 5)
+    attr(out, "threshold") <- c(1, 9, 3, 5)
   } else if (type == "AIAG") {
     out <- list(rule_1 = nelson_rule1(x, m, s),
                 rule_2 = nelson_rule2(x, m, 7),
@@ -219,7 +219,7 @@ qc_test <- function(x, m = mean(x), s = sd(x), type = "Nelson") {
                 rule_6 = nelson_rule6(x, m, s, 5),
                 rule_7 = nelson_rule7(x, m, s, 15),
                 rule_8 = nelson_rule8(x, m, s, 8))
-    attr(out, "threshold") <- c(0, 7, 6, 14, 3, 5, 15, 8)
+    attr(out, "threshold") <- c(1, 7, 6, 14, 3, 5, 15, 8)
   } else if (type == "Montgomery") {
     out <- list(rule_1 = nelson_rule1(x, m, s),
                 rule_2 = nelson_rule2(x, m, 8),
@@ -229,14 +229,14 @@ qc_test <- function(x, m = mean(x), s = sd(x), type = "Nelson") {
                 rule_6 = nelson_rule6(x, m, s, 5),
                 rule_7 = nelson_rule7(x, m, s, 15),
                 rule_8 = nelson_rule8(x, m, s, 8))
-    attr(out, "threshold") <- c(0, 8, 6, 14, 3, 5, 15, 8)
+    attr(out, "threshold") <- c(1, 8, 6, 14, 3, 5, 15, 8)
   } else if (type == "Healthcare") {
     out <- list(rule_1 = nelson_rule1(x, m, s),
                 rule_2 = nelson_rule2(x, m, 8),
                 rule_3 = nelson_rule3(x, 6),
                 rule_5 = nelson_rule5(x, m, s, 3),
                 rule_7 = nelson_rule7(x, m, s, 15))
-    attr(out, "threshold") <- c(0, 8, 6, 3, 15)
+    attr(out, "threshold") <- c(1, 8, 6, 3, 15)
   }
   structure(out,
             class = c("qc_test", "list"),
