@@ -10,6 +10,8 @@
 \alias{midhinge}
 \alias{ewma}
 \alias{rr_ewma}
+\alias{normalise}
+\alias{normalize}
 \title{Distribution Metrics}
 \usage{
 se(x, na.rm = getOption("na.rm", FALSE))
@@ -27,6 +29,10 @@ midhinge(x, na.rm = getOption("na.rm", FALSE))
 ewma(x, lambda, na.rm = getOption("na.rm", FALSE))
 
 rr_ewma(x, lambda, na.rm = getOption("na.rm", FALSE))
+
+normalise(n, n_ref, per = 1000)
+
+normalize(n, n_ref, per = 1000)
 }
 \arguments{
 \item{x}{values}
@@ -36,6 +42,12 @@ rr_ewma(x, lambda, na.rm = getOption("na.rm", FALSE))
 \item{correct_mean}{with \code{TRUE} (the default) correct for the mean will be applied, by summing each square of \code{x} after the mean of \code{x} has been subtracted, so that this says something about \code{x}. With \code{FALSE}, all \code{x^2} are simply added together, so this says something about \code{x}'s location in the data.}
 
 \item{lambda}{smoothing parameter, must be less than one. Under that condition, instead of equal weights, each squared return is weighted by a multiplier.}
+
+\item{n}{number to be normalised}
+
+\item{n_ref}{reference to use for normalisation}
+
+\item{per}{normalisation factor}
 }
 \description{
 These are simple distribution metric functions.

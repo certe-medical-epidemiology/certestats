@@ -36,6 +36,11 @@ test_that("math functions work", {
   expect_identical(midhinge(x, na.rm = FALSE),
                    unname((quantile(x, 0.25, na.rm = FALSE) +
                              quantile(x, 0.75, na.rm = FALSE)) / 2))
+  expect_identical(sum_of_squares(x, correct_mean = FALSE),
+                   sum(x ^ 2, na.rm = FALSE))
+  
+  expect_lt(cv(ewma(x, 0.9)), cv(x))
+  expect_lt(cv(rr_ewma(x, 0.9)), cv(x))
   
   expect_identical(mean_harmonic(x),
                    1 / mean(1 / x))
@@ -62,4 +67,9 @@ test_that("math functions work", {
   expect_identical(quantile(x), stats::quantile(x, na.rm = TRUE))
   expect_identical(IQR(x), stats::IQR(x, na.rm = TRUE))
   options(na.rm = old)
+  
+  df <- data.frame(n = c(1000, 2000, 4000),
+                   ref = c(50, 100, 200))
+  expect_identical(normalise(df$n, df$ref), c(20000, 20000, 20000))
+  expect_identical(normalize(df$n, df$ref, 10), c(200, 200, 200))
 })

@@ -108,3 +108,16 @@ rr_ewma <- function(x, lambda, na.rm = getOption("na.rm", FALSE)) {
          ewma(x = rev(x), lambda = lambda, na.rm = na.rm),
          na.rm = na.rm) / 2
 }
+
+#' @rdname distribution_metrics
+#' @param n number to be normalised
+#' @param n_ref reference to use for normalisation
+#' @param per normalisation factor
+#' @export
+normalise <- function (n, n_ref, per = 1000) {
+  (n / n_ref) * per
+}
+
+#' @rdname distribution_metrics
+#' @export
+normalize <- normalise
