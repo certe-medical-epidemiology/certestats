@@ -5,7 +5,7 @@
 [![R-CMD-check](https://github.com/certe-medical-epidemiology/certestats/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/certe-medical-epidemiology/certestats/actions/workflows/R-CMD-check.yaml)
 [![CodeFactor](https://www.codefactor.io/repository/github/certe-medical-epidemiology/certestats/badge/main)](https://www.codefactor.io/repository/github/certe-medical-epidemiology/certestats/overview/main)
 
-This is a Certe R Package for applying statistical modelling, such as creating machine learning models. This package is part of the 'certedata' universe.
+This is a Certe R Package for applying statistical modelling (such as creating machine learning models), QC rules and distribution analysis. This package is part of the 'certedata' universe.
 
 You can [read the manual with explanation about all functions](https://certe-medical-epidemiology.github.io/certestats/reference), or install this particular R package using:
 
