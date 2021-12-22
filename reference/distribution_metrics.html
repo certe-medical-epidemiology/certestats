@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.9</span>
       </span>
     </div>
 
@@ -90,7 +90,11 @@
 
 <span class="fu">ewma</span><span class="op">(</span><span class="va">x</span>, <span class="va">lambda</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
 
-<span class="fu">rr_ewma</span><span class="op">(</span><span class="va">x</span>, <span class="va">lambda</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<span class="fu">rr_ewma</span><span class="op">(</span><span class="va">x</span>, <span class="va">lambda</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu">normalise</span><span class="op">(</span><span class="va">n</span>, <span class="va">n_ref</span>, per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>
+
+<span class="fu">normalize</span><span class="op">(</span><span class="va">n</span>, <span class="va">n_ref</span>, per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -103,6 +107,12 @@
 <dd><p>with <code>TRUE</code> (the default) correct for the mean will be applied, by summing each square of <code>x</code> after the mean of <code>x</code> has been subtracted, so that this says something about <code>x</code>. With <code>FALSE</code>, all <code>x^2</code> are simply added together, so this says something about <code>x</code>'s location in the data.</p></dd>
 <dt>lambda</dt>
 <dd><p>smoothing parameter, must be less than one. Under that condition, instead of equal weights, each squared return is weighted by a multiplier.</p></dd>
+<dt>n</dt>
+<dd><p>number to be normalised</p></dd>
+<dt>n_ref</dt>
+<dd><p>reference to use for normalisation</p></dd>
+<dt>per</dt>
+<dd><p>normalisation factor</p></dd>
 </dl></div>
     <div id="details">
     <h2>Details</h2>
