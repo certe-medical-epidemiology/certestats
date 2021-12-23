@@ -18,13 +18,13 @@
 # ===================================================================== #
 
 test_that("moving averages work", {
-  x <- rnorm(1000)
+  x <- rnorm(1000, mean = 10, sd = 1)
   expect_lt(cv(moving_average(x, 7)), cv(x))
   expect_lt(cv(moving_average(x, 7, side = "left")), cv(x))
   expect_lt(cv(moving_average(x, 7, side = "right")), cv(x))
   expect_lt(cv(moving_average(x, 7, side = "center")), cv(x))
   
-  expect_gt(sum(moving_sum(x, 77)), sum(x))
+  expect_gt(sum(moving_sum(x, 7)), sum(x))
   
   expect_lt(median(moving_Q1(x, 7)), median(x))
   expect_gt(median(moving_Q3(x, 7)), median(x))
