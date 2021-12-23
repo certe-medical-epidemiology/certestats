@@ -17,11 +17,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Erwin Dijkstra \email{e.dijkstra@certe.nl}
+\strong{Maintainer}: Matthijs S. Berends \email{m.berends@certe.nl}
 
 Authors:
 \itemize{
-  \item Matthijs S. Berends \email{m.berends@certe.nl}
+  \item Erwin Dijkstra \email{e.dijkstra@certe.nl}
 }
 
 Other contributors:

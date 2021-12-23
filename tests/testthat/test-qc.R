@@ -61,4 +61,13 @@ test_that("QC rules work", {
   expect_s3_class(qc_test(x, guideline = "Healthcare"), "qc_test")
   expect_output(print(qc_test(x)))
   expect_s3_class(as.data.frame(qc_test(x)), "data.frame")
+  
+  expect_length(qc_rule1(1), 0)
+  expect_length(qc_rule2(1), 0)
+  expect_length(qc_rule3(1), 0)
+  expect_length(qc_rule4(1), 0)
+  expect_length(qc_rule5(1), 0)
+  expect_length(qc_rule6(1), 0)
+  expect_length(qc_rule7(1), 0)
+  expect_length(qc_rule8(1), 0)
 })
