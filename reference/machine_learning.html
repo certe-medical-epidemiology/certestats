@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.1</span>
       </span>
     </div>
 
@@ -310,29 +310,29 @@ generics::fit()       yardstick::metrics()
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   .metric  .estimator .estimate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> accuracy multiclass     0.947</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> kap      multiclass     0.919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> accuracy multiclass         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> kap      multiclass         1</span>
 <span class="r-in"><span class="va">model2</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">yardstick</span><span class="fu">::</span><span class="fu"><a href="https://yardstick.tidymodels.org/reference/metrics.html" class="external-link">metrics</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2 × 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   .metric  .estimator .estimate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> accuracy multiclass     0.895</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> kap      multiclass     0.838</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> accuracy multiclass         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> kap      multiclass         1</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">model1</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">apply_model_to</span><span class="op">(</span><span class="va">iris</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 150 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    predicted .pred_setosa .pred_versicolor .pred_virginica</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> setosa           1.00          0.000<span style="text-decoration: underline;">225</span>        0.000<span style="text-decoration: underline;">236</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> setosa           0.942         0.043<span style="text-decoration: underline;">9</span>          0.013<span style="text-decoration: underline;">7</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> setosa           0.985         0.011<span style="text-decoration: underline;">6</span>          0.002<span style="text-decoration: underline;">99</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> setosa           0.988         0.009<span style="text-decoration: underline;">63</span>         0.002<span style="text-decoration: underline;">05</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> setosa           0.995         0.002<span style="text-decoration: underline;">30</span>         0.002<span style="text-decoration: underline;">4</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> setosa           0.978         0.015<span style="text-decoration: underline;">3</span>          0.006<span style="text-decoration: underline;">55</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> setosa           0.997         0.001<span style="text-decoration: underline;">41</span>         0.001<span style="text-decoration: underline;">63</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> setosa           0.994         0.004<span style="text-decoration: underline;">03</span>         0.001<span style="text-decoration: underline;">86</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> setosa           0.934         0.058<span style="text-decoration: underline;">1</span>          0.008<span style="text-decoration: underline;">29</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> setosa           0.961         0.027<span style="text-decoration: underline;">0</span>          0.011<span style="text-decoration: underline;">5</span>  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> setosa           0.998          0.001<span style="text-decoration: underline;">28</span>         0.001<span style="text-decoration: underline;">17</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> setosa           0.953          0.030<span style="text-decoration: underline;">2</span>          0.017<span style="text-decoration: underline;">0</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> setosa           0.981          0.010<span style="text-decoration: underline;">7</span>          0.007<span style="text-decoration: underline;">98</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> setosa           0.981          0.012<span style="text-decoration: underline;">3</span>          0.007<span style="text-decoration: underline;">02</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> setosa           0.986          0.006<span style="text-decoration: underline;">98</span>         0.007<span style="text-decoration: underline;">29</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> setosa           0.982          0.005<span style="text-decoration: underline;">13</span>         0.013<span style="text-decoration: underline;">2</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> setosa           0.991          0.003<span style="text-decoration: underline;">44</span>         0.005<span style="text-decoration: underline;">33</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> setosa           0.984          0.011<span style="text-decoration: underline;">0</span>          0.004<span style="text-decoration: underline;">94</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> setosa           0.861          0.117           0.022<span style="text-decoration: underline;">2</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> setosa           0.970          0.015<span style="text-decoration: underline;">9</span>          0.014<span style="text-decoration: underline;">4</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 140 more rows</span></span>
 <span class="r-in"><span class="va">model1</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="machine_learning-1.png" alt="" width="700" height="433"></span>
@@ -341,32 +341,32 @@ generics::fit()       yardstick::metrics()
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             outcome</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> .pred_class  setosa versicolor virginica</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   setosa          9          0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   versicolor      0         14         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   virginica       0          1        13</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   setosa         16          0         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   versicolor      0         12         0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   virginica       0          0        10</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Overall Statistics</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Accuracy : 0.9474          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  95% CI : (0.8225, 0.9936)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     No Information Rate : 0.3947          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     P-Value [Acc &gt; NIR] : 7.82e-13        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Kappa : 0.9193          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Mcnemar's Test P-Value : NA              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Accuracy : 1          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  95% CI : (0.9075, 1)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     No Information Rate : 0.4211     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     P-Value [Acc &gt; NIR] : 5.306e-15  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Kappa : 1          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Mcnemar's Test P-Value : NA         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Statistics by Class:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                      Class: setosa Class: versicolor Class: virginica</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Sensitivity                 1.0000            0.9333           0.9286</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Specificity                 1.0000            0.9565           0.9583</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pos Pred Value              1.0000            0.9333           0.9286</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Neg Pred Value              1.0000            0.9565           0.9583</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prevalence                  0.2368            0.3947           0.3684</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Detection Rate              0.2368            0.3684           0.3421</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Detection Prevalence        0.2368            0.3947           0.3684</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Balanced Accuracy           1.0000            0.9449           0.9435</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Sensitivity                 1.0000            1.0000           1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Specificity                 1.0000            1.0000           1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Pos Pred Value              1.0000            1.0000           1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Neg Pred Value              1.0000            1.0000           1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Prevalence                  0.4211            0.3158           0.2632</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Detection Rate              0.4211            0.3158           0.2632</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Detection Prevalence        0.4211            0.3158           0.2632</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Balanced Accuracy           1.0000            1.0000           1.0000</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
 <span class="r-in"><span class="va">esbl</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
