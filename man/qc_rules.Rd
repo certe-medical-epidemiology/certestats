@@ -81,7 +81,6 @@ head(as.data.frame(x))
 
 if (require("certeplot2")) {
   plot2(x,
-        title = "QC plot",
         subtitle = "Workflow 'example123'")
 }
 }

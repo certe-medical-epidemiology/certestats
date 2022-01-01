@@ -196,7 +196,6 @@ qc_rule_text <- function(rule, threshold) {
 #' 
 #' if (require("certeplot2")) {
 #'   plot2(x,
-#'         title = "QC plot",
 #'         subtitle = "Workflow 'example123'")
 #' }
 qc_test <- function(x, m = mean(x), s = sd(x), guideline = "Nelson") {
