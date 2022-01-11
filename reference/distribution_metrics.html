@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.0.2</span>
       </span>
     </div>
 
@@ -106,7 +106,7 @@
 <dt>correct_mean</dt>
 <dd><p>with <code>TRUE</code> (the default) correct for the mean will be applied, by summing each square of <code>x</code> after the mean of <code>x</code> has been subtracted, so that this says something about <code>x</code>. With <code>FALSE</code>, all <code>x^2</code> are simply added together, so this says something about <code>x</code>'s location in the data.</p></dd>
 <dt>lambda</dt>
-<dd><p>smoothing parameter, must be less than one. Under that condition, instead of equal weights, each squared return is weighted by a multiplier.</p></dd>
+<dd><p>smoothing parameter, a value between 0 and 1. A value of 0 is equal to <code>x</code>, a value of 1 equal to the <em>mean</em> of <code>x</code>. The EWMA looks back and has a delay - the rrEWMA takes the mean of a 'forward' and 'backward' EWMA.</p></dd>
 <dt>n</dt>
 <dd><p>number to be normalised</p></dd>
 <dt>n_ref</dt>
@@ -122,8 +122,8 @@
 </ul><ul><li><p><code>cqv()</code> (coefficient of quartile variation): (Q3 - Q1) / (Q3 + Q1)</p></li>
 </ul><ul><li><p><code>z_score()</code> (number of standard deviations from the mean): (x - mean) / sd</p></li>
 </ul><ul><li><p><code>midhinge()</code> (mean of interquartile range): (Q1 + Q3) / 2</p></li>
-</ul><ul><li><p><code>ewma()</code> (exponentially weighted moving average)</p></li>
-</ul><ul><li><p><code>rr_ewma()</code> (reversed-recombined exponentially weighted moving average)</p></li>
+</ul><ul><li><p><code>ewma()</code> (EWMA, exponentially weighted moving average)</p></li>
+</ul><ul><li><p><code>rr_ewma()</code> (rrEWMA, reversed-recombined exponentially weighted moving average)</p></li>
 </ul></div>
     <div id="default-values-of-na-rm">
     <h2>Default values of <code>na.rm</code></h2>
