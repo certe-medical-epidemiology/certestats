@@ -82,8 +82,8 @@ midhinge <- function(x, na.rm = getOption("na.rm", FALSE)) {
 }
 
 #' @rdname distribution_metrics
-#' @details * [ewma()] (exponentially weighted moving average)
-#' @param lambda smoothing parameter, must be less than one. Under that condition, instead of equal weights, each squared return is weighted by a multiplier.
+#' @details * [ewma()] (EWMA, exponentially weighted moving average)
+#' @param lambda smoothing parameter, a value between 0 and 1. A value of 0 is equal to `x`, a value of 1 equal to the *mean* of `x`. The EWMA looks back and has a delay - the rrEWMA takes the mean of a 'forward' and 'backward' EWMA.
 #' @export
 ewma <- function(x, lambda, na.rm = getOption("na.rm", FALSE)) {
   x <- as.double(x)
@@ -96,7 +96,7 @@ ewma <- function(x, lambda, na.rm = getOption("na.rm", FALSE)) {
 
 
 #' @rdname distribution_metrics
-#' @details * [rr_ewma()] (reversed-recombined exponentially weighted moving average)
+#' @details * [rr_ewma()] (rrEWMA, reversed-recombined exponentially weighted moving average)
 #' @export
 rr_ewma <- function(x, lambda, na.rm = getOption("na.rm", FALSE)) {
   # Reversed-Recombined EWMA

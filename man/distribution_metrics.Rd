@@ -41,7 +41,7 @@ normalize(n, n_ref, per = 1000)
 
 \item{correct_mean}{with \code{TRUE} (the default) correct for the mean will be applied, by summing each square of \code{x} after the mean of \code{x} has been subtracted, so that this says something about \code{x}. With \code{FALSE}, all \code{x^2} are simply added together, so this says something about \code{x}'s location in the data.}
 
-\item{lambda}{smoothing parameter, must be less than one. Under that condition, instead of equal weights, each squared return is weighted by a multiplier.}
+\item{lambda}{smoothing parameter, a value between 0 and 1. A value of 0 is equal to \code{x}, a value of 1 equal to the \emph{mean} of \code{x}. The EWMA looks back and has a delay - the rrEWMA takes the mean of a 'forward' and 'backward' EWMA.}
 
 \item{n}{number to be normalised}
 
@@ -79,11 +79,11 @@ These are the explanations of the functions:
 }
 
 \itemize{
-\item \code{\link[=ewma]{ewma()}} (exponentially weighted moving average)
+\item \code{\link[=ewma]{ewma()}} (EWMA, exponentially weighted moving average)
 }
 
 \itemize{
-\item \code{\link[=rr_ewma]{rr_ewma()}} (reversed-recombined exponentially weighted moving average)
+\item \code{\link[=rr_ewma]{rr_ewma()}} (rrEWMA, reversed-recombined exponentially weighted moving average)
 }
 }
 \section{Default values of \code{na.rm}}{

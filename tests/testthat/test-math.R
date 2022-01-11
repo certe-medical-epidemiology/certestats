@@ -39,8 +39,8 @@ test_that("math functions work", {
   expect_identical(sum_of_squares(x, correct_mean = FALSE),
                    sum(x ^ 2, na.rm = FALSE))
   
-  expect_lt(cv(ewma(x, 0.9)), cv(x))
-  expect_lt(cv(rr_ewma(x, 0.9)), cv(x))
+  expect_lt(cv(ewma(x, 0.99)), cv(x))
+  expect_lt(cv(rr_ewma(x, 0.99)), cv(x))
   
   expect_identical(mean_harmonic(x),
                    1 / mean(1 / x))
