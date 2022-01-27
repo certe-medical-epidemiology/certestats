@@ -365,6 +365,7 @@ bootstrap_ml <- function(.data,
 }
 
 #' @importFrom dplyr `%>%` mutate select across filter everything bind_cols
+#' @importFrom yardstick metrics
 ml_exec <- function(FUN,
                     .data,
                     outcome,
@@ -458,7 +459,7 @@ ml_exec <- function(FUN,
   metrics <- mdl %>%
     stats::predict(df_testing) %>%
     bind_cols(df_testing) %>% 
-    yardstick::metrics(truth = outcome, estimate = colnames(.)[1])
+    metrics(truth = outcome, estimate = colnames(.)[1])
   
   structure(mdl,
             class = c("certestats_ml", class(mdl)),
@@ -492,19 +493,19 @@ print.certestats_ml <- function(x, ...) {
 }
 
 #' @rdname machine_learning
-#' @param ml_model outcome of machine learning model
-#' @param data new input data that require prediction, having the same columns of the training data
+#' @param object,data outcome of machine learning model
+#' @param new_data new input data that requires prediction, having the same columns of the training data
 #' @param only_prediction only return predictions, without chances
 #' @export
-apply_model_to <- function(ml_model, data, only_prediction = FALSE) {
-  if (!inherits(ml_model, "certestats_ml")) {
+apply_model_to <- function(object, new_data, only_prediction = FALSE) {
+  if (!inherits(object, "certestats_ml")) {
     stop("Only output from certestats::ml_*() functions can be used.")
   }
   # test - transform data according to recipe
-  test_data <- recipes::bake(attributes(ml_model)$recipe, new_data = data)
+  test_data <- recipes::bake(attributes(object)$recipe, new_data = new_data)
   
-  out <- bind_cols(stats::setNames(stats::predict(ml_model, test_data), "predicted"),
-                   stats::predict(ml_model, test_data, type = "prob"))
+  out <- bind_cols(stats::setNames(stats::predict(object, test_data), "predicted"),
+                   stats::predict(object, test_data, type = "prob"))
   
   if (isTRUE(only_prediction)) {
     out$predicted
@@ -517,14 +518,14 @@ apply_model_to <- function(ml_model, data, only_prediction = FALSE) {
 #' @method confusionMatrix certestats_ml
 #' @rdname machine_learning
 #' @export
-confusionMatrix.certestats_ml <- function(ml_model) {
+confusionMatrix.certestats_ml <- function(data, ...) {
   # some package already have a confusion matrix, such as 'randomForest':
-  conf_mtrx <- attributes(ml_model)$model$fit$confusion
+  conf_mtrx <- attributes(data)$model$fit$confusion
   # create it self otherwise:
   if (is.null(conf_mtrx)) {
-    conf_mtrx <- ml_model %>%
-      stats::predict(attributes(ml_model)$data_testing) %>%
-      bind_cols(outcome = attributes(ml_model)$data_testing$outcome) %>%
+    conf_mtrx <- data %>%
+      stats::predict(attributes(data)$data_testing) %>%
+      bind_cols(outcome = attributes(data)$data_testing$outcome) %>%
       table()
   }
   conf_mtrx <- as.matrix(conf_mtrx)
@@ -537,19 +538,20 @@ confusionMatrix.certestats_ml <- function(ml_model) {
 #' @method metrics certestats_ml
 #' @rdname machine_learning
 #' @export
-metrics.certestats_ml <- function(ml_model) {
-  attributes(ml_model)$metrics
+metrics.certestats_ml <- function(data, ...) {
+  attributes(data)$metrics
 }
 
 #' @method autoplot certestats_ml
 #' @rdname machine_learning
 #' @importFrom ggplot2 autoplot
 #' @importFrom dplyr `%>%` bind_cols
+#' @importFrom yardstick gain_curve
 #' @export
-autoplot.certestats_ml <- function(ml_model) {
-  model_prop <- attributes(ml_model)
+autoplot.certestats_ml <- function(object, ...) {
+  model_prop <- attributes(object)
   
-  out <- ml_model %>%
+  out <- object %>%
     stats::predict(model_prop$data_testing, type = "prob") %>%
     bind_cols(model_prop$data_testing)
   
@@ -559,14 +561,13 @@ autoplot.certestats_ml <- function(ml_model) {
   }
   
   out %>%
-    yardstick::gain_curve("outcome", pred) %>%
+    gain_curve("outcome", pred) %>%
     autoplot()
 }
 
 #' @method autoplot certestats_ml_bootstrap
 #' @rdname machine_learning
 #' @importFrom ggplot2 autoplot
-#' @param object a bootstrap object
 #' @param all_cols Include all columns, not only sensitivity, specificity, pos_pred_value, neg_pred_value.
 #' @importFrom dplyr `%>%` select filter mutate across
 #' @importFrom tidyr pivot_longer

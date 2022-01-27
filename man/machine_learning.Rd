@@ -127,13 +127,13 @@ bootstrap_ml(
   mode = c("classification", "regression")
 )
 
-apply_model_to(ml_model, data, only_prediction = FALSE)
+apply_model_to(object, new_data, only_prediction = FALSE)
 
-\method{confusionMatrix}{certestats_ml}(ml_model)
+\method{confusionMatrix}{certestats_ml}(data, ...)
 
-\method{metrics}{certestats_ml}(ml_model)
+\method{metrics}{certestats_ml}(data, ...)
 
-\method{autoplot}{certestats_ml}(ml_model)
+\method{autoplot}{certestats_ml}(object, ...)
 
 \method{autoplot}{certestats_ml_bootstrap}(object, all_cols = FALSE, ...)
 }
@@ -183,13 +183,11 @@ the ensemble.}
 
 \item{times}{Number of times to run the model(s), defaults to \code{25}}
 
-\item{ml_model}{outcome of machine learning model}
+\item{object, data}{outcome of machine learning model}
 
-\item{data}{new input data that require prediction, having the same columns of the training data}
+\item{new_data}{new input data that requires prediction, having the same columns of the training data}
 
 \item{only_prediction}{only return predictions, without chances}
-
-\item{object}{a bootstrap object}
 
 \item{all_cols}{Include all columns, not only sensitivity, specificity, pos_pred_value, neg_pred_value.}
 }
