@@ -4,6 +4,9 @@
 \name{reexports}
 \alias{reexports}
 \alias{\%>\%}
+\alias{confusionMatrix}
+\alias{metrics}
+\alias{autoplot}
 \title{Objects exported from other packages}
 \keyword{internal}
 \description{
@@ -11,6 +14,12 @@ These objects are imported from other packages. Follow the links
 below to see their documentation.
 
 \describe{
+  \item{caret}{\code{\link[caret]{confusionMatrix}}}
+
   \item{dplyr}{\code{\link[dplyr:reexports]{\%>\%}}}
+
+  \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}
+
+  \item{yardstick}{\code{\link[yardstick]{metrics}}}
 }}
 

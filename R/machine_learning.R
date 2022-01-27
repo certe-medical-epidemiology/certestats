@@ -23,7 +23,7 @@
 #' @param .data Data set to train
 #' @param outcome Outcome variable to be used (the variable that must be predicted)
 #' @param predictors Variables to use as predictors - these will be transformed using [as.double()]
-#' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*.
+#' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*. If given a number over 1, the number will be considered to be the required number of rows for *training*.
 #' @param strata Groups to consider in the model (i.e., variables to stratify by)
 #' @param correlation_filter A [logical] to indicate whether the `predictors` should be removed that have to much correlation with each other, using [recipes::step_corr()]
 #' @param centre A [logical] to indicate whether the `predictors` should be transformed so that their mean will be `0`, using [recipes::step_center()]
@@ -86,12 +86,12 @@
 #' model2 <- iris %>% ml_decision_trees(Species, where(is.double))
 #' model3 <- iris %>% ml_neural_network(Species, where(is.double))
 #'
-#' model1 %>% yardstick::metrics()
-#' model2 %>% yardstick::metrics()
+#' model1 %>% metrics()
+#' model2 %>% metrics()
 #'
 #' model1 %>% apply_model_to(iris)
-#' model1 %>% ggplot2::autoplot()
-#' model1 %>% caret::confusionMatrix()
+#' model1 %>% autoplot()
+#' model1 %>% confusionMatrix()
 #'
 #' \dontrun{
 #' esbl %>%
@@ -117,7 +117,7 @@ ml_decision_trees <- function(.data,
           outcome = {{outcome}},
           predictors = {{predictors}},
           training_fraction = training_fraction,
-          strata = strata,
+          strata = {{strata}},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -147,7 +147,7 @@ ml_linear_regression <- function(.data,
           outcome = {{outcome}},
           predictors = {{predictors}},
           training_fraction = training_fraction,
-          strata = strata,
+          strata = {{strata}},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -177,7 +177,7 @@ ml_logistic_regression <- function(.data,
           outcome = {{outcome}},
           predictors = {{predictors}},
           training_fraction = training_fraction,
-          strata = strata,
+          strata = {{strata}},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -209,7 +209,7 @@ ml_neural_network <- function(.data,
           outcome = {{outcome}},
           predictors = {{predictors}},
           training_fraction = training_fraction,
-          strata = strata,
+          strata = {{strata}},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -242,7 +242,7 @@ ml_nearest_neighbour <- function(.data,
           outcome = {{outcome}},
           predictors = {{predictors}},
           training_fraction = training_fraction,
-          strata = strata,
+          strata = {{strata}},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -274,7 +274,7 @@ ml_random_forest <- function(.data,
           outcome = {{outcome}},
           predictors = {{predictors}},
           training_fraction = training_fraction,
-          strata = strata,
+          strata = {{strata}},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -335,7 +335,7 @@ bootstrap_ml <- function(.data,
                                       outcome = {{outcome}},
                                       predictors = {{predictors}},
                                       training_fraction = training_fraction,
-                                      strata = strata,
+                                      strata = {{strata}},
                                       max_na_fraction = max_na_fraction,
                                       correlation_filter = correlation_filter,
                                       centre = centre,
@@ -381,41 +381,64 @@ ml_exec <- function(FUN,
   if (missing(predictors)) {
     stop("'predictors' is missing, use tidyselect code to choose them, such as 'where(is.double)'.")
   }
-  
-  properties <- c(list(FUN = deparse(substitute(FUN)),
-                       engine = engine,
-                       training_fraction = training_fraction),
-                  list(...))
-  
+
   # format data to work with it
   df <- .data %>%
-    mutate(outcome = {{outcome}}) %>%
-    select(outcome, {{predictors}}) %>%
+    mutate(outcome = {{outcome}},
+           strata = {{strata}}) %>%
+    select(outcome, {{predictors}}, strata) %>%
     # force all predictors as double
     mutate(across({{ predictors }}, as.double)) %>%
     # remove columns that do not comply to max_na_fraction
     select(where(~sum(is.na(.)) / length(.) <= max_na_fraction)) %>%
     # remove rows that have NA in outcome or predictors
     filter(across(everything(), ~ !is.na(.)))
+
+  # the outcome variable must be factor in case of regression prediction
+  if (list(...)$mode == "classification" && !is.factor(df$outcome)) {
+    if (is.logical(df$outcome)) {
+      df$outcome <- factor(df$outcome, levels = c(TRUE, FALSE))
+    } else {
+      df$outcome <- factor(df$outcome)
+    }
+  }
+  
+  if (training_fraction > 1) {
+    training_fraction <- training_fraction / nrow(df)
+  }
+  
+  suppressWarnings(
+    properties <- c(list(ml_function = deparse(substitute(FUN)),
+                         engine_package = engine,
+                         training_fraction = training_fraction,
+                         strata = paste(length(unique(df$strata)), "groups")),
+                    list(...))
+  )
   
   if (nrow(df) == 0) {
     stop("No more rows left for analysis (max_na_fraction = ", max_na_fraction, "). Check column values.", call. = FALSE)
   }
   
-  df_split <- rsample::initial_split(df, strata = strata, prop = training_fraction)
+  if ("strata" %in% colnames(df)) {
+    strata_var <- "strata"
+  } else {
+    strata_var <- NULL
+  }
+  
+  df_split <- rsample::initial_split(df, strata = strata_var, prop = training_fraction)
   
   df_recipe <- df_split %>%
     rsample::training() %>%
     recipes::recipe(outcome ~ .)
   
   if (isTRUE(correlation_filter)) {
-    df_recipe <- df_recipe %>% recipes::step_corr(recipes::all_predictors())
+    df_recipe <- df_recipe %>% recipes::step_corr(recipes::all_predictors(), -strata_var)
   }
   if (isTRUE(centre)) {
-    df_recipe <- df_recipe %>% recipes::step_center(recipes::all_predictors(), -recipes::all_outcomes())
+    df_recipe <- df_recipe %>% recipes::step_center(recipes::all_predictors(), -recipes::all_outcomes(), -strata_var)
   }
   if (isTRUE(scale)) {
-    df_recipe <- df_recipe %>% recipes::step_scale(recipes::all_predictors(), -recipes::all_outcomes())
+    df_recipe <- df_recipe %>% recipes::step_scale(recipes::all_predictors(), -recipes::all_outcomes(), -strata_var)
   }
   df_recipe <- df_recipe %>%
     recipes::prep()

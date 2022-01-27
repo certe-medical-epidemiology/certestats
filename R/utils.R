@@ -21,6 +21,18 @@
 #' @export
 dplyr::`%>%`
 
+#' @importFrom caret confusionMatrix
+#' @export
+caret::confusionMatrix
+
+#' @importFrom yardstick metrics
+#' @export
+yardstick::metrics
+
+#' @importFrom ggplot2 autoplot
+#' @export
+ggplot2::autoplot
+
 globalVariables(c(".",
                   ".pred_class",
                   "model",

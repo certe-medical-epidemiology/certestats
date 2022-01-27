@@ -6,7 +6,10 @@
 \alias{certestats-package}
 \title{certestats: A Certe R Package for Statistical Modelling}
 \description{
-A Certe R Package for applying statistical modelling (such as creating machine learning models), QC rules and distribution analysis. This package is part of the 'certedata' universe.
+A Certe R Package for applying statistical modelling
+  (such as creating machine learning models), QC rules and distribution
+  analysis.
+  This package is part of the 'certedata' universe.
 }
 \seealso{
 Useful links:

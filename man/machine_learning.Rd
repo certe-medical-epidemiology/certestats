@@ -144,7 +144,7 @@ apply_model_to(ml_model, data, only_prediction = FALSE)
 
 \item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}}}
 
-\item{training_fraction}{Fraction of rows to be used for \emph{training}, defaults to 75\%. The rest will be used for \emph{testing}.}
+\item{training_fraction}{Fraction of rows to be used for \emph{training}, defaults to 75\%. The rest will be used for \emph{testing}. If given a number over 1, the number will be considered to be the required number of rows for \emph{training}.}
 
 \item{strata}{Groups to consider in the model (i.e., variables to stratify by)}
 
@@ -242,12 +242,12 @@ model1 <- iris \%>\% ml_random_forest(Species, where(is.double))
 model2 <- iris \%>\% ml_decision_trees(Species, where(is.double))
 model3 <- iris \%>\% ml_neural_network(Species, where(is.double))
 
-model1 \%>\% yardstick::metrics()
-model2 \%>\% yardstick::metrics()
+model1 \%>\% metrics()
+model2 \%>\% metrics()
 
 model1 \%>\% apply_model_to(iris)
-model1 \%>\% ggplot2::autoplot()
-model1 \%>\% caret::confusionMatrix()
+model1 \%>\% autoplot()
+model1 \%>\% confusionMatrix()
 
 \dontrun{
 esbl \%>\%
