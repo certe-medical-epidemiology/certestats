@@ -140,7 +140,7 @@ apply_model_to(object, new_data, only_prediction = FALSE)
 \arguments{
 \item{.data}{Data set to train}
 
-\item{outcome}{Outcome variable to be used (the variable that must be predicted)}
+\item{outcome}{Outcome variable to be used (the variable that must be predicted). In case of classification prediction, this variable will be coerced to a \link{factor}.}
 
 \item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}}}
 
@@ -195,9 +195,9 @@ the ensemble.}
 Create a machine learning model based on different 'engines'. These function internally use the \code{tidymodels} packages by RStudio, which is the \code{tidyverse} variant for predictive modelling.
 }
 \details{
-To predict \strong{regression} (numeric values), any model can be used.
+To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
 
-To predict \strong{classifications} (character values), the functions \code{\link[=ml_linear_regression]{ml_linear_regression()}} and \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
+To predict \strong{classifications} (character values), the function \code{\link[=ml_linear_regression]{ml_linear_regression()}} cannot be used.
 
 The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):\preformatted{                       .data
                          |
