@@ -412,14 +412,18 @@ ml_exec <- function(FUN,
     # in case of a higher training_fraction than nrow(df), or if training_fraction = 1
     warning("Training size set to ", round(training_fraction * nrow(df)),
             ", while data size is ", nrow(df),
-            " - setting training size to ", nrow(df) - 1, call. = FALSE)
+            " - training size has been set to ", nrow(df) - 1, call. = FALSE)
     training_fraction <- (nrow(df) - 1) / nrow(df)
   }
   
   suppressWarnings(
     properties <- c(list(ml_function = deparse(substitute(FUN)),
                          engine_package = engine,
-                         training_fraction = training_fraction,
+                         data_size = nrow(df),
+                         training_size = paste0(round(training_fraction * nrow(df)),
+                                                " (fraction: ", round(training_fraction, 3), ")"),
+                         testing_size = paste0(round((1 - training_fraction) * nrow(df)),
+                                                " (fraction: ", round(1 - training_fraction, 3), ")"),
                          strata = paste(length(unique(df$strata)), "groups")),
                     list(...))
   )
@@ -488,7 +492,7 @@ ml_exec <- function(FUN,
 #' @export
 print.certestats_ml <- function(x, ...) {
   model_prop <- attributes(x)
-  cat("'certestats' Machine learning model\n\n",
+  cat("'certestats' Machine Learning Model\n\n",
       paste0(format(names(model_prop$properties)), " : ", model_prop$properties, "\n"),
       sep = "")
   cat(strrep("-", options()$width -2), "\n", sep = "")
