@@ -21,7 +21,7 @@
 #'
 #' Create a machine learning model based on different 'engines'. These function internally use the `tidymodels` packages by RStudio, which is the `tidyverse` variant for predictive modelling.
 #' @param .data Data set to train
-#' @param outcome Outcome variable to be used (the variable that must be predicted)
+#' @param outcome Outcome variable to be used (the variable that must be predicted). In case of classification prediction, this variable will be coerced to a [factor].
 #' @param predictors Variables to use as predictors - these will be transformed using [as.double()]
 #' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*. If given a number over 1, the number will be considered to be the required number of rows for *training*.
 #' @param strata Groups to consider in the model (i.e., variables to stratify by)
@@ -40,9 +40,9 @@
 #' @inheritParams parsnip::nearest_neighbor
 #' @inheritParams parsnip::rand_forest
 #' @details
-#' To predict **regression** (numeric values), any model can be used.
+#' To predict **regression** (numeric values), the function [ml_logistic_regression()] cannot be used.
 #'
-#' To predict **classifications** (character values), the functions [ml_linear_regression()] and [ml_logistic_regression()] cannot be used.
+#' To predict **classifications** (character values), the function [ml_linear_regression()] cannot be used.
 #' 
 #' The workflow of the `ml_*()` functions is basically like this (thus saving a lot of `tidymodels` functions to type):
 #' 
@@ -405,13 +405,25 @@ ml_exec <- function(FUN,
   }
   
   if (training_fraction > 1) {
+    # per the documentation, this is the number of rows for training, so:
     training_fraction <- training_fraction / nrow(df)
+  }
+  if (training_fraction >= 1) {
+    # in case of a higher training_fraction than nrow(df), or if training_fraction = 1
+    warning("Training size set to ", round(training_fraction * nrow(df)),
+            ", while data size is ", nrow(df),
+            " - training size has been set to ", nrow(df) - 1, call. = FALSE)
+    training_fraction <- (nrow(df) - 1) / nrow(df)
   }
   
   suppressWarnings(
     properties <- c(list(ml_function = deparse(substitute(FUN)),
                          engine_package = engine,
-                         training_fraction = training_fraction,
+                         data_size = nrow(df),
+                         training_size = paste0(round(training_fraction * nrow(df)),
+                                                " (fraction: ", round(training_fraction, 3), ")"),
+                         testing_size = paste0(round((1 - training_fraction) * nrow(df)),
+                                                " (fraction: ", round(1 - training_fraction, 3), ")"),
                          strata = paste(length(unique(df$strata)), "groups")),
                     list(...))
   )
@@ -480,7 +492,7 @@ ml_exec <- function(FUN,
 #' @export
 print.certestats_ml <- function(x, ...) {
   model_prop <- attributes(x)
-  cat("'certestats' Machine learning model\n\n",
+  cat("'certestats' Machine Learning Model\n\n",
       paste0(format(names(model_prop$properties)), " : ", model_prop$properties, "\n"),
       sep = "")
   cat(strrep("-", options()$width -2), "\n", sep = "")

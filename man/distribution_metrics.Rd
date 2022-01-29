@@ -3,6 +3,7 @@
 \name{distribution_metrics}
 \alias{distribution_metrics}
 \alias{se}
+\alias{ci}
 \alias{sum_of_squares}
 \alias{cv}
 \alias{cqv}
@@ -12,9 +13,13 @@
 \alias{rr_ewma}
 \alias{normalise}
 \alias{normalize}
+\alias{scale_sd}
+\alias{centre_mean}
 \title{Distribution Metrics}
 \usage{
 se(x, na.rm = getOption("na.rm", FALSE))
+
+ci(x, level = 0.95, na.rm = getOption("na.rm", FALSE))
 
 sum_of_squares(x, correct_mean = TRUE, na.rm = getOption("na.rm", FALSE))
 
@@ -33,11 +38,17 @@ rr_ewma(x, lambda, na.rm = getOption("na.rm", FALSE))
 normalise(n, n_ref, per = 1000)
 
 normalize(n, n_ref, per = 1000)
+
+scale_sd(x)
+
+centre_mean(x)
 }
 \arguments{
 \item{x}{values}
 
 \item{na.rm}{a \link{logical} to indicate whether empty must be removed from \code{x}}
+
+\item{level}{alpha level, defaults to 95\%}
 
 \item{correct_mean}{with \code{TRUE} (the default) correct for the mean will be applied, by summing each square of \code{x} after the mean of \code{x} has been subtracted, so that this says something about \code{x}. With \code{FALSE}, all \code{x^2} are simply added together, so this says something about \code{x}'s location in the data.}
 
@@ -55,35 +66,51 @@ These are simple distribution metric functions.
 \details{
 These are the explanations of the functions:
 \itemize{
-\item \code{\link[=se]{se()}} (standard error): sd / square root of length
+\item \code{\link[=se]{se()}} calculates the standard error: sd / square root of length
 }
 
 \itemize{
-\item \code{\link[=sum_of_squares]{sum_of_squares()}}: sum of (x - mean(x)) ^ 2
+\item \code{\link[=ci]{ci()}} calculates the confidence intervals for a mean (defaults at 95\%), which returns length 2
 }
 
 \itemize{
-\item \code{\link[=cv]{cv()}} (coefficient of variation): standard deviation / mean
+\item \code{\link[=sum_of_squares]{sum_of_squares()}} calculates the sum of (x - mean(x)) ^ 2
 }
 
 \itemize{
-\item \code{\link[=cqv]{cqv()}} (coefficient of quartile variation): (Q3 - Q1) / (Q3 + Q1)
+\item \code{\link[=cv]{cv()}} calculates the coefficient of variation: standard deviation / mean
 }
 
 \itemize{
-\item \code{\link[=z_score]{z_score()}} (number of standard deviations from the mean): (x - mean) / sd
+\item \code{\link[=cqv]{cqv()}} calculates the coefficient of quartile variation: (Q3 - Q1) / (Q3 + Q1)
 }
 
 \itemize{
-\item \code{\link[=midhinge]{midhinge()}} (mean of interquartile range): (Q1 + Q3) / 2
+\item \code{\link[=z_score]{z_score()}} calculates the number of standard deviations from the mean: (x - mean) / sd
 }
 
 \itemize{
-\item \code{\link[=ewma]{ewma()}} (EWMA, exponentially weighted moving average)
+\item \code{\link[=midhinge]{midhinge()}} calculates the mean of interquartile range: (Q1 + Q3) / 2
 }
 
 \itemize{
-\item \code{\link[=rr_ewma]{rr_ewma()}} (rrEWMA, reversed-recombined exponentially weighted moving average)
+\item \code{\link[=ewma]{ewma()}} calculates the EWMA (exponentially weighted moving average)
+}
+
+\itemize{
+\item \code{\link[=rr_ewma]{rr_ewma()}} calculates the rrEWMA (reversed-recombined exponentially weighted moving average)
+}
+
+\itemize{
+\item \code{\link[=normalise]{normalise()}} normalises the data based on a reference: (n / reference) * unit
+}
+
+\itemize{
+\item \code{\link[=scale_sd]{scale_sd()}} normalises the data to have a standard deviation of 1, while retaining the mean
+}
+
+\itemize{
+\item \code{\link[=centre_mean]{centre_mean()}} normalises the data to have a mean of 0, while retaining the standard deviation
 }
 }
 \section{Default values of \code{na.rm}}{

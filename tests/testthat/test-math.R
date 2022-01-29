@@ -72,4 +72,11 @@ test_that("math functions work", {
                    ref = c(50, 100, 200))
   expect_identical(normalise(df$n, df$ref), c(20000, 20000, 20000))
   expect_identical(normalize(df$n, df$ref, 10), c(200, 200, 200))
+  
+  x <- rnorm(100, 250, 50)
+  expect_gt(ci(x)[1], mean(x) - sd(x))
+  expect_lt(ci(x, na.rm = TRUE)[2], mean(x) + sd(x))
+  
+  expect_equal(sd(scale_sd(x)), 1)
+  expect_equal(round(mean(centre_mean(x)), 5), 0)
 })
