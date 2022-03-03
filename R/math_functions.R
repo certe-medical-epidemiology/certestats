@@ -39,6 +39,33 @@ mean_geometric <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
   # or prod(x) ^ (1 / length(x))
 }
 
+#' Apply Function per Row
+#' 
+#' This can be used to e.g. add a maximum of certain rows.
+#' @param fn function to apply, such as [max()]
+#' @param ... tidyverse selector helpers, passed on to [`select()`][dplyr::select()]
+#' @param data data set, will be determined with [`cur_data_all()`][dplyr::cur_data_all()] if left blank
+#' @importFrom dplyr `%>%` select cur_data_all
+#' @export
+#' @examples
+#' if (require("dplyr")) {
+#'   iris %>% 
+#'     mutate(max = row_function(max, where(is.numeric)),
+#'            sepal_mean = row_function(mean, starts_with("Sepal"))) %>% 
+#'     head()
+#' }
+row_function <- function(fn, ..., data = NULL) {
+  if (is.null(data)) {
+    data <- cur_data_all()
+  } else if (!is.data.frame(data)) {
+    stop("'data' must be a data.frame", call. = FALSE)
+  }
+  if (tryCatch(length(list(...)) > 0, error = function(e) TRUE)) {
+    data <- data %>% select(...)
+  } 
+  apply(data, 1, fn)
+}
+
 #' Mathematical Functions With Global `na.rm`
 #' 
 #' These functions call their original base \R namesake, but with a global settable `na.rm` argument.

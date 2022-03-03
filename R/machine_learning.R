@@ -17,9 +17,9 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-#' Create a Machine Learning (ML) Model
+#' Create a Traditional Machine Learning (ML) Model
 #'
-#' Create a machine learning model based on different 'engines'. These function internally use the `tidymodels` packages by RStudio, which is the `tidyverse` variant for predictive modelling.
+#' Create a traditional machine learning model based on different 'engines'. These function internally use the `tidymodels` packages by RStudio, which is the `tidyverse` variant for predictive modelling.
 #' @param .data Data set to train
 #' @param outcome Outcome variable to be used (the variable that must be predicted). In case of classification prediction, this variable will be coerced to a [factor].
 #' @param predictors Variables to use as predictors - these will be transformed using [as.double()]
@@ -69,6 +69,22 @@
 #'        |                       |
 #'     output            attributes(output)
 #' ```
+#' 
+#' @section Attributes:
+#' The `ml_*()` functions return the following [attributes][base::attributes()]:
+#' 
+#' * `properties`: a [list] with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as `tree_depth` in [ml_decision_trees()])
+#' * `recipe`: a [recipe][recipes::recipe()] as generated with [recipes::prep()], to be used for training and testing
+#' * `data_training`: a [data.frame] containing the training data
+#' * `data_testing`: a [data.frame] containing the testing data
+#' * `rows_training`: an [integer] vector of rows used for training
+#' * `rows_testing`: an [integer] vector of rows used for training
+#' * `predictions`: a [data.frame] containing predicted values based on the testing data
+#' * `metrics`: a [data.frame] with model metrics as returned by [yardstick::metrics()]
+#' * `correlation_filter`: a [logical] indicating whether [recipes::step_corr()] has been applied
+#' * `centre`: a [logical] indicating whether [recipes::step_center()] has been applied
+#' * `scale`: a [logical] indicating whether [recipes::step_scale()] has been applied
+#' 
 #' @section Model Functions:
 #' These are the called functions from the `parsnip` package. Arguments set in `...` will be passed on to these `parsnip` functions:
 #' 
@@ -91,8 +107,14 @@
 #'
 #' model1 %>% apply_model_to(iris)
 #' model1 %>% autoplot()
+#' 
+#' # confusion matrix of the model (trained data)
 #' model1 %>% confusionMatrix()
-#'
+#' # confusion model of applying to a different data set
+#' table(iris$Species,
+#'       apply_model_to(model1, iris, TRUE)) %>% 
+#'   confusionMatrix()
+#'   
 #' \dontrun{
 #' esbl %>%
 #'   ml_random_forest(esbl_interpr,
@@ -473,6 +495,13 @@ ml_exec <- function(FUN,
     bind_cols(df_testing) %>% 
     metrics(truth = outcome, estimate = colnames(.)[1])
   
+  if (properties$mode == "classification") {
+    prediction <- stats::predict(mdl, df_testing, type = "prob") %>%
+      mutate(max = row_function(max, data = .))
+  } else {
+    prediction <- stats::predict(mdl, df_testing, type = "numeric")
+  }
+  
   structure(mdl,
             class = c("certestats_ml", class(mdl)),
             properties = properties,
@@ -481,6 +510,7 @@ ml_exec <- function(FUN,
             data_testing = df_testing,
             rows_training = sort(df_split$in_id),
             rows_testing = seq_len(nrow(df))[!seq_len(nrow(df)) %in% df_split$in_id],
+            predictions = prediction,
             metrics = metrics,
             correlation_filter = correlation_filter,
             centre = centre,
@@ -495,34 +525,48 @@ print.certestats_ml <- function(x, ...) {
   cat("'certestats' Machine Learning Model\n\n",
       paste0(format(names(model_prop$properties)), " : ", model_prop$properties, "\n"),
       sep = "")
+  if (model_prop$properties$mode == "classification") {
+    cat("\nClassification reliability (based on testing data):\n")
+    print(quantile(model_prop$predictions$max, c(0, 0.5, 0.68, 0.95, 0.98, 1)))
+  }
+  cat("\nMetrics:\n")
+  print(metrics(x))
   cat(strrep("-", options()$width -2), "\n", sep = "")
   print(model_prop$recipe)
   cat(strrep("-", options()$width -2), "\n", sep = "")
-  
   # print the rest like it used to be
+  cat("Model Object:\n\n")
   class(x) <- class(x)[class(x) != "certestats_ml"]
   print(x)
 }
 
 #' @rdname machine_learning
 #' @param object,data outcome of machine learning model
-#' @param new_data new input data that requires prediction, having the same columns of the training data
-#' @param only_prediction only return predictions, without chances
+#' @param new_data new input data that requires prediction, must have all columns present in the training data
+#' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with reliabilities of the predictions
+#' @importFrom dplyr select all_of mutate across everything
 #' @export
 apply_model_to <- function(object, new_data, only_prediction = FALSE) {
   if (!inherits(object, "certestats_ml")) {
     stop("Only output from certestats::ml_*() functions can be used.")
   }
   # test - transform data according to recipe
+  training_cols <- colnames(attributes(object)$data_training)
+  training_cols <- training_cols[training_cols != "outcome"]
+  if (!all(training_cols %in% colnames(new_data))) {
+    stop("These columns are in the training data, but not in the new data: ",
+         paste0(training_cols[!training_cols %in% colnames(new_data)], collapse = ", "))
+  }
+  new_data <- new_data %>% 
+    select(all_of(training_cols)) %>% 
+    mutate(across(everything(), as.double))
   test_data <- recipes::bake(attributes(object)$recipe, new_data = new_data)
   
-  out <- bind_cols(stats::setNames(stats::predict(object, test_data), "predicted"),
-                   stats::predict(object, test_data, type = "prob"))
-  
   if (isTRUE(only_prediction)) {
-    out$predicted
+    stats::predict(object, test_data)[[1]]
   } else {
-    out
+    bind_cols(stats::setNames(stats::predict(object, test_data), "predicted"),
+              stats::predict(object, test_data, type = "prob"))
   }
 }
 
@@ -551,7 +595,7 @@ confusionMatrix.certestats_ml <- function(data, ...) {
 #' @rdname machine_learning
 #' @export
 metrics.certestats_ml <- function(data, ...) {
-  attributes(data)$metrics
+  as.data.frame(attributes(data)$metrics, stringsAsFactors = FALSE)
 }
 
 #' @method autoplot certestats_ml

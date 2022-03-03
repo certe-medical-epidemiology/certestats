@@ -14,7 +14,7 @@
 \alias{metrics.certestats_ml}
 \alias{autoplot.certestats_ml}
 \alias{autoplot.certestats_ml_bootstrap}
-\title{Create a Machine Learning (ML) Model}
+\title{Create a Traditional Machine Learning (ML) Model}
 \usage{
 ml_decision_trees(
   .data,
@@ -185,14 +185,14 @@ the ensemble.}
 
 \item{object, data}{outcome of machine learning model}
 
-\item{new_data}{new input data that requires prediction, having the same columns of the training data}
+\item{new_data}{new input data that requires prediction, must have all columns present in the training data}
 
-\item{only_prediction}{only return predictions, without chances}
+\item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with reliabilities of the predictions}
 
 \item{all_cols}{Include all columns, not only sensitivity, specificity, pos_pred_value, neg_pred_value.}
 }
 \description{
-Create a machine learning model based on different 'engines'. These function internally use the \code{tidymodels} packages by RStudio, which is the \code{tidyverse} variant for predictive modelling.
+Create a traditional machine learning model based on different 'engines'. These function internally use the \code{tidymodels} packages by RStudio, which is the \code{tidyverse} variant for predictive modelling.
 }
 \details{
 To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
@@ -222,6 +222,24 @@ generics::fit()       yardstick::metrics()
     output            attributes(output)
 }
 }
+\section{Attributes}{
+
+The \verb{ml_*()} functions return the following \link[base:attributes]{attributes}:
+\itemize{
+\item \code{properties}: a \link{list} with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as \code{tree_depth} in \code{\link[=ml_decision_trees]{ml_decision_trees()}})
+\item \code{recipe}: a \link[recipes:recipe]{recipe} as generated with \code{\link[recipes:prep]{recipes::prep()}}, to be used for training and testing
+\item \code{data_training}: a \link{data.frame} containing the training data
+\item \code{data_testing}: a \link{data.frame} containing the testing data
+\item \code{rows_training}: an \link{integer} vector of rows used for training
+\item \code{rows_testing}: an \link{integer} vector of rows used for training
+\item \code{predictions}: a \link{data.frame} containing predicted values based on the testing data
+\item \code{metrics}: a \link{data.frame} with model metrics as returned by \code{\link[yardstick:metrics]{yardstick::metrics()}}
+\item \code{correlation_filter}: a \link{logical} indicating whether \code{\link[recipes:step_corr]{recipes::step_corr()}} has been applied
+\item \code{centre}: a \link{logical} indicating whether \code{\link[recipes:step_center]{recipes::step_center()}} has been applied
+\item \code{scale}: a \link{logical} indicating whether \code{\link[recipes:step_scale]{recipes::step_scale()}} has been applied
+}
+}
+
 \section{Model Functions}{
 
 These are the called functions from the \code{parsnip} package. Arguments set in \code{...} will be passed on to these \code{parsnip} functions:
@@ -245,8 +263,14 @@ model2 \%>\% metrics()
 
 model1 \%>\% apply_model_to(iris)
 model1 \%>\% autoplot()
-model1 \%>\% confusionMatrix()
 
+# confusion matrix of the model (trained data)
+model1 \%>\% confusionMatrix()
+# confusion model of applying to a different data set
+table(iris$Species,
+      apply_model_to(model1, iris, TRUE)) \%>\% 
+  confusionMatrix()
+  
 \dontrun{
 esbl \%>\%
   ml_random_forest(esbl_interpr,

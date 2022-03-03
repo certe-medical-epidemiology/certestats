@@ -42,7 +42,7 @@ test_that("ML works", {
   expect_s3_class(ggplot2::autoplot(model_decision_trees), "gg")
   expect_s3_class(ggplot2::autoplot(bootstrap), "gg")
   expect_s3_class(caret::confusionMatrix(model_decision_trees), "confusionMatrix")
-  expect_true(dplyr::is.tbl(yardstick::metrics(model_decision_trees)))
+  expect_true(is.data.frame(yardstick::metrics(model_decision_trees)))
   expect_true(all(c("predicted", ".pred_setosa", ".pred_versicolor", ".pred_virginica") %in% colnames(apply_model_to(model_decision_trees, iris))))
   expect_true(is.factor(apply_model_to(model_decision_trees, iris, only_prediction = TRUE)))
   expect_warning(iris %>% ml_decision_trees(as.character(Species), where(is.double), training_fraction = 10000))
