@@ -386,7 +386,7 @@ bootstrap_ml <- function(.data,
   structure(df, class = c("certestats_ml_bootstrap", "data.frame"))
 }
 
-#' @importFrom dplyr `%>%` mutate select across filter everything bind_cols
+#' @importFrom dplyr `%>%` mutate select across filter_all bind_cols
 #' @importFrom yardstick metrics
 ml_exec <- function(FUN,
                     .data,
@@ -415,7 +415,7 @@ ml_exec <- function(FUN,
     # remove columns that do not comply to max_na_fraction
     select(where(~sum(is.na(.)) / length(.) <= max_na_fraction)) %>%
     # remove rows that have NA in outcome or predictors
-    filter(across(everything(), ~ !is.na(.)))
+    filter_all(~!is.na(.))
 
   # the outcome variable must be factor in case of regression prediction
   if (list(...)$mode == "classification" && !is.factor(df$outcome)) {
