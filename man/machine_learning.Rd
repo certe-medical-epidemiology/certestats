@@ -133,7 +133,7 @@ apply_model_to(object, new_data, only_prediction = FALSE)
 
 \method{metrics}{certestats_ml}(data, ...)
 
-\method{autoplot}{certestats_ml}(object, ...)
+\method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
 \method{autoplot}{certestats_ml_bootstrap}(object, all_cols = FALSE, ...)
 }
@@ -189,6 +189,8 @@ the ensemble.}
 
 \item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with reliabilities of the predictions}
 
+\item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
+
 \item{all_cols}{Include all columns, not only sensitivity, specificity, pos_pred_value, neg_pred_value.}
 }
 \description{
@@ -221,6 +223,8 @@ generics::fit()       yardstick::metrics()
        |                       |
     output            attributes(output)
 }
+
+Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve.
 }
 \section{Attributes}{
 
@@ -262,10 +266,13 @@ model1 \%>\% metrics()
 model2 \%>\% metrics()
 
 model1 \%>\% apply_model_to(iris)
-model1 \%>\% autoplot()
+
+model3 \%>\% autoplot()
+model3 \%>\% autoplot(plot_type = "gain")
 
 # confusion matrix of the model (trained data)
 model1 \%>\% confusionMatrix()
+
 # confusion model of applying to a different data set
 table(iris$Species,
       apply_model_to(model1, iris, TRUE)) \%>\% 

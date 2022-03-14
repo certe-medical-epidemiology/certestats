@@ -39,7 +39,10 @@ test_that("ML works", {
   bootstrap <- iris %>% bootstrap_ml(Species, where(is.double), times = 10)
   expect_s3_class(bootstrap, "certestats_ml_bootstrap")
   
-  expect_s3_class(ggplot2::autoplot(model_decision_trees), "gg")
+  expect_s3_class(ggplot2::autoplot(model_decision_trees, plot_type = "roc"), "gg")
+  expect_s3_class(ggplot2::autoplot(model_decision_trees, plot_type = "gain"), "gg")
+  expect_s3_class(ggplot2::autoplot(model_decision_trees, plot_type = "lift"), "gg")
+  expect_s3_class(ggplot2::autoplot(model_decision_trees, plot_type = "pr"), "gg")
   expect_s3_class(ggplot2::autoplot(bootstrap), "gg")
   expect_s3_class(caret::confusionMatrix(model_decision_trees), "confusionMatrix")
   expect_true(is.data.frame(yardstick::metrics(model_decision_trees)))

@@ -34,11 +34,13 @@ yardstick::metrics
 ggplot2::autoplot
 
 globalVariables(c(".",
+                  ".level",
                   ".pred_class",
                   "model",
                   "name",
                   "neg_pred_value",
                   "pos_pred_value",
+                  "predicted",
                   "sensitivity",
                   "specificity",
                   "t_diff",

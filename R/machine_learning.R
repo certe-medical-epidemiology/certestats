@@ -70,6 +70,8 @@
 #'     output            attributes(output)
 #' ```
 #' 
+#' Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses [yardstick::roc_curve()] to construct the curve.
+#' 
 #' @section Attributes:
 #' The `ml_*()` functions return the following [attributes][base::attributes()]:
 #' 
@@ -106,10 +108,13 @@
 #' model2 %>% metrics()
 #'
 #' model1 %>% apply_model_to(iris)
-#' model1 %>% autoplot()
+#' 
+#' model3 %>% autoplot()
+#' model3 %>% autoplot(plot_type = "gain")
 #' 
 #' # confusion matrix of the model (trained data)
 #' model1 %>% confusionMatrix()
+#' 
 #' # confusion model of applying to a different data set
 #' table(iris$Species,
 #'       apply_model_to(model1, iris, TRUE)) %>% 
@@ -401,10 +406,11 @@ ml_exec <- function(FUN,
                     engine,
                     ...) {
   
-  if (missing(predictors)) {
-    stop("'predictors' is missing, use tidyselect code to choose them, such as 'where(is.double)'.")
+  n_pred <- tryCatch(ncol(select(.data, {{predictors}})), error = function(e) NULL)
+  if (is.null(n_pred) || n_pred == 0) {
+    stop("no columns found for argument 'predictors' (is argument 'predictors' missing?)", call. = FALSE)
   }
-
+  
   # format data to work with it
   df <- .data %>%
     mutate(outcome = {{outcome}},
@@ -501,6 +507,9 @@ ml_exec <- function(FUN,
   } else {
     prediction <- stats::predict(mdl, df_testing, type = "numeric")
   }
+  pred_outcome <- stats::predict(mdl, df_testing)
+  colnames(pred_outcome) <- "predicted"
+  prediction <- bind_cols(prediction, pred_outcome)
   
   structure(mdl,
             class = c("certestats_ml", class(mdl)),
@@ -527,7 +536,10 @@ print.certestats_ml <- function(x, ...) {
       sep = "")
   if (model_prop$properties$mode == "classification") {
     cat("\nClassification reliability (based on testing data):\n")
-    print(quantile(model_prop$predictions$max, c(0, 0.5, 0.68, 0.95, 0.98, 1)))
+    intervals <- c(0, 0.5, 0.68, 0.95, 0.98, 1)
+    q <- quantile(model_prop$predictions$max, intervals)
+    names(q) <- paste0("p", intervals * 100)
+    print(q)
   }
   cat("\nMetrics:\n")
   print(metrics(x))
@@ -600,25 +612,87 @@ metrics.certestats_ml <- function(data, ...) {
 
 #' @method autoplot certestats_ml
 #' @rdname machine_learning
-#' @importFrom ggplot2 autoplot
-#' @importFrom dplyr `%>%` bind_cols
-#' @importFrom yardstick gain_curve
+#' @param plot_type the plot type, can be `"roc"` (default), `"gain"`, `"lift"` or `"pr"`. These functions rely on [yardstick::roc_curve()], [yardstick::gain_curve()], [yardstick::lift_curve()] and [yardstick::pr_curve()] to construct the curves.
+#' @importFrom ggplot2 autoplot ggplot aes geom_path geom_abline coord_equal scale_x_continuous scale_y_continuous labs element_line
+#' @importFrom dplyr `%>%` bind_cols starts_with
+#' @importFrom yardstick roc_curve roc_auc gain_curve lift_curve pr_curve
 #' @export
-autoplot.certestats_ml <- function(object, ...) {
+autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
   model_prop <- attributes(object)
+  plot_type <- tolower(plot_type)[1L]
   
-  out <- object %>%
-    stats::predict(model_prop$data_testing, type = "prob") %>%
-    bind_cols(model_prop$data_testing)
-  
-  pred <- colnames(out)[colnames(out) %like% "^.pred"]
-  if (length(pred) == 2) {
-    pred <- pred[1L]
+  if (plot_type == "roc") {
+    curve_fn <- roc_curve
+  } else if (plot_type == "gain") {
+    curve_fn <- gain_curve
+  } else if (plot_type == "lift") {
+    curve_fn <- lift_curve
+  } else if (plot_type == "pr") {
+    curve_fn <- pr_curve
+  } else {
+    stop("invalid plot_type", call. = FALSE)
   }
   
-  out %>%
-    gain_curve("outcome", pred) %>%
-    autoplot()
+  if (all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
+    curve <- curve_fn(model_prop$predictions, truth = predicted, 1)
+    if (plot_type == "roc") {
+      roc_auc <- roc_auc(model_prop$predictions, truth = predicted, 1)
+    }
+  } else {
+    curve <- curve_fn(model_prop$predictions,
+                      truth = predicted,
+                      starts_with(".pred"))
+    if (plot_type == "roc") {
+      roc_auc <- roc_auc(model_prop$predictions,
+                         truth = predicted,
+                         starts_with(".pred"))
+    }
+  }
+  
+  if (plot_type == "roc") {
+    if (".level" %in% colnames(curve) &&
+        !all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
+      p <- ggplot(curve, aes(x = 1 - specificity, y = sensitivity, colour = .level))
+    } else {
+      p <- ggplot(curve, aes(x = 1 - specificity, y = sensitivity))
+    }
+    p <- p +
+      geom_path(size = 1) +
+      geom_abline(lty = 3) +
+      coord_equal() +
+      scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
+      scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
+      labs(title = "Receiver Operating Characteristic (ROC) Curve",
+           subtitle = paste0("Area Under Curve (AUC): ", round(roc_auc$.estimate, digits = 3)),
+           colour = "Outcome")
+    
+  } else if (plot_type == "pr") {
+    suppressMessages(
+      p <- curve %>%
+        # thse is defined in the yardstick package:
+        autoplot() +
+        scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
+        scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
+        labs(title = "Precision Recall (PR) Curve")
+    )
+    
+  } else {
+    p <- curve %>%
+      # these ones are defined in the yardstick package:
+      autoplot() +
+      scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
+      scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
+      labs(title = paste(tools::toTitleCase(plot_type), "Curve"))
+      
+  }
+  
+  if ("certeplot2" %in% rownames(utils::installed.packages())) {
+    p <- p +
+      certeplot2::theme_minimal2() +
+      certeplot2::scale_colour_certe_d()
+  }
+  
+  p
 }
 
 #' @method autoplot certestats_ml_bootstrap
