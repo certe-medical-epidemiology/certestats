@@ -70,7 +70,7 @@
 #'     output            attributes(output)
 #' ```
 #' 
-#' Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses [yardstick::roc_curve()] to construct the curve.
+#' Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses [yardstick::roc_curve()] to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
 #' 
 #' @section Attributes:
 #' The `ml_*()` functions return the following [attributes][base::attributes()]:
@@ -509,7 +509,9 @@ ml_exec <- function(FUN,
   }
   pred_outcome <- stats::predict(mdl, df_testing)
   colnames(pred_outcome) <- "predicted"
-  prediction <- bind_cols(prediction, pred_outcome)
+  prediction <- bind_cols(prediction,
+                          pred_outcome,
+                          data.frame(truth = df_testing$outcome, stringsAsFactors = FALSE))
   
   structure(mdl,
             class = c("certestats_ml", class(mdl)),
@@ -587,19 +589,11 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
 #' @rdname machine_learning
 #' @export
 confusionMatrix.certestats_ml <- function(data, ...) {
-  # some package already have a confusion matrix, such as 'randomForest':
-  conf_mtrx <- attributes(data)$model$fit$confusion
-  # create it self otherwise:
-  if (is.null(conf_mtrx)) {
-    conf_mtrx <- data %>%
-      stats::predict(attributes(data)$data_testing) %>%
-      bind_cols(outcome = attributes(data)$data_testing$outcome) %>%
-      table()
-  }
-  conf_mtrx <- as.matrix(conf_mtrx)
+  conf_mtrx <- as.matrix(table(attributes(data)$predictions$predicted,
+                               attributes(data)$predictions$truth))
   # not more columns than rows
   conf_mtrx <- conf_mtrx[, seq_len(NROW(conf_mtrx))]
-  caret::confusionMatrix(conf_mtrx)
+  confusionMatrix(conf_mtrx)
 }
 
 #' @importFrom yardstick metrics
@@ -634,17 +628,21 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
   }
   
   if (all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
-    curve <- curve_fn(model_prop$predictions, truth = predicted, 1)
+    curve <- curve_fn(model_prop$predictions,
+                      truth = truth,
+                      1)
     if (plot_type == "roc") {
-      roc_auc <- roc_auc(model_prop$predictions, truth = predicted, 1)
+      roc_auc <- roc_auc(model_prop$predictions,
+                         truth = truth,
+                         1)
     }
   } else {
     curve <- curve_fn(model_prop$predictions,
-                      truth = predicted,
+                      truth = truth,
                       starts_with(".pred"))
     if (plot_type == "roc") {
       roc_auc <- roc_auc(model_prop$predictions,
-                         truth = predicted,
+                         truth = truth,
                          starts_with(".pred"))
     }
   }
@@ -652,18 +650,27 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
   if (plot_type == "roc") {
     if (".level" %in% colnames(curve) &&
         !all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
+      for (val in unique(curve$.level)) {
+        auc <- get_auc(model_prop$predictions, val)
+        curve$.level[curve$.level == val] <- paste0(curve$.level[curve$.level == val],
+                                                    " (AUC: ", round(auc$.estimate, digits = 3), ")")
+      }
+      multiple_outcomes <- TRUE
       p <- ggplot(curve, aes(x = 1 - specificity, y = sensitivity, colour = .level))
     } else {
+      multiple_outcomes <- FALSE
       p <- ggplot(curve, aes(x = 1 - specificity, y = sensitivity))
     }
     p <- p +
-      geom_path(size = 1) +
+      geom_path(size = 0.75) +
       geom_abline(lty = 3) +
       coord_equal() +
       scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
       scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
       labs(title = "Receiver Operating Characteristic (ROC) Curve",
-           subtitle = paste0("Area Under Curve (AUC): ", round(roc_auc$.estimate, digits = 3)),
+           subtitle = paste0(ifelse(isTRUE(multiple_outcomes), "Overall ", ""),
+                             "Area Under the Curve (AUC): ",
+                             round(roc_auc$.estimate, digits = 3)),
            colour = "Outcome")
     
   } else if (plot_type == "pr") {
