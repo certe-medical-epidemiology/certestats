@@ -39,11 +39,13 @@ globalVariables(c(".",
                   "model",
                   "name",
                   "neg_pred_value",
+                  "other",
                   "pos_pred_value",
                   "predicted",
                   "sensitivity",
                   "specificity",
                   "t_diff",
+                  "truth",
                   "value",
                   "where"))
 
