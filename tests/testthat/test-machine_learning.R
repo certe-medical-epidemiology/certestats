@@ -49,4 +49,11 @@ test_that("ML works", {
   expect_true(all(c("predicted", ".pred_setosa", ".pred_versicolor", ".pred_virginica") %in% colnames(apply_model_to(model_decision_trees, iris))))
   expect_true(is.factor(apply_model_to(model_decision_trees, iris, only_prediction = TRUE)))
   expect_warning(iris %>% ml_decision_trees(as.character(Species), where(is.double), training_fraction = 10000))
+  
+  tuned <- model_neural_network %>% tune_parameters(levels = 2)
+  tuned2 <- model_neural_network %>% tune_parameters(epochs = dials::epochs(), levels = 2)
+  expect_true(all(c(".metric", ".estimator", "mean", "n", "std_err") %in% colnames(tuned)))
+  expect_true("results" %in% names(attributes(tuned)))
+  expect_true(nrow(tune::select_best(attributes(tuned)$results, metric = "accuracy")) == 1)
+  expect_error(model_neural_network %>% tune_parameters(dials::epochs()))
 })

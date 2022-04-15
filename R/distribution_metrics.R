@@ -29,6 +29,7 @@
 #' @name distribution_metrics
 #' @export
 se <- function(x, na.rm = getOption("na.rm", FALSE)) {
+  x <- as.double(x)
   if (isTRUE(na.rm)) {
     n <- length(stats::na.omit(x))
   } else {
@@ -68,6 +69,7 @@ sum_of_squares <- function(x, correct_mean = TRUE, na.rm = getOption("na.rm", FA
 #' @details * [cv()] calculates the coefficient of variation: standard deviation / mean
 #' @export
 cv <- function(x, na.rm = getOption("na.rm", FALSE)) {
+  x <- as.double(x)
   sd(x, na.rm = na.rm) / abs(mean(x, na.rm = na.rm))
 }
 
@@ -85,6 +87,7 @@ cqv <- function(x, na.rm = getOption("na.rm", FALSE)) {
 #' @details * [z_score()] calculates the number of standard deviations from the mean: (x - mean) / sd
 #' @export
 z_score <- function(x, na.rm = getOption("na.rm", FALSE)) {
+  x <- as.double(x)
   (x - mean(x, na.rm = na.rm)) / sd(x, na.rm = na.rm)
 }
 
