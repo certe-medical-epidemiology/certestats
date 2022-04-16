@@ -47,10 +47,18 @@ test_that("ML works", {
   expect_warning(iris %>% ml_decision_trees(Species, where(is.double), training_fraction = 10000))
   expect_error(iris %>% ml_decision_trees(as.character(Species), where(is.double)))
   
+  # tuning parameters
   tuned <- model_neural_network %>% tune_parameters(levels = 2)
   tuned2 <- model_neural_network %>% tune_parameters(epochs = dials::epochs(), levels = 2)
   expect_true(all(c(".metric", ".estimator", "mean", "n", "std_err") %in% colnames(tuned)))
   expect_true("results" %in% names(attributes(tuned)))
   expect_true(nrow(tune::select_best(attributes(tuned)$results, metric = "accuracy")) == 1)
   expect_error(model_neural_network %>% tune_parameters(dials::epochs()))
+  # try to run on any of our ML functions
+  expect_true(model_decision_trees %>% tune_parameters(levels = 2, v = 2) %>% is.data.frame())
+  expect_true(model_linear_regression %>% tune_parameters(levels = 2, v = 2) %>% is.data.frame())
+  expect_true(model_logistic_regression %>% tune_parameters(levels = 2, v = 2) %>% is.data.frame())
+  expect_true(model_neural_network %>% tune_parameters(levels = 2, v = 2) %>% is.data.frame())
+  expect_true(model_nearest_neighbour %>% tune_parameters(levels = 2, v = 2) %>% is.data.frame())
+  expect_true(model_random_forest %>% tune_parameters(levels = 2, v = 2) %>% is.data.frame())
 })

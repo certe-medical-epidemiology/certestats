@@ -683,17 +683,17 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
             ". Use e.g. `", names(params)[1], " = dials::", names(params)[1], "()` to specify tuning.")
     dials_fns <- lapply(names(params), function(p) {
       dials_fn <- eval(parse(text = paste0("dials::", p)))
-      if (!is.numeric(dials_fn()$range$lower)) {
-        stop("Unknown lower range in parameter ", p, ". Specify dials::", p, "() manually.")
+      if (!is.null(dials_fn()$range$lower) && !is.numeric(dials_fn()$range$lower)) {
+        stop("Unknown lower range in parameter '", p, "'. Specify dials::", p, "() manually.")
       }
-      if (!is.numeric(dials_fn()$range$upper)) {
+      if (!is.null(dials_fn()$range$upper) && !is.numeric(dials_fn()$range$upper)) {
         if (p == "mtry") {
           new_upper <- ncol(model_prop$data_training) - 1
           # it's a random guess from the predictors, so take that length as upper range
           message("Assuming upper range of ", new_upper, " for `dials::", p, "()` because of number of available predictors.")
           return(dials_fn(range = c(dials_fn()$range$lower, new_upper)))
         } else {
-          stop("Unknown upper range in parameter ", p, ". Specify dials::", p, "() manually.")
+          stop("Unknown upper range in parameter '", p, "'. Specify dials::", p, "() manually.")
         }
       }
       dials_fn()
