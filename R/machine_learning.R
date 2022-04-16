@@ -729,12 +729,18 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   } else {
     message("[", Sys.time(), "] Running tuning workflow V = ", v, " times for ", nrow(tree_grid), " combinations...")
   }
-  tree_res <- tree_wf %>% 
-    tune::tune_grid(resamples = vfold,
-                    grid = tree_grid)
+  suppressWarnings(
+    tree_res <- tree_wf %>% 
+      tune::tune_grid(resamples = vfold,
+                      grid = tree_grid)
+  )
   message("[", Sys.time(), "] Done. Returning top ", n, " best results.")
   
   # return the results
-  structure(tree_res %>% tune::show_best(metric = metric, n = n),
-            results = tree_res)
+  available_metrics <- unlist(tree_res$`.metrics`, use.names = FALSE)
+  if (!metric %in% available_metrics) {
+    message("Metric '", metric, "' not available, assuming `metric = \"", available_metrics[1], "\"`")
+    metric <- available_metrics[1]
+  }
+  tree_res %>% tune::show_best(metric = metric, n = n)
 }
