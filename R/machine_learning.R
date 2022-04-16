@@ -21,8 +21,8 @@
 #'
 #' Create a traditional machine learning model based on different 'engines'. These function internally use the `tidymodels` packages by RStudio, which is the `tidyverse` variant for predictive modelling.
 #' @param .data Data set to train
-#' @param outcome Outcome variable to be used (the variable that must be predicted). In case of classification prediction, this variable will be coerced to a [factor].
-#' @param predictors Variables to use as predictors - these will be transformed using [as.double()]. Using [everything()][tidyselect::everything()] will automatically exclude the `outcome` variable.
+#' @param outcome Outcome variable to be used (the variable that must be predicted). The value will be evaluated in [select()][dplyr::select()] and thus supports the `tidyselect` language In case of classification prediction, this variable will be coerced to a [factor].
+#' @param predictors Variables to use as predictors - these will be transformed using [as.double()]. The value will be evaluated in [select()][dplyr::select()] and thus supports the `tidyselect` language. Using [everything()][tidyselect::everything()] will automatically exclude the `outcome` variable.
 #' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*. If given a number over 1, the number will be considered to be the required number of rows for *training*.
 #' @param strata Groups to consider in the model (i.e., variables to stratify by)
 #' @param correlation_filter A [logical] to indicate whether the `predictors` should be removed that have to much correlation with each other, using [recipes::step_corr()]
@@ -124,11 +124,11 @@
 #'       apply_model_to(model1, esbl_tests, TRUE)) %>% 
 #'   confusionMatrix(positive = "TRUE")
 #' 
-#' \dontrun{
 #' # tune the parameters of a model (will take some time)
 #' model1 %>% 
-#'   tune_parameters()
+#'   tune_parameters(v = 5, levels = 3)
 #' 
+#' \dontrun{
 #' model1 %>% 
 #'   tune_parameters(dials::mtry(range = c(1, 10)),
 #'                   dials::trees())
@@ -301,7 +301,6 @@ ml_random_forest <- function(.data,
                              scale = TRUE,
                              engine = "ranger",
                              mode = c("classification", "regression", "unknown"),
-                             mtry = 5,
                              trees = 2000,
                              ...) {
   ml_exec(FUN = parsnip::rand_forest,
@@ -316,7 +315,6 @@ ml_random_forest <- function(.data,
           scale = scale,
           engine = engine,
           mode = mode[1L],
-          mtry = mtry,
           trees = trees,
           ...)
 }
@@ -646,11 +644,12 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 }
 
 #' @rdname machine_learning
+#' @param only_params_in_model a [logical] to indicate whether only parameters in the model should be tuned
 #' @inheritParams dials::grid_regular
 #' @inheritParams tune::show_best
 #' @inheritParams rsample::vfold_cv
 #' @export
-tune_parameters <- function(object, ..., levels = 3, v = 5, n = 10, metric = "accuracy") {
+tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 5, v = 10, n = 10, metric = "accuracy") {
   req_pkgs <- sort(c("rsample", "workflows", "dials", "tune", "hardhat"))
   if (!all(req_pkgs %in% rownames(utils::installed.packages()))) {
     stop("Tuning the parameters requires the following packages: ",
@@ -664,7 +663,10 @@ tune_parameters <- function(object, ..., levels = 3, v = 5, n = 10, metric = "ac
   # get the parsnip function and its parameters
   FUN <- eval(parse(text = model_prop$properties$ml_function))
   params <- names(formals(FUN))
-  params <- params[params %in% names(model_prop$properties) & !params %in% c("mode", "engine")]
+  params <- params[!params %in% c("mode", "engine")]
+  if (isTRUE(only_params_in_model)) {
+    params <- params[params %in% names(model_prop$properties)]
+  }
   params <- lapply(stats::setNames(as.list(params), params), function(x) hardhat::tune())
   
   # create the grid
@@ -677,8 +679,8 @@ tune_parameters <- function(object, ..., levels = 3, v = 5, n = 10, metric = "ac
     dials_fns <- dots
     names(dials_fns) <- NULL
   } else {
-    message("Assuming tuning for parameters ", paste0("'", names(params), "'", collapse = ", "),
-            ". Use e.g. dials::", names(params)[1], "() to specify tuning.")
+    message("Assuming tuning for the ", length(params), " parameters ", paste0("'", names(params), "'", collapse = ", "),
+            ". Use e.g. `", names(params)[1], " = dials::", names(params)[1], "()` to specify tuning.")
     dials_fns <- lapply(names(params), function(p) {
       dials_fn <- eval(parse(text = paste0("dials::", p)))
       if (!is.numeric(dials_fn()$range$lower)) {
@@ -688,7 +690,7 @@ tune_parameters <- function(object, ..., levels = 3, v = 5, n = 10, metric = "ac
         if (p == "mtry") {
           new_upper <- ncol(model_prop$data_training) - 1
           # it's a random guess from the predictors, so take that length as upper range
-          message("Assuming upper range of ", new_upper, " for dials::", p, "().")
+          message("Assuming upper range of ", new_upper, " for `dials::", p, "()` because of number of available predictors.")
           return(dials_fn(range = c(dials_fn()$range$lower, new_upper)))
         } else {
           stop("Unknown upper range in parameter ", p, ". Specify dials::", p, "() manually.")
@@ -710,12 +712,23 @@ tune_parameters <- function(object, ..., levels = 3, v = 5, n = 10, metric = "ac
     workflows::add_model(tune_spec) %>%
     workflows::add_formula(outcome ~ .)
   
-  
   # create the V-fold cross-validation (also known as k-fold cross-validation)
   vfold <- rsample::vfold_cv(model_prop$data_training, v = v)
   
   # run the tuning
-  message("[", Sys.time(), "] Running tuning workflow ", v, " times for ", nrow(tree_grid), " combinations...")
+  if (interactive()) {
+    cat("\n")
+    ans <- utils::askYesNo(paste0("This will run the tuning V = ",
+                                  v, " times for ",
+                                  nrow(tree_grid), " combinations. Continue?"))
+    if (!isTRUE(ans)) {
+      return(invisible(NULL))
+    } else {
+      message("[", Sys.time(), "] Running tuning workflow...")
+    }
+  } else {
+    message("[", Sys.time(), "] Running tuning workflow V = ", v, " times for ", nrow(tree_grid), " combinations...")
+  }
   tree_res <- tree_wf %>% 
     tune::tune_grid(resamples = vfold,
                     grid = tree_grid)

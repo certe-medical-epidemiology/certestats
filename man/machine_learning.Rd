@@ -108,7 +108,6 @@ ml_random_forest(
   scale = TRUE,
   engine = "ranger",
   mode = c("classification", "regression", "unknown"),
-  mtry = 5,
   trees = 2000,
   ...
 )
@@ -121,14 +120,22 @@ apply_model_to(object, new_data, only_prediction = FALSE)
 
 \method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
-tune_parameters(object, ..., levels = 3, v = 5, n = 10, metric = "accuracy")
+tune_parameters(
+  object,
+  ...,
+  only_params_in_model = FALSE,
+  levels = 5,
+  v = 10,
+  n = 10,
+  metric = "accuracy"
+)
 }
 \arguments{
 \item{.data}{Data set to train}
 
-\item{outcome}{Outcome variable to be used (the variable that must be predicted). In case of classification prediction, this variable will be coerced to a \link{factor}.}
+\item{outcome}{Outcome variable to be used (the variable that must be predicted). The value will be evaluated in \link[dplyr:select]{select()} and thus supports the \code{tidyselect} language In case of classification prediction, this variable will be coerced to a \link{factor}.}
 
-\item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}}. Using \link[tidyselect:everything]{everything()} will automatically exclude the \code{outcome} variable.}
+\item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}}. The value will be evaluated in \link[dplyr:select]{select()} and thus supports the \code{tidyselect} language. Using \link[tidyselect:everything]{everything()} will automatically exclude the \code{outcome} variable.}
 
 \item{training_fraction}{Fraction of rows to be used for \emph{training}, defaults to 75\%. The rest will be used for \emph{testing}. If given a number over 1, the number will be considered to be the required number of rows for \emph{training}.}
 
@@ -164,9 +171,6 @@ to weight distances between samples. Valid choices are: \code{"rectangular"},
 \code{"triangular"}, \code{"epanechnikov"}, \code{"biweight"}, \code{"triweight"},
 \code{"cos"}, \code{"inv"}, \code{"gaussian"}, \code{"rank"}, or \code{"optimal"}.}
 
-\item{mtry}{An integer for the number of predictors that will
-be randomly sampled at each split when creating the tree models.}
-
 \item{trees}{An integer for the number of trees contained in
 the ensemble.}
 
@@ -177,6 +181,8 @@ the ensemble.}
 \item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with reliabilities of the predictions}
 
 \item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
+
+\item{only_params_in_model}{a \link{logical} to indicate whether only parameters in the model should be tuned}
 
 \item{levels}{An integer for the number of values of each parameter to use
 to make the regular grid. \code{levels} can be a single integer or a vector of
