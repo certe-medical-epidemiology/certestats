@@ -18,4 +18,8 @@
 # ===================================================================== #
 
 #' @keywords internal
+#' @importFrom kknn kknn
+#' @importFrom nnet nnet
+#' @importFrom ranger ranger
+#' @importFrom rpart rpart
 "_PACKAGE"

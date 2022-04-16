@@ -321,6 +321,10 @@ ml_random_forest <- function(.data,
 
 #' @importFrom dplyr `%>%` mutate select across filter_all bind_cols all_of
 #' @importFrom yardstick metrics
+#' @importFrom parsnip set_engine
+#' @importFrom recipes recipe step_corr step_center step_scale all_predictors all_outcomes prep bake
+#' @importFrom rsample initial_split training testing
+#' @importFrom generics fit
 ml_exec <- function(FUN,
                     .data,
                     outcome,
@@ -356,7 +360,7 @@ ml_exec <- function(FUN,
     select(where(~sum(is.na(.)) / length(.) <= max_na_fraction)) %>%
     # remove rows that have NA in outcome or predictors
     filter_all(~!is.na(.))
-
+  
   # the outcome variable must be factor in case of regression prediction
   if (list(...)$mode == "classification" && !is.factor(df$outcome)) {
     if (is.logical(df$outcome)) {
@@ -385,7 +389,7 @@ ml_exec <- function(FUN,
                          training_size = paste0(round(training_fraction * nrow(df)),
                                                 " (fraction: ", round(training_fraction, 3), ")"),
                          testing_size = paste0(round((1 - training_fraction) * nrow(df)),
-                                                " (fraction: ", round(1 - training_fraction, 3), ")"),
+                                               " (fraction: ", round(1 - training_fraction, 3), ")"),
                          strata = paste(length(unique(df$strata)), "groups")),
                     list(...))
   )
@@ -400,35 +404,35 @@ ml_exec <- function(FUN,
     strata_var <- NULL
   }
   
-  df_split <- rsample::initial_split(df, strata = strata_var, prop = training_fraction)
+  df_split <- initial_split(df, strata = strata_var, prop = training_fraction)
   
   df_recipe <- df_split %>%
-    rsample::training() %>%
-    recipes::recipe(outcome ~ .)
+    training() %>%
+    recipe(outcome ~ .)
   
   if (isTRUE(correlation_filter)) {
-    df_recipe <- df_recipe %>% recipes::step_corr(recipes::all_predictors(), -strata_var)
+    df_recipe <- df_recipe %>% step_corr(all_predictors(), -strata_var)
   }
   if (isTRUE(centre)) {
-    df_recipe <- df_recipe %>% recipes::step_center(recipes::all_predictors(), -recipes::all_outcomes(), -strata_var)
+    df_recipe <- df_recipe %>% step_center(all_predictors(), -all_outcomes(), -strata_var)
   }
   if (isTRUE(scale)) {
-    df_recipe <- df_recipe %>% recipes::step_scale(recipes::all_predictors(), -recipes::all_outcomes(), -strata_var)
+    df_recipe <- df_recipe %>% step_scale(all_predictors(), -all_outcomes(), -strata_var)
   }
   df_recipe <- df_recipe %>%
-    recipes::prep()
+    prep()
   
   # train
   df_training <- df_recipe %>%
-    recipes::bake(new_data = NULL)
+    bake(new_data = NULL)
   
   # test
   df_testing <- df_recipe %>%
-    recipes::bake(rsample::testing(df_split))
+    bake(testing(df_split))
   
   mdl <- FUN(...) %>%
-    parsnip::set_engine(engine) %>%
-    generics::fit(outcome ~ ., data = df_training)
+    set_engine(engine) %>%
+    fit(outcome ~ ., data = df_training)
   
   metrics <- mdl %>%
     stats::predict(df_testing) %>%
@@ -493,6 +497,7 @@ print.certestats_ml <- function(x, ...) {
 #' @param new_data new input data that requires prediction, must have all columns present in the training data
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with reliabilities of the predictions
 #' @importFrom dplyr select all_of mutate across everything
+#' @importFrom recipes bake
 #' @export
 apply_model_to <- function(object, new_data, only_prediction = FALSE) {
   if (!inherits(object, "certestats_ml")) {
@@ -508,7 +513,7 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
   new_data <- new_data %>% 
     select(all_of(training_cols)) %>% 
     mutate(across(everything(), as.double))
-  test_data <- recipes::bake(attributes(object)$recipe, new_data = new_data)
+  test_data <- bake(attributes(object)$recipe, new_data = new_data)
   
   if (isTRUE(only_prediction)) {
     out <- stats::predict(object, test_data)[[1]]
@@ -517,7 +522,7 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
     }
   } else {
     out <- bind_cols(stats::setNames(stats::predict(object, test_data), "predicted"),
-              stats::predict(object, test_data, type = "prob"))
+                     stats::predict(object, test_data, type = "prob"))
     if (all(out$predicted %in% c("TRUE", "FALSE", NA))) {
       out$predicted <- as.logical(out$predicted)
     }
@@ -631,7 +636,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
       scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
       scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
       labs(title = paste(tools::toTitleCase(plot_type), "Curve"))
-      
+    
   }
   
   if ("certeplot2" %in% rownames(utils::installed.packages())) {
@@ -648,6 +653,12 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 #' @inheritParams dials::grid_regular
 #' @inheritParams tune::show_best
 #' @inheritParams rsample::vfold_cv
+#' @importFrom parsnip set_engine set_mode
+#' @importFrom dials grid_regular
+#' @importFrom workflows workflow add_model add_formula
+#' @importFrom rsample vfold_cv
+#' @importFrom tune tune_grid show_best
+#' @importFrom hardhat tune
 #' @export
 tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 5, v = 10, n = 10, metric = "accuracy") {
   req_pkgs <- sort(c("rsample", "workflows", "dials", "tune", "hardhat"))
@@ -667,7 +678,7 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   if (isTRUE(only_params_in_model)) {
     params <- params[params %in% names(model_prop$properties)]
   }
-  params <- lapply(stats::setNames(as.list(params), params), function(x) hardhat::tune())
+  params <- lapply(stats::setNames(as.list(params), params), function(x) tune())
   
   # create the grid
   if (length(dots) > 0) {
@@ -699,21 +710,21 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
       dials_fn()
     })
   }
-  tree_grid <- do.call(dials::grid_regular,
+  tree_grid <- do.call(grid_regular,
                        args = c(dials_fns, list(levels = levels)))
   
   # create the tuning specification
   tune_spec <- do.call(FUN, args = params) %>% 
-    parsnip::set_engine(model_prop$properties$engine_package) %>% 
-    parsnip::set_mode(model_prop$properties$mode)
+    set_engine(model_prop$properties$engine_package) %>% 
+    set_mode(model_prop$properties$mode)
   
   # create the worflow, using the tuning specification
-  tree_wf <- workflows::workflow() %>%
-    workflows::add_model(tune_spec) %>%
-    workflows::add_formula(outcome ~ .)
+  tree_wf <- workflow() %>%
+    add_model(tune_spec) %>%
+    add_formula(outcome ~ .)
   
   # create the V-fold cross-validation (also known as k-fold cross-validation)
-  vfold <- rsample::vfold_cv(model_prop$data_training, v = v)
+  vfold <- vfold_cv(model_prop$data_training, v = v)
   
   # run the tuning
   if (interactive()) {
@@ -731,8 +742,8 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   }
   suppressWarnings(
     tree_res <- tree_wf %>% 
-      tune::tune_grid(resamples = vfold,
-                      grid = tree_grid)
+      tune_grid(resamples = vfold,
+                grid = tree_grid)
   )
   message("[", Sys.time(), "] Done. Returning top ", n, " best results.")
   
@@ -742,5 +753,5 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
     message("Metric '", metric, "' not available, assuming `metric = \"", available_metrics[1], "\"`")
     metric <- available_metrics[1]
   }
-  tree_res %>% tune::show_best(metric = metric, n = n)
+  tree_res %>% show_best(metric = metric, n = n)
 }

@@ -291,11 +291,11 @@ table(esbl_tests$esbl,
       apply_model_to(model1, esbl_tests, TRUE)) \%>\% 
   confusionMatrix(positive = "TRUE")
 
-\dontrun{
 # tune the parameters of a model (will take some time)
 model1 \%>\% 
-  tune_parameters()
+  tune_parameters(v = 5, levels = 3)
 
+\dontrun{
 model1 \%>\% 
   tune_parameters(dials::mtry(range = c(1, 10)),
                   dials::trees())
