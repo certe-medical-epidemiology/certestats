@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.3.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.4.0</span>
       </span>
     </div>
 
@@ -173,20 +173,6 @@
   <span class="va">...</span>
 <span class="op">)</span>
 
-<span class="fu">bootstrap_ml</span><span class="op">(</span>
-  <span class="va">.data</span>,
-  <span class="va">outcome</span>,
-  <span class="va">predictors</span>,
-  times <span class="op">=</span> <span class="fl">25</span>,
-  training_fraction <span class="op">=</span> <span class="fl">3</span><span class="op">/</span><span class="fl">4</span>,
-  strata <span class="op">=</span> <span class="cn">NULL</span>,
-  max_na_fraction <span class="op">=</span> <span class="fl">0.01</span>,
-  correlation_filter <span class="op">=</span> <span class="cn">TRUE</span>,
-  centre <span class="op">=</span> <span class="cn">TRUE</span>,
-  scale <span class="op">=</span> <span class="cn">TRUE</span>,
-  mode <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"classification"</span>, <span class="st">"regression"</span><span class="op">)</span>
-<span class="op">)</span>
-
 <span class="fu">apply_model_to</span><span class="op">(</span><span class="va">object</span>, <span class="va">new_data</span>, only_prediction <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
 
 <span class="co"># S3 method for certestats_ml</span>
@@ -198,8 +184,15 @@
 <span class="co"># S3 method for certestats_ml</span>
 <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">object</span>, plot_type <span class="op">=</span> <span class="st">"roc"</span>, <span class="va">...</span><span class="op">)</span>
 
-<span class="co"># S3 method for certestats_ml_bootstrap</span>
-<span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">object</span>, all_cols <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></code></pre></div>
+<span class="fu">tune_parameters</span><span class="op">(</span>
+  <span class="va">object</span>,
+  <span class="va">...</span>,
+  only_params_in_model <span class="op">=</span> <span class="cn">FALSE</span>,
+  levels <span class="op">=</span> <span class="fl">5</span>,
+  v <span class="op">=</span> <span class="fl">10</span>,
+  n <span class="op">=</span> <span class="fl">10</span>,
+  metric <span class="op">=</span> <span class="st">"accuracy"</span>
+<span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -207,9 +200,9 @@
     <dl><dt>.data</dt>
 <dd><p>Data set to train</p></dd>
 <dt>outcome</dt>
-<dd><p>Outcome variable to be used (the variable that must be predicted). In case of classification prediction, this variable will be coerced to a <a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a>.</p></dd>
+<dd><p>Outcome variable to be used (the variable that must be predicted). The value will be evaluated in <a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select()</a> and thus supports the <code>tidyselect</code> language In case of classification prediction, this variable will be coerced to a <a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a>.</p></dd>
 <dt>predictors</dt>
-<dd><p>Variables to use as predictors - these will be transformed using <code><a href="https://rdrr.io/r/base/double.html" class="external-link">as.double()</a></code></p></dd>
+<dd><p>Variables to use as predictors - these will be transformed using <code><a href="https://rdrr.io/r/base/double.html" class="external-link">as.double()</a></code>. The value will be evaluated in <a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select()</a> and thus supports the <code>tidyselect</code> language. Using <a href="https://tidyselect.r-lib.org/reference/everything.html" class="external-link">everything()</a> will automatically exclude the <code>outcome</code> variable.</p></dd>
 <dt>training_fraction</dt>
 <dd><p>Fraction of rows to be used for <em>training</em>, defaults to 75%. The rest will be used for <em>testing</em>. If given a number over 1, the number will be considered to be the required number of rows for <em>training</em>.</p></dd>
 <dt>strata</dt>
@@ -229,7 +222,7 @@
 <dt>tree_depth</dt>
 <dd><p>An integer for maximum depth of the tree.</p></dd>
 <dt>...</dt>
-<dd><p>Arguments to be passed on to the <code>parsnip</code> functions, see <em>Model Functions</em></p></dd>
+<dd><p>Arguments to be passed on to the <code>parsnip</code> functions, see <em>Model Functions</em>. For the <code>tune_parameters()</code> function, these must be <code>dials</code> package calls, such as <code><a href="https://dials.tidymodels.org/reference/trees.html" class="external-link">dials::trees()</a></code> (see Examples).</p></dd>
 <dt>penalty</dt>
 <dd><p>A non-negative number representing the total
 amount of regularization (specific engines only).</p></dd>
@@ -247,8 +240,6 @@ to weight distances between samples. Valid choices are: <code>"rectangular"</cod
 <dt>trees</dt>
 <dd><p>An integer for the number of trees contained in
 the ensemble.</p></dd>
-<dt>times</dt>
-<dd><p>Number of times to run the model(s), defaults to <code>25</code></p></dd>
 <dt>object, data</dt>
 <dd><p>outcome of machine learning model</p></dd>
 <dt>new_data</dt>
@@ -257,8 +248,25 @@ the ensemble.</p></dd>
 <dd><p>a <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether predictions must be returned as <a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a>, otherwise returns a <a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a> with reliabilities of the predictions</p></dd>
 <dt>plot_type</dt>
 <dd><p>the plot type, can be <code>"roc"</code> (default), <code>"gain"</code>, <code>"lift"</code> or <code>"pr"</code>. These functions rely on <code><a href="https://yardstick.tidymodels.org/reference/roc_curve.html" class="external-link">yardstick::roc_curve()</a></code>, <code><a href="https://yardstick.tidymodels.org/reference/gain_curve.html" class="external-link">yardstick::gain_curve()</a></code>, <code><a href="https://yardstick.tidymodels.org/reference/lift_curve.html" class="external-link">yardstick::lift_curve()</a></code> and <code><a href="https://yardstick.tidymodels.org/reference/pr_curve.html" class="external-link">yardstick::pr_curve()</a></code> to construct the curves.</p></dd>
-<dt>all_cols</dt>
-<dd><p>Include all columns, not only sensitivity, specificity, pos_pred_value, neg_pred_value.</p></dd>
+<dt>only_params_in_model</dt>
+<dd><p>a <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether only parameters in the model should be tuned</p></dd>
+<dt>levels</dt>
+<dd><p>An integer for the number of values of each parameter to use
+to make the regular grid. <code>levels</code> can be a single integer or a vector of
+integers that is the same length as the number of parameters in <code>...</code>.
+<code>levels</code> can be a named integer vector, with names that match the id values
+of parameters.</p></dd>
+<dt>v</dt>
+<dd><p>The number of partitions of the data set.</p></dd>
+<dt>n</dt>
+<dd><p>An integer for the number of top results/rows to return.</p></dd>
+<dt>metric</dt>
+<dd><p>A character value for the metric that will be used to sort
+the models. (See
+<a href="https://yardstick.tidymodels.org/articles/metric-types.html" class="external-link">https://yardstick.tidymodels.org/articles/metric-types.html</a> for
+more details). Not required if a single metric exists in <code>x</code>. If there are
+multiple metric and none are given, the first in the metric set is used (and
+a warning is issued).</p></dd>
 </dl></div>
     <div id="details">
     <h2>Details</h2>
@@ -319,113 +327,135 @@ generics::fit()       yardstick::metrics()
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">model1</span> <span class="op">&lt;-</span> <span class="va">iris</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">ml_random_forest</span><span class="op">(</span><span class="va">Species</span>, <span class="fu">where</span><span class="op">(</span><span class="va">is.double</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">model2</span> <span class="op">&lt;-</span> <span class="va">iris</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">ml_decision_trees</span><span class="op">(</span><span class="va">Species</span>, <span class="fu">where</span><span class="op">(</span><span class="va">is.double</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">model3</span> <span class="op">&lt;-</span> <span class="va">iris</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">ml_neural_network</span><span class="op">(</span><span class="va">Species</span>, <span class="fu">where</span><span class="op">(</span><span class="va">is.double</span><span class="op">)</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># 'esbl_tests' is an included data set, see ?esbl_tests</span></span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co"># predict ESSBL test outcome based on MICs</span></span>
+<span class="r-in"><span class="va">model1</span> <span class="op">&lt;-</span> <span class="va">esbl_tests</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">ml_random_forest</span><span class="op">(</span><span class="va">esbl</span>, <span class="fu">where</span><span class="op">(</span><span class="va">is.double</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">model2</span> <span class="op">&lt;-</span> <span class="va">esbl_tests</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">ml_decision_trees</span><span class="op">(</span><span class="va">esbl</span>, <span class="fu">where</span><span class="op">(</span><span class="va">is.double</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">model1</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://yardstick.tidymodels.org/reference/metrics.html" class="external-link">metrics</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    .metric .estimator .estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy multiclass 0.9473684</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap multiclass 0.9194915</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy     binary 0.9520000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap     binary 0.9008723</span>
 <span class="r-in"><span class="va">model2</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://yardstick.tidymodels.org/reference/metrics.html" class="external-link">metrics</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    .metric .estimator .estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy multiclass         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap multiclass         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy     binary 0.9040000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap     binary 0.8076923</span>
 <span class="r-in"></span>
-<span class="r-in"><span class="va">model1</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">apply_model_to</span><span class="op">(</span><span class="va">iris</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 150 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    predicted .pred_setosa .pred_versicolor .pred_virginica</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> setosa           0.999         0.000<span style="text-decoration: underline;">256</span>        0.000<span style="text-decoration: underline;">298</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> setosa           0.931         0.053<span style="text-decoration: underline;">5</span>          0.015<span style="text-decoration: underline;">5</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> setosa           0.982         0.011<span style="text-decoration: underline;">0</span>          0.006<span style="text-decoration: underline;">56</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> setosa           0.981         0.014<span style="text-decoration: underline;">9</span>          0.004<span style="text-decoration: underline;">33</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> setosa           0.990         0.004<span style="text-decoration: underline;">90</span>         0.005<span style="text-decoration: underline;">36</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> setosa           0.943         0.033<span style="text-decoration: underline;">0</span>          0.023<span style="text-decoration: underline;">9</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> setosa           0.994         0.003<span style="text-decoration: underline;">37</span>         0.003<span style="text-decoration: underline;">04</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> setosa           0.988         0.008<span style="text-decoration: underline;">72</span>         0.003<span style="text-decoration: underline;">31</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> setosa           0.870         0.116           0.014<span style="text-decoration: underline;">4</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> setosa           0.949         0.037<span style="text-decoration: underline;">6</span>          0.013<span style="text-decoration: underline;">6</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 140 more rows</span></span>
+<span class="r-in"><span class="va">model1</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">apply_model_to</span><span class="op">(</span><span class="va">esbl_tests</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 500 × 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    predicted .pred_TRUE .pred_FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> FALSE        0.012<span style="text-decoration: underline;">3</span>        0.988</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> FALSE        0.027<span style="text-decoration: underline;">0</span>        0.973</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> FALSE        0.251         0.749</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> FALSE        0.009<span style="text-decoration: underline;">31</span>       0.991</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> FALSE        0.064<span style="text-decoration: underline;">9</span>        0.935</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> FALSE        0.201         0.799</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> FALSE        0.019<span style="text-decoration: underline;">7</span>        0.980</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> FALSE        0.020<span style="text-decoration: underline;">5</span>        0.980</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> FALSE        0.139         0.861</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> FALSE        0.090<span style="text-decoration: underline;">7</span>        0.909</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 490 more rows</span></span>
 <span class="r-in"></span>
-<span class="r-in"><span class="va">model3</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span class="co"># predict genus based on MICs</span></span>
+<span class="r-in"><span class="va">genus</span> <span class="op">&lt;-</span> <span class="va">esbl_tests</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu">ml_neural_network</span><span class="op">(</span><span class="va">genus</span>, <span class="fu"><a href="https://tidyselect.r-lib.org/reference/everything.html" class="external-link">everything</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">genus</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://yardstick.tidymodels.org/reference/metrics.html" class="external-link">metrics</a></span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    .metric .estimator .estimate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy multiclass 0.8080000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap multiclass 0.6670736</span>
+<span class="r-in"><span class="va">genus</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="machine_learning-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="va">model3</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span>plot_type <span class="op">=</span> <span class="st">"gain"</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">genus</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span>plot_type <span class="op">=</span> <span class="st">"gain"</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="machine_learning-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># confusion matrix of the model (trained data)</span></span>
 <span class="r-in"><span class="va">model1</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html" class="external-link">confusionMatrix</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Confusion Matrix and Statistics</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              setosa versicolor virginica</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   setosa         14          0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   versicolor      0         14         2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   virginica       0          0         8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overall Statistics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         TRUE FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TRUE    48     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   FALSE    6    71</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Accuracy : 0.9474          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  95% CI : (0.8225, 0.9936)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     No Information Rate : 0.3684          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     P-Value [Acc &gt; NIR] : 7.078e-14       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Accuracy : 0.952           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  95% CI : (0.8985, 0.9822)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     No Information Rate : 0.568           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     P-Value [Acc &gt; NIR] : &lt; 2e-16         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Kappa : 0.9195          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Kappa : 0.9009          </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Mcnemar's Test P-Value : NA              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Statistics by Class:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      Class: setosa Class: versicolor Class: virginica</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Sensitivity                 1.0000            1.0000           0.8000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Specificity                 1.0000            0.9167           1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pos Pred Value              1.0000            0.8750           1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Neg Pred Value              1.0000            1.0000           0.9333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prevalence                  0.3684            0.3684           0.2632</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Detection Rate              0.3684            0.3684           0.2105</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Detection Prevalence        0.3684            0.4211           0.2105</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Balanced Accuracy           1.0000            0.9583           0.9000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Mcnemar's Test P-Value : 0.04123         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Sensitivity : 0.8889          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Specificity : 1.0000          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Pos Pred Value : 1.0000          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Neg Pred Value : 0.9221          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Prevalence : 0.4320          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Detection Rate : 0.3840          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Detection Prevalence : 0.3840          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Balanced Accuracy : 0.9444          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        'Positive' Class : TRUE            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># confusion model of applying to a different data set</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">iris</span><span class="op">$</span><span class="va">Species</span>,</span>
-<span class="r-in">      <span class="fu">apply_model_to</span><span class="op">(</span><span class="va">model1</span>, <span class="va">iris</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html" class="external-link">confusionMatrix</a></span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">esbl_tests</span><span class="op">$</span><span class="va">esbl</span>,</span>
+<span class="r-in">      <span class="fu">apply_model_to</span><span class="op">(</span><span class="va">model1</span>, <span class="va">esbl_tests</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span class="r-in">  <span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html" class="external-link">confusionMatrix</a></span><span class="op">(</span>positive <span class="op">=</span> <span class="st">"TRUE"</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Confusion Matrix and Statistics</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              setosa versicolor virginica</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   setosa         50          0         0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   versicolor      0         49         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   virginica       0          3        47</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overall Statistics</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         FALSE TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   FALSE   248    2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TRUE     12  238</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Accuracy : 0.9733          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  95% CI : (0.9331, 0.9927)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     No Information Rate : 0.3467          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Accuracy : 0.972           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  95% CI : (0.9535, 0.9846)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     No Information Rate : 0.52            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     P-Value [Acc &gt; NIR] : &lt; 2e-16         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Kappa : 0.96            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Kappa : 0.944           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Mcnemar's Test P-Value : NA              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Statistics by Class:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                      Class: setosa Class: versicolor Class: virginica</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Sensitivity                 1.0000            0.9423           0.9792</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Specificity                 1.0000            0.9898           0.9706</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Pos Pred Value              1.0000            0.9800           0.9400</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Neg Pred Value              1.0000            0.9700           0.9900</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Prevalence                  0.3333            0.3467           0.3200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Detection Rate              0.3333            0.3267           0.3133</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Detection Prevalence        0.3333            0.3333           0.3333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Balanced Accuracy           1.0000            0.9661           0.9749</span>
-<span class="r-in">  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Mcnemar's Test P-Value : 0.01616         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Sensitivity : 0.9917          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Specificity : 0.9538          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Pos Pred Value : 0.9520          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Neg Pred Value : 0.9920          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Prevalence : 0.4800          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Detection Rate : 0.4760          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Detection Prevalence : 0.5000          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Balanced Accuracy : 0.9728          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        'Positive' Class : TRUE            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-in"></span>
+<span class="r-in"><span class="co"># tune the parameters of a model (will take some time)</span></span>
+<span class="r-in"><span class="va">model1</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span class="r-in">  <span class="fu">tune_parameters</span><span class="op">(</span>v <span class="op">=</span> <span class="fl">5</span>, levels <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Assuming tuning for the 3 parameters 'mtry', 'trees', 'min_n'. Use e.g. `mtry = dials::mtry()` to specify tuning.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Assuming upper range of 16 for `dials::mtry()` because of number of available predictors.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-04-16 15:46:56] Running tuning workflow V = 5 times for 27 combinations...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-04-16 15:47:58] Done. Returning top 10 best results.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 10 × 9</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     mtry trees min_n .metric  .estimator  mean     n std_err .config            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     8  <span style="text-decoration: underline;">1</span>000    21 accuracy binary     0.952     5 0.009<span style="text-decoration: underline;">04</span> Preprocessor1_Mode…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     8  <span style="text-decoration: underline;">1</span>000    40 accuracy binary     0.952     5 0.009<span style="text-decoration: underline;">04</span> Preprocessor1_Mode…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>     8  <span style="text-decoration: underline;">2</span>000    40 accuracy binary     0.952     5 0.009<span style="text-decoration: underline;">04</span> Preprocessor1_Mode…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     8  <span style="text-decoration: underline;">2</span>000    21 accuracy binary     0.949     5 0.009<span style="text-decoration: underline;">80</span> Preprocessor1_Mode…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>     1  <span style="text-decoration: underline;">1</span>000     2 accuracy binary     0.947     5 0.011<span style="text-decoration: underline;">2</span>  Preprocessor1_Mode…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     8  <span style="text-decoration: underline;">1</span>000     2 accuracy binary     0.947     5 0.009<span style="text-decoration: underline;">43</span> Preprocessor1_Mode…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     8  <span style="text-decoration: underline;">2</span>000     2 accuracy binary     0.947     5 0.009<span style="text-decoration: underline;">43</span> Preprocessor1_Mode…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     1  <span style="text-decoration: underline;">1</span>000    21 accuracy binary     0.944     5 0.011<span style="text-decoration: underline;">5</span>  Preprocessor1_Mode…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     1  <span style="text-decoration: underline;">2</span>000    21 accuracy binary     0.944     5 0.011<span style="text-decoration: underline;">5</span>  Preprocessor1_Mode…</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>     8     1    40 accuracy binary     0.944     5 0.012<span style="text-decoration: underline;">9</span>  Preprocessor1_Mode…</span>
+<span class="r-in"></span>
 <span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="va">esbl</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu">ml_random_forest</span><span class="op">(</span><span class="va">esbl_interpr</span>,</span>
-<span class="r-in">                   <span class="fu">betalactams</span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu">apply_model_to</span><span class="op">(</span><span class="va">esbl</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span></span>
+<span class="r-in"><span class="va">model1</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
+<span class="r-in">  <span class="fu">tune_parameters</span><span class="op">(</span><span class="fu">dials</span><span class="fu">::</span><span class="fu"><a href="https://dials.tidymodels.org/reference/mtry.html" class="external-link">mtry</a></span><span class="op">(</span>range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span>
+<span class="r-in">                  <span class="fu">dials</span><span class="fu">::</span><span class="fu"><a href="https://dials.tidymodels.org/reference/trees.html" class="external-link">trees</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-in"><span class="op">}</span></span>
 </code></pre></div>
     </div>
