@@ -8,12 +8,11 @@
 \alias{ml_neural_network}
 \alias{ml_nearest_neighbour}
 \alias{ml_random_forest}
-\alias{bootstrap_ml}
 \alias{apply_model_to}
 \alias{confusionMatrix.certestats_ml}
 \alias{metrics.certestats_ml}
 \alias{autoplot.certestats_ml}
-\alias{autoplot.certestats_ml_bootstrap}
+\alias{tune_parameters}
 \title{Create a Traditional Machine Learning (ML) Model}
 \usage{
 ml_decision_trees(
@@ -113,20 +112,6 @@ ml_random_forest(
   ...
 )
 
-bootstrap_ml(
-  .data,
-  outcome,
-  predictors,
-  times = 25,
-  training_fraction = 3/4,
-  strata = NULL,
-  max_na_fraction = 0.01,
-  correlation_filter = TRUE,
-  centre = TRUE,
-  scale = TRUE,
-  mode = c("classification", "regression")
-)
-
 apply_model_to(object, new_data, only_prediction = FALSE)
 
 \method{confusionMatrix}{certestats_ml}(data, ...)
@@ -135,14 +120,22 @@ apply_model_to(object, new_data, only_prediction = FALSE)
 
 \method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
-\method{autoplot}{certestats_ml_bootstrap}(object, all_cols = FALSE, ...)
+tune_parameters(
+  object,
+  ...,
+  only_params_in_model = FALSE,
+  levels = 5,
+  v = 10,
+  n = 10,
+  metric = "accuracy"
+)
 }
 \arguments{
 \item{.data}{Data set to train}
 
-\item{outcome}{Outcome variable to be used (the variable that must be predicted). In case of classification prediction, this variable will be coerced to a \link{factor}.}
+\item{outcome}{Outcome variable to be used (the variable that must be predicted). The value will be evaluated in \link[dplyr:select]{select()} and thus supports the \code{tidyselect} language In case of classification prediction, this variable will be coerced to a \link{factor}.}
 
-\item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}}}
+\item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}}. The value will be evaluated in \link[dplyr:select]{select()} and thus supports the \code{tidyselect} language. Using \link[tidyselect:everything]{everything()} will automatically exclude the \code{outcome} variable.}
 
 \item{training_fraction}{Fraction of rows to be used for \emph{training}, defaults to 75\%. The rest will be used for \emph{testing}. If given a number over 1, the number will be considered to be the required number of rows for \emph{training}.}
 
@@ -162,7 +155,7 @@ apply_model_to(object, new_data, only_prediction = FALSE)
 
 \item{tree_depth}{An integer for maximum depth of the tree.}
 
-\item{...}{Arguments to be passed on to the \code{parsnip} functions, see \emph{Model Functions}}
+\item{...}{Arguments to be passed on to the \code{parsnip} functions, see \emph{Model Functions}. For the \code{\link[=tune_parameters]{tune_parameters()}} function, these must be \code{dials} package calls, such as \code{dials::trees()} (see Examples).}
 
 \item{penalty}{A non-negative number representing the total
 amount of regularization (specific engines only).}
@@ -181,8 +174,6 @@ to weight distances between samples. Valid choices are: \code{"rectangular"},
 \item{trees}{An integer for the number of trees contained in
 the ensemble.}
 
-\item{times}{Number of times to run the model(s), defaults to \code{25}}
-
 \item{object, data}{outcome of machine learning model}
 
 \item{new_data}{new input data that requires prediction, must have all columns present in the training data}
@@ -191,7 +182,24 @@ the ensemble.}
 
 \item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
 
-\item{all_cols}{Include all columns, not only sensitivity, specificity, pos_pred_value, neg_pred_value.}
+\item{only_params_in_model}{a \link{logical} to indicate whether only parameters in the model should be tuned}
+
+\item{levels}{An integer for the number of values of each parameter to use
+to make the regular grid. \code{levels} can be a single integer or a vector of
+integers that is the same length as the number of parameters in \code{...}.
+\code{levels} can be a named integer vector, with names that match the id values
+of parameters.}
+
+\item{v}{The number of partitions of the data set.}
+
+\item{n}{An integer for the number of top results/rows to return.}
+
+\item{metric}{A character value for the metric that will be used to sort
+the models. (See
+\url{https://yardstick.tidymodels.org/articles/metric-types.html} for
+more details). Not required if a single metric exists in \code{x}. If there are
+multiple metric and none are given, the first in the metric set is used (and
+a warning is issued).}
 }
 \description{
 Create a traditional machine learning model based on different 'engines'. These function internally use the \code{tidymodels} packages by RStudio, which is the \code{tidyverse} variant for predictive modelling.
@@ -258,30 +266,38 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 }
 
 \examples{
-model1 <- iris \%>\% ml_random_forest(Species, where(is.double))
-model2 <- iris \%>\% ml_decision_trees(Species, where(is.double))
-model3 <- iris \%>\% ml_neural_network(Species, where(is.double))
+# 'esbl_tests' is an included data set, see ?esbl_tests
+
+# predict ESSBL test outcome based on MICs
+model1 <- esbl_tests \%>\% ml_random_forest(esbl, where(is.double))
+model2 <- esbl_tests \%>\% ml_decision_trees(esbl, where(is.double))
 
 model1 \%>\% metrics()
 model2 \%>\% metrics()
 
-model1 \%>\% apply_model_to(iris)
+model1 \%>\% apply_model_to(esbl_tests)
 
-model3 \%>\% autoplot()
-model3 \%>\% autoplot(plot_type = "gain")
+# predict genus based on MICs
+genus <- esbl_tests \%>\% ml_neural_network(genus, everything())
+genus \%>\% metrics()
+genus \%>\% autoplot()
+genus \%>\% autoplot(plot_type = "gain")
 
 # confusion matrix of the model (trained data)
 model1 \%>\% confusionMatrix()
 
 # confusion model of applying to a different data set
-table(iris$Species,
-      apply_model_to(model1, iris, TRUE)) \%>\% 
-  confusionMatrix()
-  
+table(esbl_tests$esbl,
+      apply_model_to(model1, esbl_tests, TRUE)) \%>\% 
+  confusionMatrix(positive = "TRUE")
+
+# tune the parameters of a model (will take some time)
+model1 \%>\% 
+  tune_parameters(v = 5, levels = 3)
+
 \dontrun{
-esbl \%>\%
-  ml_random_forest(esbl_interpr,
-                   betalactams()) \%>\%
-  apply_model_to(esbl[1:10, ])
+model1 \%>\% 
+  tune_parameters(dials::mtry(range = c(1, 10)),
+                  dials::trees())
 }
 }

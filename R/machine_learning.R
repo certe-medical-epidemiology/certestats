@@ -21,8 +21,8 @@
 #'
 #' Create a traditional machine learning model based on different 'engines'. These function internally use the `tidymodels` packages by RStudio, which is the `tidyverse` variant for predictive modelling.
 #' @param .data Data set to train
-#' @param outcome Outcome variable to be used (the variable that must be predicted). In case of classification prediction, this variable will be coerced to a [factor].
-#' @param predictors Variables to use as predictors - these will be transformed using [as.double()]
+#' @param outcome Outcome variable to be used (the variable that must be predicted). The value will be evaluated in [select()][dplyr::select()] and thus supports the `tidyselect` language In case of classification prediction, this variable will be coerced to a [factor].
+#' @param predictors Variables to use as predictors - these will be transformed using [as.double()]. The value will be evaluated in [select()][dplyr::select()] and thus supports the `tidyselect` language. Using [everything()][tidyselect::everything()] will automatically exclude the `outcome` variable.
 #' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*. If given a number over 1, the number will be considered to be the required number of rows for *training*.
 #' @param strata Groups to consider in the model (i.e., variables to stratify by)
 #' @param correlation_filter A [logical] to indicate whether the `predictors` should be removed that have to much correlation with each other, using [recipes::step_corr()]
@@ -31,8 +31,7 @@
 #' @param max_na_fraction Maximum fraction of `NA` values (defaults to `0.01`) of the `predictors` before they are removed from the model
 #' @param mode Type of predicted value - defaults to `"classification"`, but can also be `"unknown"` or `"regression"`
 #' @param engine \R package or function name to be used for the model, will be passed on to [parsnip::set_engine()]
-#' @param ... Arguments to be passed on to the `parsnip` functions, see *Model Functions*
-#' @param times Number of times to run the model(s), defaults to `25`
+#' @param ... Arguments to be passed on to the `parsnip` functions, see *Model Functions*. For the [tune_parameters()] function, these must be `dials` package calls, such as `dials::trees()` (see Examples).
 #' @inheritParams parsnip::decision_tree
 #' @inheritParams parsnip::linear_reg
 #' @inheritParams parsnip::logistic_reg
@@ -100,31 +99,39 @@
 #' @rdname machine_learning
 #' @export
 #' @examples
-#' model1 <- iris %>% ml_random_forest(Species, where(is.double))
-#' model2 <- iris %>% ml_decision_trees(Species, where(is.double))
-#' model3 <- iris %>% ml_neural_network(Species, where(is.double))
+#' # 'esbl_tests' is an included data set, see ?esbl_tests
+#' 
+#' # predict ESSBL test outcome based on MICs
+#' model1 <- esbl_tests %>% ml_random_forest(esbl, where(is.double))
+#' model2 <- esbl_tests %>% ml_decision_trees(esbl, where(is.double))
 #'
 #' model1 %>% metrics()
 #' model2 %>% metrics()
 #'
-#' model1 %>% apply_model_to(iris)
+#' model1 %>% apply_model_to(esbl_tests)
 #' 
-#' model3 %>% autoplot()
-#' model3 %>% autoplot(plot_type = "gain")
+#' # predict genus based on MICs
+#' genus <- esbl_tests %>% ml_neural_network(genus, everything())
+#' genus %>% metrics()
+#' genus %>% autoplot()
+#' genus %>% autoplot(plot_type = "gain")
 #' 
 #' # confusion matrix of the model (trained data)
 #' model1 %>% confusionMatrix()
 #' 
 #' # confusion model of applying to a different data set
-#' table(iris$Species,
-#'       apply_model_to(model1, iris, TRUE)) %>% 
-#'   confusionMatrix()
-#'   
+#' table(esbl_tests$esbl,
+#'       apply_model_to(model1, esbl_tests, TRUE)) %>% 
+#'   confusionMatrix(positive = "TRUE")
+#' 
+#' # tune the parameters of a model (will take some time)
+#' model1 %>% 
+#'   tune_parameters(v = 5, levels = 3)
+#' 
 #' \dontrun{
-#' esbl %>%
-#'   ml_random_forest(esbl_interpr,
-#'                    betalactams()) %>%
-#'   apply_model_to(esbl[1:10, ])
+#' model1 %>% 
+#'   tune_parameters(dials::mtry(range = c(1, 10)),
+#'                   dials::trees())
 #' }
 ml_decision_trees <- function(.data,
                               outcome,
@@ -312,87 +319,12 @@ ml_random_forest <- function(.data,
           ...)
 }
 
-#' @rdname machine_learning
-#' @importFrom caret confusionMatrix
-#' @importFrom cleaner format_names
-#' @importFrom tibble rownames_to_column
-#' @importFrom dplyr `%>%` mutate select everything arrange
-#' @importFrom progress progress_bar
-#' @export
-bootstrap_ml <- function(.data,
-                         outcome,
-                         predictors,
-                         times = 25,
-                         training_fraction = 3/4,
-                         strata = NULL,
-                         max_na_fraction = 0.01,
-                         correlation_filter = TRUE,
-                         centre = TRUE,
-                         scale = TRUE,
-                         mode = c("classification", "regression")) {
-  
-  
-  funs <- list(structure(ml_decision_trees, nm = "ml_decision_trees"),
-               structure(ml_neural_network, nm = "ml_neural_network"),
-               structure(ml_nearest_neighbour, nm = "ml_nearest_neighbour"),
-               structure(ml_random_forest, nm = "ml_random_forest"))
-  if (mode[1L] == "regression") {
-    funs <- c(funs,
-              structure(ml_linear_regression, nm = "ml_linear_regression"))
-  } else if (mode[1L] == "classification") {
-    funs <- c(funs,
-              structure(ml_logistic_regression, nm = "ml_logistic_regression"))
-  }
-  
-  n <- times * length(funs)
-  pb <- progress_bar$new(
-    format = ":elapsedfull [:bar] :current/:total :eta",
-    total = n, clear = FALSE)
-  
-  df <- NULL
-  
-  for (i in seq_len(times)) {
-    sapply(funs,
-           function(f) {
-             pb$tick()
-             
-             t_start <- as.numeric(Sys.time()) * 1000
-             suppressWarnings(suppressMessages(
-               m <- confusionMatrix(f(.data = .data,
-                                      outcome = {{outcome}},
-                                      predictors = {{predictors}},
-                                      training_fraction = training_fraction,
-                                      strata = {{strata}},
-                                      max_na_fraction = max_na_fraction,
-                                      correlation_filter = correlation_filter,
-                                      centre = centre,
-                                      scale = scale,
-                                      mode = mode[1L]))
-             ))
-             t_diff <- (as.numeric(Sys.time()) * 1000) - t_start
-             to_merge <- m$byClass %>%
-               as.data.frame() %>%
-               rownames_to_column("Class") %>%
-               mutate(model = attributes(f)$nm,
-                      t_diff = t_diff)
-             if (is.null(df)) {
-               df <<- to_merge
-             } else {
-               df <<- rbind(df, to_merge)
-             }
-           })
-  }
-  
-  df <- df %>%
-    format_names(snake_case = TRUE) %>%
-    select(model, class, everything()) %>%
-    arrange(model, class)
-  
-  structure(df, class = c("certestats_ml_bootstrap", "data.frame"))
-}
-
-#' @importFrom dplyr `%>%` mutate select across filter_all bind_cols
+#' @importFrom dplyr `%>%` mutate select across filter_all bind_cols all_of
 #' @importFrom yardstick metrics
+#' @importFrom parsnip set_engine
+#' @importFrom recipes recipe step_corr step_center step_scale all_predictors all_outcomes prep bake
+#' @importFrom rsample initial_split training testing
+#' @importFrom generics fit
 ml_exec <- function(FUN,
                     .data,
                     outcome,
@@ -411,18 +343,24 @@ ml_exec <- function(FUN,
     stop("no columns found for argument 'predictors' (is argument 'predictors' missing?)", call. = FALSE)
   }
   
-  # format data to work with it
+  # select only required data
   df <- .data %>%
-    mutate(outcome = {{outcome}},
-           strata = {{strata}}) %>%
-    select(outcome, {{predictors}}, strata) %>%
+    select(outcome = {{ outcome }}, {{predictors}}, {{strata}})
+  
+  # this will allow `predictors = everything()`, without selecting the outcome var with it
+  predictors <- df %>% 
+    select(-c(outcome, {{ strata }})) %>% 
+    colnames()
+  
+  # format data to work with it
+  df <- df %>%
     # force all predictors as double
-    mutate(across({{ predictors }}, as.double)) %>%
+    mutate(across(all_of(predictors), as.double)) %>%
     # remove columns that do not comply to max_na_fraction
     select(where(~sum(is.na(.)) / length(.) <= max_na_fraction)) %>%
     # remove rows that have NA in outcome or predictors
     filter_all(~!is.na(.))
-
+  
   # the outcome variable must be factor in case of regression prediction
   if (list(...)$mode == "classification" && !is.factor(df$outcome)) {
     if (is.logical(df$outcome)) {
@@ -451,7 +389,7 @@ ml_exec <- function(FUN,
                          training_size = paste0(round(training_fraction * nrow(df)),
                                                 " (fraction: ", round(training_fraction, 3), ")"),
                          testing_size = paste0(round((1 - training_fraction) * nrow(df)),
-                                                " (fraction: ", round(1 - training_fraction, 3), ")"),
+                                               " (fraction: ", round(1 - training_fraction, 3), ")"),
                          strata = paste(length(unique(df$strata)), "groups")),
                     list(...))
   )
@@ -466,35 +404,35 @@ ml_exec <- function(FUN,
     strata_var <- NULL
   }
   
-  df_split <- rsample::initial_split(df, strata = strata_var, prop = training_fraction)
+  df_split <- initial_split(df, strata = strata_var, prop = training_fraction)
   
   df_recipe <- df_split %>%
-    rsample::training() %>%
-    recipes::recipe(outcome ~ .)
+    training() %>%
+    recipe(outcome ~ .)
   
   if (isTRUE(correlation_filter)) {
-    df_recipe <- df_recipe %>% recipes::step_corr(recipes::all_predictors(), -strata_var)
+    df_recipe <- df_recipe %>% step_corr(all_predictors(), -strata_var)
   }
   if (isTRUE(centre)) {
-    df_recipe <- df_recipe %>% recipes::step_center(recipes::all_predictors(), -recipes::all_outcomes(), -strata_var)
+    df_recipe <- df_recipe %>% step_center(all_predictors(), -all_outcomes(), -strata_var)
   }
   if (isTRUE(scale)) {
-    df_recipe <- df_recipe %>% recipes::step_scale(recipes::all_predictors(), -recipes::all_outcomes(), -strata_var)
+    df_recipe <- df_recipe %>% step_scale(all_predictors(), -all_outcomes(), -strata_var)
   }
   df_recipe <- df_recipe %>%
-    recipes::prep()
+    prep()
   
   # train
   df_training <- df_recipe %>%
-    recipes::bake(new_data = NULL)
+    bake(new_data = NULL)
   
   # test
   df_testing <- df_recipe %>%
-    recipes::bake(rsample::testing(df_split))
+    bake(testing(df_split))
   
   mdl <- FUN(...) %>%
-    parsnip::set_engine(engine) %>%
-    generics::fit(outcome ~ ., data = df_training)
+    set_engine(engine) %>%
+    fit(outcome ~ ., data = df_training)
   
   metrics <- mdl %>%
     stats::predict(df_testing) %>%
@@ -559,6 +497,7 @@ print.certestats_ml <- function(x, ...) {
 #' @param new_data new input data that requires prediction, must have all columns present in the training data
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with reliabilities of the predictions
 #' @importFrom dplyr select all_of mutate across everything
+#' @importFrom recipes bake
 #' @export
 apply_model_to <- function(object, new_data, only_prediction = FALSE) {
   if (!inherits(object, "certestats_ml")) {
@@ -574,14 +513,21 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
   new_data <- new_data %>% 
     select(all_of(training_cols)) %>% 
     mutate(across(everything(), as.double))
-  test_data <- recipes::bake(attributes(object)$recipe, new_data = new_data)
+  test_data <- bake(attributes(object)$recipe, new_data = new_data)
   
   if (isTRUE(only_prediction)) {
-    stats::predict(object, test_data)[[1]]
+    out <- stats::predict(object, test_data)[[1]]
+    if (all(out %in% c("TRUE", "FALSE", NA))) {
+      out <- as.logical(out)
+    }
   } else {
-    bind_cols(stats::setNames(stats::predict(object, test_data), "predicted"),
-              stats::predict(object, test_data, type = "prob"))
+    out <- bind_cols(stats::setNames(stats::predict(object, test_data), "predicted"),
+                     stats::predict(object, test_data, type = "prob"))
+    if (all(out$predicted %in% c("TRUE", "FALSE", NA))) {
+      out$predicted <- as.logical(out$predicted)
+    }
   }
+  out
 }
 
 #' @importFrom caret confusionMatrix
@@ -671,7 +617,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
            subtitle = paste0(ifelse(isTRUE(multiple_outcomes), "Overall ", ""),
                              "Area Under the Curve (AUC): ",
                              round(roc_auc$.estimate, digits = 3)),
-           colour = "Outcome")
+           colour = "Outcome Variable")
     
   } else if (plot_type == "pr") {
     suppressMessages(
@@ -690,7 +636,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
       scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
       scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
       labs(title = paste(tools::toTitleCase(plot_type), "Curve"))
-      
+    
   }
   
   if ("certeplot2" %in% rownames(utils::installed.packages())) {
@@ -702,37 +648,110 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
   p
 }
 
-#' @method autoplot certestats_ml_bootstrap
 #' @rdname machine_learning
-#' @importFrom ggplot2 autoplot
-#' @param all_cols Include all columns, not only sensitivity, specificity, pos_pred_value, neg_pred_value.
-#' @importFrom dplyr `%>%` select filter mutate across
-#' @importFrom tidyr pivot_longer
+#' @param only_params_in_model a [logical] to indicate whether only parameters in the model should be tuned
+#' @inheritParams dials::grid_regular
+#' @inheritParams tune::show_best
+#' @inheritParams rsample::vfold_cv
+#' @importFrom parsnip set_engine set_mode
+#' @importFrom dials grid_regular
+#' @importFrom workflows workflow add_model add_formula
+#' @importFrom rsample vfold_cv
+#' @importFrom tune tune_grid show_best
+#' @importFrom hardhat tune
 #' @export
-autoplot.certestats_ml_bootstrap <- function(object, all_cols = FALSE, ...) {
-  
-  if (!isTRUE(all_cols)) {
-    object <- object %>%
-      select(model, class, t_diff, sensitivity, specificity, pos_pred_value, neg_pred_value)
+tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 5, v = 10, n = 10, metric = "accuracy") {
+  req_pkgs <- sort(c("rsample", "workflows", "dials", "tune", "hardhat"))
+  if (!all(req_pkgs %in% rownames(utils::installed.packages()))) {
+    stop("Tuning the parameters requires the following packages: ",
+         paste(req_pkgs, collapse = ", "),
+         call. = FALSE)
   }
   
-  markup <- function(x) {
-    x %>%
-      gsub("^Class: ", "", .) %>%
-      gsub("^ml_", "", .) %>%
-      gsub("_", " ", .) %>%
-      tools::toTitleCase()
-  }
+  model_prop <- attributes(object)
+  dots <- list(...)
   
-  object %>%
-    pivot_longer(-c(model, class, t_diff)) %>%
-    filter(!is.na(value)) %>%
-    mutate(across(c(model, class, name), markup)) %>%
-    ggplot2::ggplot(mapping = ggplot2::aes(x = class,
-                                           y = value,
-                                           colour = name)) +
-    ggplot2::geom_boxplot() +
-    ggplot2::facet_wrap(facets = "model") +
-    ggplot2::labs(title = "Model Properties",
-                  colour = "Property")
+  # get the parsnip function and its parameters
+  FUN <- eval(parse(text = model_prop$properties$ml_function))
+  params <- names(formals(FUN))
+  params <- params[!params %in% c("mode", "engine")]
+  if (isTRUE(only_params_in_model)) {
+    params <- params[params %in% names(model_prop$properties)]
+  }
+  params <- lapply(stats::setNames(as.list(params), params), function(x) tune())
+  
+  # create the grid
+  if (length(dots) > 0) {
+    # parameters were specified manually in ...
+    if (is.null(names(dots)) || any(names(dots) == "")) {
+      stop("All tune parameters must be named if they are specified manually, e.g. `trees = dials::trees()`", call. = FALSE)
+    }
+    params <- params[names(params) %in% names(dots)]
+    dials_fns <- dots
+    names(dials_fns) <- NULL
+  } else {
+    message("Assuming tuning for the ", length(params), " parameters ", paste0("'", names(params), "'", collapse = ", "),
+            ". Use e.g. `", names(params)[1], " = dials::", names(params)[1], "()` to specify tuning.")
+    dials_fns <- lapply(names(params), function(p) {
+      dials_fn <- eval(parse(text = paste0("dials::", p)))
+      if (!is.null(dials_fn()$range$lower) && !is.numeric(dials_fn()$range$lower)) {
+        stop("Unknown lower range in parameter '", p, "'. Specify dials::", p, "() manually.")
+      }
+      if (!is.null(dials_fn()$range$upper) && !is.numeric(dials_fn()$range$upper)) {
+        if (p == "mtry") {
+          new_upper <- ncol(model_prop$data_training) - 1
+          # it's a random guess from the predictors, so take that length as upper range
+          message("Assuming upper range of ", new_upper, " for `dials::", p, "()` because of number of available predictors.")
+          return(dials_fn(range = c(dials_fn()$range$lower, new_upper)))
+        } else {
+          stop("Unknown upper range in parameter '", p, "'. Specify dials::", p, "() manually.")
+        }
+      }
+      dials_fn()
+    })
+  }
+  tree_grid <- do.call(grid_regular,
+                       args = c(dials_fns, list(levels = levels)))
+  
+  # create the tuning specification
+  tune_spec <- do.call(FUN, args = params) %>% 
+    set_engine(model_prop$properties$engine_package) %>% 
+    set_mode(model_prop$properties$mode)
+  
+  # create the worflow, using the tuning specification
+  tree_wf <- workflow() %>%
+    add_model(tune_spec) %>%
+    add_formula(outcome ~ .)
+  
+  # create the V-fold cross-validation (also known as k-fold cross-validation)
+  vfold <- vfold_cv(model_prop$data_training, v = v)
+  
+  # run the tuning
+  if (interactive()) {
+    cat("\n")
+    ans <- utils::askYesNo(paste0("This will run the tuning V = ",
+                                  v, " times for ",
+                                  nrow(tree_grid), " combinations. Continue?"))
+    if (!isTRUE(ans)) {
+      return(invisible(NULL))
+    } else {
+      message("[", Sys.time(), "] Running tuning workflow...")
+    }
+  } else {
+    message("[", Sys.time(), "] Running tuning workflow V = ", v, " times for ", nrow(tree_grid), " combinations...")
+  }
+  suppressWarnings(
+    tree_res <- tree_wf %>% 
+      tune_grid(resamples = vfold,
+                grid = tree_grid)
+  )
+  message("[", Sys.time(), "] Done. Returning top ", n, " best results.")
+  
+  # return the results
+  available_metrics <- unlist(tree_res$`.metrics`, use.names = FALSE)
+  if (!metric %in% available_metrics) {
+    message("Metric '", metric, "' not available, assuming `metric = \"", available_metrics[1], "\"`")
+    metric <- available_metrics[1]
+  }
+  tree_res %>% show_best(metric = metric, n = n)
 }

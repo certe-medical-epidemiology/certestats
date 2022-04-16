@@ -21,6 +21,10 @@
 #' @export
 dplyr::`%>%`
 
+#' @importFrom dplyr everything
+#' @export
+dplyr::everything
+
 #' @importFrom caret confusionMatrix
 #' @export
 caret::confusionMatrix

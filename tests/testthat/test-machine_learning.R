@@ -36,17 +36,27 @@ test_that("ML works", {
   
   expect_output(print(model_decision_trees))
   
-  bootstrap <- iris %>% bootstrap_ml(Species, where(is.double), times = 10)
-  expect_s3_class(bootstrap, "certestats_ml_bootstrap")
-  
-  expect_s3_class(ggplot2::autoplot(model_decision_trees, plot_type = "roc"), "gg")
-  expect_s3_class(ggplot2::autoplot(model_decision_trees, plot_type = "gain"), "gg")
-  expect_s3_class(ggplot2::autoplot(model_decision_trees, plot_type = "lift"), "gg")
-  expect_s3_class(ggplot2::autoplot(model_decision_trees, plot_type = "pr"), "gg")
-  expect_s3_class(ggplot2::autoplot(bootstrap), "gg")
-  expect_s3_class(caret::confusionMatrix(model_decision_trees), "confusionMatrix")
-  expect_true(is.data.frame(yardstick::metrics(model_decision_trees)))
+  expect_s3_class(autoplot(model_decision_trees, plot_type = "roc"), "gg")
+  expect_s3_class(autoplot(model_decision_trees, plot_type = "gain"), "gg")
+  expect_s3_class(autoplot(model_decision_trees, plot_type = "lift"), "gg")
+  expect_s3_class(autoplot(model_decision_trees, plot_type = "pr"), "gg")
+  expect_s3_class(confusionMatrix(model_decision_trees), "confusionMatrix")
+  expect_true(is.data.frame(metrics(model_decision_trees)))
   expect_true(all(c("predicted", ".pred_setosa", ".pred_versicolor", ".pred_virginica") %in% colnames(apply_model_to(model_decision_trees, iris))))
   expect_true(is.factor(apply_model_to(model_decision_trees, iris, only_prediction = TRUE)))
-  expect_warning(iris %>% ml_decision_trees(as.character(Species), where(is.double), training_fraction = 10000))
+  expect_warning(iris %>% ml_decision_trees(Species, where(is.double), training_fraction = 10000))
+  expect_error(iris %>% ml_decision_trees(as.character(Species), where(is.double)))
+  
+  # tuning parameters
+  tuned <- model_neural_network %>% tune_parameters(levels = 1, v = 2)
+  tuned2 <- model_neural_network %>% tune_parameters(epochs = dials::epochs(), levels = 1, v = 2)
+  expect_true(all(c(".metric", ".estimator", "mean", "n", "std_err") %in% colnames(tuned)))
+  expect_error(model_neural_network %>% tune_parameters(dials::epochs()))
+  # try to run on any of our ML functions
+  expect_true(model_decision_trees %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
+  expect_true(model_linear_regression %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
+  # expect_true(model_logistic_regression %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
+  expect_true(model_neural_network %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
+  expect_true(model_nearest_neighbour %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
+  expect_true(model_random_forest %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
 })
