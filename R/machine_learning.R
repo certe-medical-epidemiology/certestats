@@ -22,7 +22,7 @@
 #' Create a traditional machine learning model based on different 'engines'. These function internally use the `tidymodels` packages by RStudio, which is the `tidyverse` variant for predictive modelling.
 #' @param .data Data set to train
 #' @param outcome Outcome variable to be used (the variable that must be predicted). The value will be evaluated in [select()][dplyr::select()] and thus supports the `tidyselect` language In case of classification prediction, this variable will be coerced to a [factor].
-#' @param predictors Variables to use as predictors - these will be transformed using [as.double()]. The value will be evaluated in [select()][dplyr::select()] and thus supports the `tidyselect` language. Using [everything()][tidyselect::everything()] will automatically exclude the `outcome` variable.
+#' @param predictors Variables to use as predictors - these will be transformed using [as.double()]. This value defaults to [everything()][tidyselect::everything()] and supports the `tidyselect` language.
 #' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*. If given a number over 1, the number will be considered to be the required number of rows for *training*.
 #' @param strata Groups to consider in the model (i.e., variables to stratify by)
 #' @param correlation_filter A [logical] to indicate whether the `predictors` should be removed that have to much correlation with each other, using [recipes::step_corr()]
@@ -50,28 +50,28 @@
 #'                          |
 #'                rsample::initial_split()
 #'                      /        \
-#'      rsample::training()   rsample::testing()
-#'               |                |
-#'         recipe::recipe()       |
-#'              |                 |
-#'        recipe::step_corr()     |
-#'              |                 |
-#'       recipe::step_center()    |
-#'              |                 |
-#'       recipe::step_scale()     |
-#'              |                 |
-#'          recipe::prep()        |
-#'          /            \        |
-#' recipes::bake()        recipes::bake()
-#'        |                       |
-#' generics::fit()       yardstick::metrics()
-#'        |                       |
+#'      rsample::training() rsample::testing()
+#'              |                |
+#'        recipe::recipe()       |
+#'              |                |
+#'       recipe::step_corr()     |
+#'              |                |
+#'       recipe::step_center()   |
+#'              |                |
+#'       recipe::step_scale()    |
+#'              |                |
+#'         recipe::prep()        |
+#'          /           \        |
+#' recipes::bake()       recipes::bake()
+#'        |                      |
+#' generics::fit()      yardstick::metrics()
+#'        |                      |
 #'     output            attributes(output)
 #' ```
+#' @return A machine learning model of class `certestats_ml` / `_rpart` / `model_fit`.
 #' 
-#' Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses [yardstick::roc_curve()] to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
+#' ## Attributes
 #' 
-#' @section Attributes:
 #' The `ml_*()` functions return the following [attributes][base::attributes()]:
 #' 
 #' * `properties`: a [list] with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as `tree_depth` in [ml_decision_trees()])
@@ -128,14 +128,13 @@
 #' model1 %>% 
 #'   tune_parameters(v = 5, levels = 3)
 #' 
-#' \dontrun{
-#' model1 %>% 
-#'   tune_parameters(dials::mtry(range = c(1, 10)),
-#'                   dials::trees())
-#' }
+#' iris %>% 
+#'   ml_random_forest(Species) %>% 
+#'   tune_parameters(mtry = dials::mtry(range = c(1, 3)),
+#'                   trees = dials::trees())
 ml_decision_trees <- function(.data,
                               outcome,
-                              predictors,
+                              predictors = everything(),
                               training_fraction = 3/4,
                               strata = NULL,
                               max_na_fraction = 0.01,
@@ -166,7 +165,7 @@ ml_decision_trees <- function(.data,
 #' @export
 ml_linear_regression <- function(.data,
                                  outcome,
-                                 predictors,
+                                 predictors = everything(),
                                  training_fraction = 3/4,
                                  strata = NULL,
                                  max_na_fraction = 0.01,
@@ -195,7 +194,7 @@ ml_linear_regression <- function(.data,
 #' @export
 ml_logistic_regression <- function(.data,
                                    outcome,
-                                   predictors,
+                                   predictors = everything(),
                                    training_fraction = 3/4,
                                    strata = NULL,
                                    max_na_fraction = 0.01,
@@ -226,7 +225,7 @@ ml_logistic_regression <- function(.data,
 #' @export
 ml_neural_network <- function(.data,
                               outcome,
-                              predictors,
+                              predictors = everything(),
                               training_fraction = 3/4,
                               strata = NULL,
                               max_na_fraction = 0.01,
@@ -259,7 +258,7 @@ ml_neural_network <- function(.data,
 #' @export
 ml_nearest_neighbour <- function(.data,
                                  outcome,
-                                 predictors,
+                                 predictors = everything(),
                                  training_fraction = 3/4,
                                  strata = NULL,
                                  max_na_fraction = 0.01,
@@ -292,7 +291,7 @@ ml_nearest_neighbour <- function(.data,
 #' @export
 ml_random_forest <- function(.data,
                              outcome,
-                             predictors,
+                             predictors = everything(),
                              training_fraction = 3/4,
                              strata = NULL,
                              max_na_fraction = 0.01,
@@ -319,7 +318,7 @@ ml_random_forest <- function(.data,
           ...)
 }
 
-#' @importFrom dplyr `%>%` mutate select across filter_all bind_cols all_of
+#' @importFrom dplyr `%>%` mutate select across filter_all bind_cols all_of cur_column
 #' @importFrom yardstick metrics
 #' @importFrom parsnip set_engine
 #' @importFrom recipes recipe step_corr step_center step_scale all_predictors all_outcomes prep bake
@@ -345,17 +344,24 @@ ml_exec <- function(FUN,
   
   # select only required data
   df <- .data %>%
-    select(outcome = {{ outcome }}, {{predictors}}, {{strata}})
+    select(outcome = {{ outcome }}, {{predictors}}, strata = {{strata}})
   
   # this will allow `predictors = everything()`, without selecting the outcome var with it
   predictors <- df %>% 
-    select(-c(outcome, {{ strata }})) %>% 
+    select(-c(outcome, strata)) %>% 
     colnames()
   
   # format data to work with it
   df <- df %>%
     # force all predictors as double
-    mutate(across(all_of(predictors), as.double)) %>%
+    mutate(across(all_of(predictors),
+                  function(values) {
+                    if (is.character(values)) {
+                      warning("Transformed column '", cur_column(), "' from <character> to <factor> and then to <double> to use as predictor", call. = FALSE)
+                      values <- as.factor(values)
+                    }
+                    as.double(values)
+                  })) %>%
     # remove columns that do not comply to max_na_fraction
     select(where(~sum(is.na(.)) / length(.) <= max_na_fraction)) %>%
     # remove rows that have NA in outcome or predictors
@@ -366,6 +372,9 @@ ml_exec <- function(FUN,
     if (is.logical(df$outcome)) {
       df$outcome <- factor(df$outcome, levels = c(TRUE, FALSE))
     } else {
+      if (is.numeric(df$outcome)) {
+        warning("The outcome variable is numeric, should the mode not be 'regression' instead of 'classification'?", call. = FALSE)
+      }
       df$outcome <- factor(df$outcome)
     }
   }
@@ -553,6 +562,7 @@ metrics.certestats_ml <- function(data, ...) {
 #' @method autoplot certestats_ml
 #' @rdname machine_learning
 #' @param plot_type the plot type, can be `"roc"` (default), `"gain"`, `"lift"` or `"pr"`. These functions rely on [yardstick::roc_curve()], [yardstick::gain_curve()], [yardstick::lift_curve()] and [yardstick::pr_curve()] to construct the curves.
+#' @details Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses [yardstick::roc_curve()] to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
 #' @importFrom ggplot2 autoplot ggplot aes geom_path geom_abline coord_equal scale_x_continuous scale_y_continuous labs element_line
 #' @importFrom dplyr `%>%` bind_cols starts_with
 #' @importFrom yardstick roc_curve roc_auc gain_curve lift_curve pr_curve
@@ -651,21 +661,20 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 #' @rdname machine_learning
 #' @param only_params_in_model a [logical] to indicate whether only parameters in the model should be tuned
 #' @inheritParams dials::grid_regular
-#' @inheritParams tune::show_best
 #' @inheritParams rsample::vfold_cv
+#' @details Use the [tune_parameters()] function to tune parameters of any `ml_*()` function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a [V-fold cross-validation][rsample::vfold_cv()], of which the number of partitions can be set with `v`. The number of `levels` will be used to split the range of the parameters. For example, a range of 1-10 with `levels = 2` will lead to `[1, 10]`, while `levels = 5` will lead to `[1, 3, 5, 7, 9]`. The resulting [data.frame] will be sorted from best to worst.
 #' @importFrom parsnip set_engine set_mode
 #' @importFrom dials grid_regular
 #' @importFrom workflows workflow add_model add_formula
 #' @importFrom rsample vfold_cv
-#' @importFrom tune tune_grid show_best
+#' @importFrom tune tune_grid collect_metrics
 #' @importFrom hardhat tune
+#' @importFrom dplyr `%>%` arrange desc across starts_with rename_with everything
+#' @importFrom tidyr pivot_wider
 #' @export
-tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 5, v = 10, n = 10, metric = "accuracy") {
-  req_pkgs <- sort(c("rsample", "workflows", "dials", "tune", "hardhat"))
-  if (!all(req_pkgs %in% rownames(utils::installed.packages()))) {
-    stop("Tuning the parameters requires the following packages: ",
-         paste(req_pkgs, collapse = ", "),
-         call. = FALSE)
+tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 5, v = 10) {
+  if (!inherits(object, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
   }
   
   model_prop <- attributes(object)
@@ -691,7 +700,7 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
     names(dials_fns) <- NULL
   } else {
     message("Assuming tuning for the ", length(params), " parameters ", paste0("'", names(params), "'", collapse = ", "),
-            ". Use e.g. `", names(params)[1], " = dials::", names(params)[1], "()` to specify tuning.")
+            ".\nUse e.g. `", names(params)[1], " = dials::", names(params)[1], "()` to specify tuning.")
     dials_fns <- lapply(names(params), function(p) {
       dials_fn <- eval(parse(text = paste0("dials::", p)))
       if (!is.null(dials_fn()$range$lower) && !is.numeric(dials_fn()$range$lower)) {
@@ -713,16 +722,16 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   tree_grid <- do.call(grid_regular,
                        args = c(dials_fns, list(levels = levels)))
   
-  # create the tuning specification
-  tune_spec <- do.call(FUN, args = params) %>% 
+  # (re)create the model specification
+  model_spec <- do.call(FUN, args = params) %>% 
     set_engine(model_prop$properties$engine_package) %>% 
     set_mode(model_prop$properties$mode)
   
   # create the worflow, using the tuning specification
   tree_wf <- workflow() %>%
-    add_model(tune_spec) %>%
+    add_model(model_spec) %>%
     add_formula(outcome ~ .)
-  
+
   # create the V-fold cross-validation (also known as k-fold cross-validation)
   vfold <- vfold_cv(model_prop$data_training, v = v)
   
@@ -741,17 +750,19 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
     message("[", Sys.time(), "] Running tuning workflow V = ", v, " times for ", nrow(tree_grid), " combinations...")
   }
   suppressWarnings(
-    tree_res <- tree_wf %>% 
+    tree_res <- tree_wf %>%
       tune_grid(resamples = vfold,
                 grid = tree_grid)
   )
-  message("[", Sys.time(), "] Done. Returning top ", n, " best results.")
+  out <- tree_res %>%
+    collect_metrics() 
+  message("[", Sys.time(), "] Done.")
   
-  # return the results
-  available_metrics <- unlist(tree_res$`.metrics`, use.names = FALSE)
-  if (!metric %in% available_metrics) {
-    message("Metric '", metric, "' not available, assuming `metric = \"", available_metrics[1], "\"`")
-    metric <- available_metrics[1]
-  }
-  tree_res %>% show_best(metric = metric, n = n)
+  # return the results, arranging according the best metrics on average
+  out %>% 
+    pivot_wider(-.estimator, names_from = .metric, values_from = c(mean, std_err)) %>%
+    arrange(desc(across(starts_with("mean_"))),
+            across(everything())) %>%
+    rename_with(function(x) gsub("^mean_", "", x)) %>%
+    rename_with(function(x) gsub("^std_err_(.*)", "\\1_se", x))
 }

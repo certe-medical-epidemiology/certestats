@@ -38,7 +38,9 @@ yardstick::metrics
 ggplot2::autoplot
 
 globalVariables(c(".",
+                  ".estimator",
                   ".level",
+                  ".metric",
                   ".pred_class",
                   "model",
                   "name",
@@ -48,6 +50,7 @@ globalVariables(c(".",
                   "predicted",
                   "sensitivity",
                   "specificity",
+                  "std_err",
                   "t_diff",
                   "truth",
                   "value",

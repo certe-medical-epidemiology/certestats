@@ -18,7 +18,7 @@
 ml_decision_trees(
   .data,
   outcome,
-  predictors,
+  predictors = everything(),
   training_fraction = 3/4,
   strata = NULL,
   max_na_fraction = 0.01,
@@ -34,7 +34,7 @@ ml_decision_trees(
 ml_linear_regression(
   .data,
   outcome,
-  predictors,
+  predictors = everything(),
   training_fraction = 3/4,
   strata = NULL,
   max_na_fraction = 0.01,
@@ -49,7 +49,7 @@ ml_linear_regression(
 ml_logistic_regression(
   .data,
   outcome,
-  predictors,
+  predictors = everything(),
   training_fraction = 3/4,
   strata = NULL,
   max_na_fraction = 0.01,
@@ -65,7 +65,7 @@ ml_logistic_regression(
 ml_neural_network(
   .data,
   outcome,
-  predictors,
+  predictors = everything(),
   training_fraction = 3/4,
   strata = NULL,
   max_na_fraction = 0.01,
@@ -82,7 +82,7 @@ ml_neural_network(
 ml_nearest_neighbour(
   .data,
   outcome,
-  predictors,
+  predictors = everything(),
   training_fraction = 3/4,
   strata = NULL,
   max_na_fraction = 0.01,
@@ -99,7 +99,7 @@ ml_nearest_neighbour(
 ml_random_forest(
   .data,
   outcome,
-  predictors,
+  predictors = everything(),
   training_fraction = 3/4,
   strata = NULL,
   max_na_fraction = 0.01,
@@ -120,22 +120,14 @@ apply_model_to(object, new_data, only_prediction = FALSE)
 
 \method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
-tune_parameters(
-  object,
-  ...,
-  only_params_in_model = FALSE,
-  levels = 5,
-  v = 10,
-  n = 10,
-  metric = "accuracy"
-)
+tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
 }
 \arguments{
 \item{.data}{Data set to train}
 
 \item{outcome}{Outcome variable to be used (the variable that must be predicted). The value will be evaluated in \link[dplyr:select]{select()} and thus supports the \code{tidyselect} language In case of classification prediction, this variable will be coerced to a \link{factor}.}
 
-\item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}}. The value will be evaluated in \link[dplyr:select]{select()} and thus supports the \code{tidyselect} language. Using \link[tidyselect:everything]{everything()} will automatically exclude the \code{outcome} variable.}
+\item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}}. This value defaults to \link[tidyselect:everything]{everything()} and supports the \code{tidyselect} language.}
 
 \item{training_fraction}{Fraction of rows to be used for \emph{training}, defaults to 75\%. The rest will be used for \emph{testing}. If given a number over 1, the number will be considered to be the required number of rows for \emph{training}.}
 
@@ -191,50 +183,10 @@ integers that is the same length as the number of parameters in \code{...}.
 of parameters.}
 
 \item{v}{The number of partitions of the data set.}
-
-\item{n}{An integer for the number of top results/rows to return.}
-
-\item{metric}{A character value for the metric that will be used to sort
-the models. (See
-\url{https://yardstick.tidymodels.org/articles/metric-types.html} for
-more details). Not required if a single metric exists in \code{x}. If there are
-multiple metric and none are given, the first in the metric set is used (and
-a warning is issued).}
 }
-\description{
-Create a traditional machine learning model based on different 'engines'. These function internally use the \code{tidymodels} packages by RStudio, which is the \code{tidyverse} variant for predictive modelling.
-}
-\details{
-To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
-
-To predict \strong{classifications} (character values), the function \code{\link[=ml_linear_regression]{ml_linear_regression()}} cannot be used.
-
-The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):\preformatted{                       .data
-                         |
-               rsample::initial_split()
-                     /        \\
-     rsample::training()   rsample::testing()
-              |                |
-        recipe::recipe()       |
-             |                 |
-       recipe::step_corr()     |
-             |                 |
-      recipe::step_center()    |
-             |                 |
-      recipe::step_scale()     |
-             |                 |
-         recipe::prep()        |
-         /            \\        |
-recipes::bake()        recipes::bake()
-       |                       |
-generics::fit()       yardstick::metrics()
-       |                       |
-    output            attributes(output)
-}
-
-Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
-}
-\section{Attributes}{
+\value{
+A machine learning model of class \code{certestats_ml} / \verb{_rpart} / \code{model_fit}.
+\subsection{Attributes}{
 
 The \verb{ml_*()} functions return the following \link[base:attributes]{attributes}:
 \itemize{
@@ -251,7 +203,42 @@ The \verb{ml_*()} functions return the following \link[base:attributes]{attribut
 \item \code{scale}: a \link{logical} indicating whether \code{\link[recipes:step_scale]{recipes::step_scale()}} has been applied
 }
 }
+}
+\description{
+Create a traditional machine learning model based on different 'engines'. These function internally use the \code{tidymodels} packages by RStudio, which is the \code{tidyverse} variant for predictive modelling.
+}
+\details{
+To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
 
+To predict \strong{classifications} (character values), the function \code{\link[=ml_linear_regression]{ml_linear_regression()}} cannot be used.
+
+The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):\preformatted{                       .data
+                         |
+               rsample::initial_split()
+                     /        \\
+     rsample::training() rsample::testing()
+             |                |
+       recipe::recipe()       |
+             |                |
+      recipe::step_corr()     |
+             |                |
+      recipe::step_center()   |
+             |                |
+      recipe::step_scale()    |
+             |                |
+        recipe::prep()        |
+         /           \\        |
+recipes::bake()       recipes::bake()
+       |                      |
+generics::fit()      yardstick::metrics()
+       |                      |
+    output            attributes(output)
+}
+
+Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
+
+Use the \code{\link[=tune_parameters]{tune_parameters()}} function to tune parameters of any \verb{ml_*()} function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a \link[rsample:vfold_cv]{V-fold cross-validation}, of which the number of partitions can be set with \code{v}. The number of \code{levels} will be used to split the range of the parameters. For example, a range of 1-10 with \code{levels = 2} will lead to \verb{[1, 10]}, while \code{levels = 5} will lead to \verb{[1, 3, 5, 7, 9]}. The resulting \link{data.frame} will be sorted from best to worst.
+}
 \section{Model Functions}{
 
 These are the called functions from the \code{parsnip} package. Arguments set in \code{...} will be passed on to these \code{parsnip} functions:
@@ -295,9 +282,8 @@ table(esbl_tests$esbl,
 model1 \%>\% 
   tune_parameters(v = 5, levels = 3)
 
-\dontrun{
-model1 \%>\% 
-  tune_parameters(dials::mtry(range = c(1, 10)),
-                  dials::trees())
-}
+iris \%>\% 
+  ml_random_forest(Species) \%>\% 
+  tune_parameters(mtry = dials::mtry(range = c(1, 3)),
+                  trees = dials::trees())
 }
