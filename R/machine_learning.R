@@ -119,15 +119,12 @@
 #' # confusion matrix of the model (trained data)
 #' model1 %>% confusionMatrix()
 #' 
-#' # confusion model of applying to a different data set
-#' table(esbl_tests$esbl,
-#'       apply_model_to(model1, esbl_tests, TRUE)) %>% 
-#'   confusionMatrix(positive = "TRUE")
-#' 
 #' # tune the parameters of a model (will take some time)
-#' model1 %>% 
+#' tuning <- model1 %>% 
 #'   tune_parameters(v = 5, levels = 3)
+#' autoplot(tuning)
 #' 
+#' # tuning analysis by specifying (some) parameters
 #' iris %>% 
 #'   ml_random_forest(Species) %>% 
 #'   tune_parameters(mtry = dials::mtry(range = c(1, 3)),
@@ -662,7 +659,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 #' @param only_params_in_model a [logical] to indicate whether only parameters in the model should be tuned
 #' @inheritParams dials::grid_regular
 #' @inheritParams rsample::vfold_cv
-#' @details Use the [tune_parameters()] function to tune parameters of any `ml_*()` function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a [V-fold cross-validation][rsample::vfold_cv()], of which the number of partitions can be set with `v`. The number of `levels` will be used to split the range of the parameters. For example, a range of 1-10 with `levels = 2` will lead to `[1, 10]`, while `levels = 5` will lead to `[1, 3, 5, 7, 9]`. The resulting [data.frame] will be sorted from best to worst.
+#' @details Use the [tune_parameters()] function to analyse tune parameters of any `ml_*()` function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a [V-fold cross-validation][rsample::vfold_cv()], of which the number of partitions can be set with `v`. The number of `levels` will be used to split the range of the parameters. For example, a range of 1-10 with `levels = 2` will lead to `[1, 10]`, while `levels = 5` will lead to `[1, 3, 5, 7, 9]`. The resulting [data.frame] will be sorted from best to worst. These results can also be plotted using [autoplot()].
 #' @importFrom parsnip set_engine set_mode
 #' @importFrom dials grid_regular
 #' @importFrom workflows workflow add_model add_formula
@@ -699,8 +696,8 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
     dials_fns <- dots
     names(dials_fns) <- NULL
   } else {
-    message("Assuming tuning for the ", length(params), " parameters ", paste0("'", names(params), "'", collapse = ", "),
-            ".\nUse e.g. `", names(params)[1], " = dials::", names(params)[1], "()` to specify tuning.")
+    message("Assuming tuning analysis for the ", length(params), " parameters ", paste0("'", names(params), "'", collapse = ", "),
+            ".\nUse e.g. `", names(params)[1], " = dials::", names(params)[1], "()` to specify tuning for less parameters.")
     dials_fns <- lapply(names(params), function(p) {
       dials_fn <- eval(parse(text = paste0("dials::", p)))
       if (!is.null(dials_fn()$range$lower) && !is.numeric(dials_fn()$range$lower)) {
@@ -738,8 +735,8 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   # run the tuning
   if (interactive()) {
     cat("\n")
-    ans <- utils::askYesNo(paste0("This will run the tuning V = ",
-                                  v, " times for ",
+    ans <- utils::askYesNo(paste0("This will run a tuning analysis using a ",
+                                  v, "-fold cross-validation for ",
                                   nrow(tree_grid), " combinations. Continue?"))
     if (!isTRUE(ans)) {
       return(invisible(NULL))
@@ -747,7 +744,7 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
       message("[", Sys.time(), "] Running tuning workflow...")
     }
   } else {
-    message("[", Sys.time(), "] Running tuning workflow V = ", v, " times for ", nrow(tree_grid), " combinations...")
+    message("[", Sys.time(), "] Running tuning analysis using a ", v, "-fold cross-validation for ", nrow(tree_grid), " combinations...")
   }
   suppressWarnings(
     tree_res <- tree_wf %>%
@@ -759,10 +756,32 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   message("[", Sys.time(), "] Done.")
   
   # return the results, arranging according the best metrics on average
-  out %>% 
-    pivot_wider(-.estimator, names_from = .metric, values_from = c(mean, std_err)) %>%
-    arrange(desc(across(starts_with("mean_"))),
-            across(everything())) %>%
-    rename_with(function(x) gsub("^mean_", "", x)) %>%
-    rename_with(function(x) gsub("^std_err_(.*)", "\\1_se", x))
+  structure(out %>% 
+              pivot_wider(-.estimator, names_from = .metric, values_from = c(mean, std_err)) %>%
+              arrange(desc(across(starts_with("mean_"))),
+                      across(everything())) %>%
+              rename_with(function(x) gsub("^mean_", "", x)) %>%
+              rename_with(function(x) gsub("^std_err_(.*)", "\\1_se", x)),
+            class = c("certestats_tuning", class(out)),
+            result = tree_res)
+}
+
+#' @method autoplot certestats_tuning
+#' @inheritParams tune::autoplot.tune_results
+#' @importFrom ggplot2 scale_y_continuous labs
+#' @rdname machine_learning
+#' @export
+autoplot.certestats_tuning <- function(object, type = c("marginals", "parameters", "performance"), ...) {
+  p <- autoplot(attributes(object)$result, type = type[1]) +
+    scale_y_continuous(expand = c(0.05, 0),
+                       limits = c(NA, 1),
+                       labels = function(x) paste0(format(x * 100), "%")) +
+    labs(title = "Tuning Parameters")
+  
+  if ("certeplot2" %in% rownames(utils::installed.packages())) {
+    p <- p +
+      certeplot2::theme_minimal2() +
+      certeplot2::scale_colour_certe_d()
+  }
+  p
 }

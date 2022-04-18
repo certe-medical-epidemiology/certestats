@@ -13,6 +13,7 @@
 \alias{metrics.certestats_ml}
 \alias{autoplot.certestats_ml}
 \alias{tune_parameters}
+\alias{autoplot.certestats_tuning}
 \title{Create a Traditional Machine Learning (ML) Model}
 \usage{
 ml_decision_trees(
@@ -121,6 +122,8 @@ apply_model_to(object, new_data, only_prediction = FALSE)
 \method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
 tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
+
+\method{autoplot}{certestats_tuning}(object, type = c("marginals", "parameters", "performance"), ...)
 }
 \arguments{
 \item{.data}{Data set to train}
@@ -183,6 +186,11 @@ integers that is the same length as the number of parameters in \code{...}.
 of parameters.}
 
 \item{v}{The number of partitions of the data set.}
+
+\item{type}{A single character value. Choices are \code{"marginals"} (for a plot
+of each predictor versus performance; see Details below), \code{"parameters"}
+(each parameter versus search iteration), or \code{"performance"} (performance
+versus iteration). The latter two choices are only used for \code{\link[tune:tune_bayes]{tune_bayes()}}.}
 }
 \value{
 A machine learning model of class \code{certestats_ml} / \verb{_rpart} / \code{model_fit}.
@@ -237,7 +245,7 @@ generics::fit()      yardstick::metrics()
 
 Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
 
-Use the \code{\link[=tune_parameters]{tune_parameters()}} function to tune parameters of any \verb{ml_*()} function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a \link[rsample:vfold_cv]{V-fold cross-validation}, of which the number of partitions can be set with \code{v}. The number of \code{levels} will be used to split the range of the parameters. For example, a range of 1-10 with \code{levels = 2} will lead to \verb{[1, 10]}, while \code{levels = 5} will lead to \verb{[1, 3, 5, 7, 9]}. The resulting \link{data.frame} will be sorted from best to worst.
+Use the \code{\link[=tune_parameters]{tune_parameters()}} function to analyse tune parameters of any \verb{ml_*()} function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a \link[rsample:vfold_cv]{V-fold cross-validation}, of which the number of partitions can be set with \code{v}. The number of \code{levels} will be used to split the range of the parameters. For example, a range of 1-10 with \code{levels = 2} will lead to \verb{[1, 10]}, while \code{levels = 5} will lead to \verb{[1, 3, 5, 7, 9]}. The resulting \link{data.frame} will be sorted from best to worst. These results can also be plotted using \code{\link[=autoplot]{autoplot()}}.
 }
 \section{Model Functions}{
 
@@ -273,15 +281,12 @@ genus \%>\% autoplot(plot_type = "gain")
 # confusion matrix of the model (trained data)
 model1 \%>\% confusionMatrix()
 
-# confusion model of applying to a different data set
-table(esbl_tests$esbl,
-      apply_model_to(model1, esbl_tests, TRUE)) \%>\% 
-  confusionMatrix(positive = "TRUE")
-
 # tune the parameters of a model (will take some time)
-model1 \%>\% 
+tuning <- model1 \%>\% 
   tune_parameters(v = 5, levels = 3)
+autoplot(tuning)
 
+# tuning analysis by specifying (some) parameters
 iris \%>\% 
   ml_random_forest(Species) \%>\% 
   tune_parameters(mtry = dials::mtry(range = c(1, 3)),

@@ -48,6 +48,7 @@ test_that("ML works", {
   expect_error(iris %>% ml_decision_trees(as.character(Species), where(is.double)))
   
   # tuning parameters
+  expect_error(tune_parameters("test"))
   tuned <- model_neural_network %>% tune_parameters(levels = 1, v = 2)
   tuned2 <- model_neural_network %>% tune_parameters(epochs = dials::epochs(), levels = 1, v = 2)
   expect_error(model_neural_network %>% tune_parameters(dials::epochs()))
@@ -58,4 +59,5 @@ test_that("ML works", {
   expect_true(model_neural_network %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
   expect_true(model_nearest_neighbour %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
   expect_true(model_random_forest %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
+  expect_s3_class(autoplot(tuned), "gg")
 })

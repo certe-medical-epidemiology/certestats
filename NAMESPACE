@@ -2,6 +2,7 @@
 
 S3method(as.data.frame,qc_test)
 S3method(autoplot,certestats_ml)
+S3method(autoplot,certestats_tuning)
 S3method(confusionMatrix,certestats_ml)
 S3method(metrics,certestats_ml)
 S3method(print,certestats_ml)
