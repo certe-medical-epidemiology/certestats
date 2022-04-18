@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.4.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.4.2</span>
       </span>
     </div>
 
@@ -132,48 +132,39 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Quality Control Rules according to Nelson</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -----------------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  n    =  250 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  mean =  -0.06518901 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  sd   =  1.03724 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  mean =  0.05817289 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  sd   =  1.024243 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -----------------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 1: One point is more than 3 standard deviations from the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 139</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.723003</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 2: 9 (or more) points in a row are on the same side of the mean</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 2: 9 (or more) points in a row are on the same side of the mean</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 38 39 40 41</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.06743636 -0.50649080 -0.57427801 -0.83413824</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 3: 6 (or more) points in a row are continually increasing or decreasing</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -2.221428</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  36  37  38  73 192 193</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  2.35985059  1.04695995 -0.06743636  0.08365807  1.52212414  1.16214618</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 4: 14 (or more) points in a row alternate in direction, increasing then decreasing</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 73 74</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.900718 1.506038</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 5: 2 out of 3 points in a row are &gt;2 sd from the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 87 88</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.4952585  2.1670111</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 6: 4 out of 5 points in a row are &gt;1 sd from the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.452408</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 105 106 107</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.2869493  1.9611815  1.2040906</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 7: &gt;=15 points in a row are within 1 sd of the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 123</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.7423978</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 8: &gt;=8 points in a row outside 1 sd of the mean, in both directions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
@@ -181,12 +172,12 @@
 <span class="r-in"><span class="co"># turn into data.frame, e.g. for export</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   index       value rule_1 rule_2 rule_3 rule_4 rule_5 rule_6 rule_7 rule_8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  0.04523146     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2  0.95974722     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3 -0.45539775     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4 -1.45240816     NA     NA     NA     NA     NA   TRUE     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5 -0.42654799     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6 -2.22142842     NA     NA   TRUE     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  0.08551217     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2 -1.68682743     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3  1.37165387     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4 -0.92849736     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5 -0.92630984     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6 -0.95871771     NA     NA     NA     NA     NA     NA     NA     NA</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://certe-medical-epidemiology.github.io/certeplot2" class="external-link">"certeplot2"</a></span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span class="r-in">  <span class="fu"><a href="https://certe-medical-epidemiology.github.io/certeplot2/reference/plot2.html" class="external-link">plot2</a></span><span class="op">(</span><span class="va">x</span>,</span>
