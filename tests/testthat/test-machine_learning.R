@@ -50,7 +50,6 @@ test_that("ML works", {
   # tuning parameters
   tuned <- model_neural_network %>% tune_parameters(levels = 1, v = 2)
   tuned2 <- model_neural_network %>% tune_parameters(epochs = dials::epochs(), levels = 1, v = 2)
-  expect_true(all(c(".metric", ".estimator", "mean", "n", "std_err") %in% colnames(tuned)))
   expect_error(model_neural_network %>% tune_parameters(dials::epochs()))
   # try to run on any of our ML functions
   expect_true(model_decision_trees %>% tune_parameters(levels = 1, v = 2) %>% is.data.frame())
