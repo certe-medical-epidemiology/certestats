@@ -264,31 +264,31 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 # 'esbl_tests' is an included data set, see ?esbl_tests
 
 # predict ESSBL test outcome based on MICs
-model1 <- esbl_tests \%>\% ml_random_forest(esbl, where(is.double))
-model2 <- esbl_tests \%>\% ml_decision_trees(esbl, where(is.double))
+model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
+model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
 
-model1 \%>\% metrics()
-model2 \%>\% metrics()
+model1 |> metrics()
+model2 |> metrics()
 
-model1 \%>\% apply_model_to(esbl_tests)
+model1 |> apply_model_to(esbl_tests)
 
 # predict genus based on MICs
-genus <- esbl_tests \%>\% ml_neural_network(genus, everything())
-genus \%>\% metrics()
-genus \%>\% autoplot()
-genus \%>\% autoplot(plot_type = "gain")
+genus <- esbl_tests |> ml_neural_network(genus, everything())
+genus |> metrics()
+genus |> autoplot()
+genus |> autoplot(plot_type = "gain")
 
 # confusion matrix of the model (trained data)
-model1 \%>\% confusionMatrix()
+model1 |> confusionMatrix()
 
 # tune the parameters of a model (will take some time)
-tuning <- model1 \%>\% 
+tuning <- model1 |> 
   tune_parameters(v = 5, levels = 3)
 autoplot(tuning)
 
 # tuning analysis by specifying (some) parameters
-iris \%>\% 
-  ml_random_forest(Species) \%>\% 
+iris |> 
+  ml_random_forest(Species) |> 
   tune_parameters(mtry = dials::mtry(range = c(1, 3)),
                   trees = dials::trees())
 }

@@ -102,31 +102,31 @@
 #' # 'esbl_tests' is an included data set, see ?esbl_tests
 #' 
 #' # predict ESSBL test outcome based on MICs
-#' model1 <- esbl_tests %>% ml_random_forest(esbl, where(is.double))
-#' model2 <- esbl_tests %>% ml_decision_trees(esbl, where(is.double))
+#' model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
+#' model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
 #'
-#' model1 %>% metrics()
-#' model2 %>% metrics()
+#' model1 |> metrics()
+#' model2 |> metrics()
 #'
-#' model1 %>% apply_model_to(esbl_tests)
+#' model1 |> apply_model_to(esbl_tests)
 #' 
 #' # predict genus based on MICs
-#' genus <- esbl_tests %>% ml_neural_network(genus, everything())
-#' genus %>% metrics()
-#' genus %>% autoplot()
-#' genus %>% autoplot(plot_type = "gain")
+#' genus <- esbl_tests |> ml_neural_network(genus, everything())
+#' genus |> metrics()
+#' genus |> autoplot()
+#' genus |> autoplot(plot_type = "gain")
 #' 
 #' # confusion matrix of the model (trained data)
-#' model1 %>% confusionMatrix()
+#' model1 |> confusionMatrix()
 #' 
 #' # tune the parameters of a model (will take some time)
-#' tuning <- model1 %>% 
+#' tuning <- model1 |> 
 #'   tune_parameters(v = 5, levels = 3)
 #' autoplot(tuning)
 #' 
 #' # tuning analysis by specifying (some) parameters
-#' iris %>% 
-#'   ml_random_forest(Species) %>% 
+#' iris |> 
+#'   ml_random_forest(Species) |> 
 #'   tune_parameters(mtry = dials::mtry(range = c(1, 3)),
 #'                   trees = dials::trees())
 ml_decision_trees <- function(.data,
@@ -315,7 +315,7 @@ ml_random_forest <- function(.data,
           ...)
 }
 
-#' @importFrom dplyr `%>%` mutate select across filter_all bind_cols all_of cur_column
+#' @importFrom dplyr mutate select across filter_all bind_cols all_of cur_column
 #' @importFrom yardstick metrics
 #' @importFrom parsnip set_engine
 #' @importFrom recipes recipe step_corr step_center step_scale all_predictors all_outcomes prep bake
@@ -340,16 +340,16 @@ ml_exec <- function(FUN,
   }
   
   # select only required data
-  df <- .data %>%
+  df <- .data |>
     select(outcome = {{ outcome }}, {{predictors}}, strata = {{strata}})
   
   # this will allow `predictors = everything()`, without selecting the outcome var with it
-  predictors <- df %>% 
-    select(-c(outcome, strata)) %>% 
+  predictors <- df |> 
+    select(-c(outcome, strata)) |> 
     colnames()
   
   # format data to work with it
-  df <- df %>%
+  df <- df |>
     # force all predictors as double
     mutate(across(all_of(predictors),
                   function(values) {
@@ -358,11 +358,11 @@ ml_exec <- function(FUN,
                       values <- as.factor(values)
                     }
                     as.double(values)
-                  })) %>%
+                  })) |>
     # remove columns that do not comply to max_na_fraction
-    select(where(~sum(is.na(.)) / length(.) <= max_na_fraction)) %>%
+    select(where(function(x) sum(is.na(x)) / length(x) <= max_na_fraction)) |>
     # remove rows that have NA in outcome or predictors
-    filter_all(~!is.na(.))
+    filter_all(function(x) !is.na(x))
   
   # the outcome variable must be factor in case of regression prediction
   if (list(...)$mode == "classification" && !is.factor(df$outcome)) {
@@ -412,42 +412,44 @@ ml_exec <- function(FUN,
   
   df_split <- initial_split(df, strata = strata_var, prop = training_fraction)
   
-  df_recipe <- df_split %>%
-    training() %>%
+  df_recipe <- df_split |>
+    training() |>
     recipe(outcome ~ .)
   
   if (isTRUE(correlation_filter)) {
-    df_recipe <- df_recipe %>% step_corr(all_predictors(), -strata_var)
+    df_recipe <- df_recipe |> step_corr(all_predictors(), -strata_var)
   }
   if (isTRUE(centre)) {
-    df_recipe <- df_recipe %>% step_center(all_predictors(), -all_outcomes(), -strata_var)
+    df_recipe <- df_recipe |> step_center(all_predictors(), -all_outcomes(), -strata_var)
   }
   if (isTRUE(scale)) {
-    df_recipe <- df_recipe %>% step_scale(all_predictors(), -all_outcomes(), -strata_var)
+    df_recipe <- df_recipe |> step_scale(all_predictors(), -all_outcomes(), -strata_var)
   }
-  df_recipe <- df_recipe %>%
+  df_recipe <- df_recipe |>
     prep()
   
   # train
-  df_training <- df_recipe %>%
+  df_training <- df_recipe |>
     bake(new_data = NULL)
   
   # test
-  df_testing <- df_recipe %>%
+  df_testing <- df_recipe |>
     bake(testing(df_split))
   
-  mdl <- FUN(...) %>%
-    set_engine(engine) %>%
+  mdl <- FUN(...) |>
+    set_engine(engine) |>
     fit(outcome ~ ., data = df_training)
   
-  metrics <- mdl %>%
-    stats::predict(df_testing) %>%
-    bind_cols(df_testing) %>% 
-    metrics(truth = outcome, estimate = colnames(.)[1])
+  metrics <- mdl |>
+    stats::predict(df_testing) |>
+    bind_cols(df_testing)
+  metrics <- metrics |>
+    metrics(truth = outcome, estimate = colnames(metrics)[1])
   
   if (properties$mode == "classification") {
-    prediction <- stats::predict(mdl, df_testing, type = "prob") %>%
-      mutate(max = row_function(max, data = .))
+    prediction <- stats::predict(mdl, df_testing, type = "prob")
+    prediction <- prediction |>
+      mutate(max = row_function(max, data = prediction))
   } else {
     prediction <- stats::predict(mdl, df_testing, type = "numeric")
   }
@@ -516,8 +518,8 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
     stop("These columns are in the training data, but not in the new data: ",
          paste0(training_cols[!training_cols %in% colnames(new_data)], collapse = ", "))
   }
-  new_data <- new_data %>% 
-    select(all_of(training_cols)) %>% 
+  new_data <- new_data |> 
+    select(all_of(training_cols)) |> 
     mutate(across(everything(), as.double))
   test_data <- bake(attributes(object)$recipe, new_data = new_data)
   
@@ -561,7 +563,7 @@ metrics.certestats_ml <- function(data, ...) {
 #' @param plot_type the plot type, can be `"roc"` (default), `"gain"`, `"lift"` or `"pr"`. These functions rely on [yardstick::roc_curve()], [yardstick::gain_curve()], [yardstick::lift_curve()] and [yardstick::pr_curve()] to construct the curves.
 #' @details Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses [yardstick::roc_curve()] to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
 #' @importFrom ggplot2 autoplot ggplot aes geom_path geom_abline coord_equal scale_x_continuous scale_y_continuous labs element_line
-#' @importFrom dplyr `%>%` bind_cols starts_with
+#' @importFrom dplyr bind_cols starts_with
 #' @importFrom yardstick roc_curve roc_auc gain_curve lift_curve pr_curve
 #' @export
 autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
@@ -628,7 +630,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
     
   } else if (plot_type == "pr") {
     suppressMessages(
-      p <- curve %>%
+      p <- curve |>
         # thse is defined in the yardstick package:
         autoplot() +
         scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
@@ -637,7 +639,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
     )
     
   } else {
-    p <- curve %>%
+    p <- curve |>
       # these ones are defined in the yardstick package:
       autoplot() +
       scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
@@ -666,7 +668,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 #' @importFrom rsample vfold_cv
 #' @importFrom tune tune_grid collect_metrics
 #' @importFrom hardhat tune
-#' @importFrom dplyr `%>%` arrange desc across starts_with rename_with everything
+#' @importFrom dplyr arrange desc across starts_with rename_with everything
 #' @importFrom tidyr pivot_wider
 #' @export
 tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 5, v = 10) {
@@ -720,13 +722,13 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
                        args = c(dials_fns, list(levels = levels)))
   
   # (re)create the model specification
-  model_spec <- do.call(FUN, args = params) %>% 
-    set_engine(model_prop$properties$engine_package) %>% 
+  model_spec <- do.call(FUN, args = params) |> 
+    set_engine(model_prop$properties$engine_package) |> 
     set_mode(model_prop$properties$mode)
   
   # create the worflow, using the tuning specification
-  tree_wf <- workflow() %>%
-    add_model(model_spec) %>%
+  tree_wf <- workflow() |>
+    add_model(model_spec) |>
     add_formula(outcome ~ .)
 
   # create the V-fold cross-validation (also known as k-fold cross-validation)
@@ -747,20 +749,20 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
     message("[", Sys.time(), "] Running tuning analysis using a ", v, "-fold cross-validation for ", nrow(tree_grid), " combinations...")
   }
   suppressWarnings(
-    tree_res <- tree_wf %>%
+    tree_res <- tree_wf |>
       tune_grid(resamples = vfold,
                 grid = tree_grid)
   )
-  out <- tree_res %>%
+  out <- tree_res |>
     collect_metrics() 
   message("[", Sys.time(), "] Done.")
   
   # return the results, arranging according the best metrics on average
-  structure(out %>% 
-              pivot_wider(-.estimator, names_from = .metric, values_from = c(mean, std_err)) %>%
+  structure(out |> 
+              pivot_wider(-.estimator, names_from = .metric, values_from = c(mean, std_err)) |>
               arrange(desc(across(starts_with("mean_"))),
-                      across(everything())) %>%
-              rename_with(function(x) gsub("^mean_", "", x)) %>%
+                      across(everything())) |>
+              rename_with(function(x) gsub("^mean_", "", x)) |>
               rename_with(function(x) gsub("^std_err_(.*)", "\\1_se", x)),
             class = c("certestats_tuning", class(out)),
             result = tree_res)

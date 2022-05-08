@@ -3,7 +3,6 @@
 \docType{import}
 \name{reexports}
 \alias{reexports}
-\alias{\%>\%}
 \alias{everything}
 \alias{confusionMatrix}
 \alias{metrics}
@@ -17,7 +16,7 @@ below to see their documentation.
 \describe{
   \item{caret}{\code{\link[caret]{confusionMatrix}}}
 
-  \item{dplyr}{\code{\link[dplyr:reexports]{\%>\%}}, \code{\link[dplyr:reexports]{everything}}}
+  \item{dplyr}{\code{\link[dplyr:reexports]{everything}}}
 
   \item{ggplot2}{\code{\link[ggplot2]{autoplot}}}
 

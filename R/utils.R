@@ -17,10 +17,6 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-#' @importFrom dplyr `%>%`
-#' @export
-dplyr::`%>%`
-
 #' @importFrom dplyr everything
 #' @export
 dplyr::everything
@@ -56,15 +52,15 @@ globalVariables(c(".",
                   "value",
                   "where"))
 
-#' @importFrom dplyr `%>%` mutate starts_with
+#' @importFrom dplyr mutate starts_with
 #' @importFrom yardstick roc_auc
 get_auc <- function(df, look_for) {
-  df %>%
+  df |>
     mutate(predicted = factor(ifelse(predicted == look_for, look_for, "other"),
                               levels = c(look_for, "other")),
            truth = factor(ifelse(truth == look_for, look_for, "other"),
                           levels = c(look_for, "other")),
-           other = row_function(sum, starts_with(".pred")) - df[, paste0(".pred_", look_for), drop = TRUE]) %>%
+           other = row_function(sum, starts_with(".pred")) - df[, paste0(".pred_", look_for), drop = TRUE]) |>
     roc_auc(truth, c(paste0(".pred_", look_for), other),
             estimator = "hand_till")
 }

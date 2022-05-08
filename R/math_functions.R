@@ -45,13 +45,13 @@ mean_geometric <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
 #' @param fn function to apply, such as [max()]
 #' @param ... tidyverse selector helpers, passed on to [`select()`][dplyr::select()]
 #' @param data data set, will be determined with [`cur_data_all()`][dplyr::cur_data_all()] if left blank
-#' @importFrom dplyr `%>%` select cur_data_all
+#' @importFrom dplyr select cur_data_all
 #' @export
 #' @examples
 #' if (require("dplyr")) {
-#'   iris %>% 
+#'   iris |> 
 #'     mutate(max = row_function(max, where(is.numeric)),
-#'            sepal_mean = row_function(mean, starts_with("Sepal"))) %>% 
+#'            sepal_mean = row_function(mean, starts_with("Sepal"))) |> 
 #'     head()
 #' }
 row_function <- function(fn, ..., data = NULL) {
@@ -61,7 +61,7 @@ row_function <- function(fn, ..., data = NULL) {
     stop("'data' must be a data.frame", call. = FALSE)
   }
   if (tryCatch(length(list(...)) > 0, error = function(e) TRUE)) {
-    data <- data %>% select(...)
+    data <- data |> select(...)
   } 
   apply(data, 1, fn)
 }

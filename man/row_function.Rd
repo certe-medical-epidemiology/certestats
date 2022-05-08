@@ -18,9 +18,9 @@ This can be used to e.g. add a maximum of certain rows.
 }
 \examples{
 if (require("dplyr")) {
-  iris \%>\% 
+  iris |> 
     mutate(max = row_function(max, where(is.numeric)),
-           sepal_mean = row_function(mean, starts_with("Sepal"))) \%>\% 
+           sepal_mean = row_function(mean, starts_with("Sepal"))) |> 
     head()
 }
 }
