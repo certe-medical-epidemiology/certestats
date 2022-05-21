@@ -47,6 +47,15 @@ test_that("ML works", {
   expect_warning(iris %>% ml_decision_trees(Species, where(is.double), training_fraction = 10000))
   expect_error(iris %>% ml_decision_trees(as.character(Species), where(is.double)))
   
+  # missing values
+  mdl <- iris |> ml_decision_trees(Species)
+  new <- iris |>
+    select(matches("[.]")) |>
+    slice(1:3) |>
+    select(-Petal.Width) |> 
+    mutate(Sepal.Width = as.integer(Sepal.Width))
+  expect_warning(mdl |> apply_model_to(new))
+  
   # tuning parameters
   expect_error(tune_parameters("test"))
   tuned <- model_neural_network %>% tune_parameters(levels = 1, v = 2)

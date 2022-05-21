@@ -200,6 +200,7 @@ The \verb{ml_*()} functions return the following \link[base:attributes]{attribut
 \itemize{
 \item \code{properties}: a \link{list} with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as \code{tree_depth} in \code{\link[=ml_decision_trees]{ml_decision_trees()}})
 \item \code{recipe}: a \link[recipes:recipe]{recipe} as generated with \code{\link[recipes:prep]{recipes::prep()}}, to be used for training and testing
+\item \code{data_structure}: a \link{data.frame} containing the original data structure with zero rows
 \item \code{data_training}: a \link{data.frame} containing the training data
 \item \code{data_testing}: a \link{data.frame} containing the testing data
 \item \code{rows_training}: an \link{integer} vector of rows used for training
@@ -220,7 +221,9 @@ To predict \strong{regression} (numeric values), the function \code{\link[=ml_lo
 
 To predict \strong{classifications} (character values), the function \code{\link[=ml_linear_regression]{ml_linear_regression()}} cannot be used.
 
-The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):\preformatted{                       .data
+The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{                       .data
                          |
                rsample::initial_split()
                      /        \\
@@ -241,7 +244,7 @@ recipes::bake()       recipes::bake()
 generics::fit()      yardstick::metrics()
        |                      |
     output            attributes(output)
-}
+}\if{html}{\out{</div>}}
 
 Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
 
@@ -270,7 +273,10 @@ model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
 model1 |> metrics()
 model2 |> metrics()
 
+# applying a model
 model1 |> apply_model_to(esbl_tests)
+# apply_model_to() can also correct for missing variables:
+model1 |> apply_model_to(esbl_tests[, 1:17])
 
 # predict genus based on MICs
 genus <- esbl_tests |> ml_neural_network(genus, everything())

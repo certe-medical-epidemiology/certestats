@@ -76,6 +76,7 @@
 #' 
 #' * `properties`: a [list] with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as `tree_depth` in [ml_decision_trees()])
 #' * `recipe`: a [recipe][recipes::recipe()] as generated with [recipes::prep()], to be used for training and testing
+#' * `data_structure`: a [data.frame] containing the original data structure with zero rows
 #' * `data_training`: a [data.frame] containing the training data
 #' * `data_testing`: a [data.frame] containing the testing data
 #' * `rows_training`: an [integer] vector of rows used for training
@@ -107,8 +108,11 @@
 #'
 #' model1 |> metrics()
 #' model2 |> metrics()
-#'
+#' 
+#' # applying a model
 #' model1 |> apply_model_to(esbl_tests)
+#' # apply_model_to() can also correct for missing variables:
+#' model1 |> apply_model_to(esbl_tests[, 1:17])
 #' 
 #' # predict genus based on MICs
 #' genus <- esbl_tests |> ml_neural_network(genus, everything())
@@ -315,7 +319,7 @@ ml_random_forest <- function(.data,
           ...)
 }
 
-#' @importFrom dplyr mutate select across filter_all bind_cols all_of cur_column
+#' @importFrom dplyr mutate select across filter_all bind_cols all_of cur_column slice
 #' @importFrom yardstick metrics
 #' @importFrom parsnip set_engine
 #' @importFrom recipes recipe step_corr step_center step_scale all_predictors all_outcomes prep bake
@@ -348,13 +352,18 @@ ml_exec <- function(FUN,
     select(-c(outcome, strata)) |> 
     colnames()
   
+  # save structure of original input data
+  df_structure <- df |> 
+    slice(0)
+  
   # format data to work with it
   df <- df |>
     # force all predictors as double
     mutate(across(all_of(predictors),
                   function(values) {
                     if (is.character(values)) {
-                      warning("Transformed column '", cur_column(), "' from <character> to <factor> and then to <double> to use as predictor", call. = FALSE)
+                      message("Transformed column '", cur_column(),
+                              "' from <character> to <factor> and then to <double> to use as predictor")
                       values <- as.factor(values)
                     }
                     as.double(values)
@@ -436,9 +445,14 @@ ml_exec <- function(FUN,
   df_testing <- df_recipe |>
     bake(testing(df_split))
   
+  # create actual model
   mdl <- FUN(...) |>
     set_engine(engine) |>
     fit(outcome ~ ., data = df_training)
+  
+  # keep only training columns of original input data
+  df_structure <- df_structure |> 
+    select(all_of(colnames(df_training)), -outcome)
   
   metrics <- mdl |>
     stats::predict(df_testing) |>
@@ -463,6 +477,7 @@ ml_exec <- function(FUN,
             class = c("certestats_ml", class(mdl)),
             properties = properties,
             recipe = df_recipe,
+            data_structure = df_structure,
             data_training = df_training,
             data_testing = df_testing,
             rows_training = sort(df_split$in_id),
@@ -504,7 +519,7 @@ print.certestats_ml <- function(x, ...) {
 #' @param object,data outcome of machine learning model
 #' @param new_data new input data that requires prediction, must have all columns present in the training data
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with reliabilities of the predictions
-#' @importFrom dplyr select all_of mutate across everything
+#' @importFrom dplyr select all_of mutate across everything pull type_sum
 #' @importFrom recipes bake
 #' @export
 apply_model_to <- function(object, new_data, only_prediction = FALSE) {
@@ -512,24 +527,69 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
     stop("Only output from certestats::ml_*() functions can be used.")
   }
   # test - transform data according to recipe
-  training_cols <- colnames(attributes(object)$data_training)
+  training_structure <- attributes(object)$data_structure
+  training_data <- attributes(object)$data_training
+  training_cols <- colnames(training_data)
   training_cols <- training_cols[training_cols != "outcome"]
-  if (!all(training_cols %in% colnames(new_data))) {
-    stop("These columns are in the training data, but not in the new data: ",
-         paste0(training_cols[!training_cols %in% colnames(new_data)], collapse = ", "))
+  # correct for missing variables
+  misses <- training_cols[!training_cols %in% colnames(new_data)]
+  if (length(misses) > 0) {
+    miss_df <- training_structure[, sort(misses), drop = FALSE]
+    warning("These variables were used for training but are missing from the input data: ",
+            paste0(colnames(miss_df), " <", miss_df |> vapply(FUN.VALUE = character(1), type_sum), ">", collapse = ", "),
+            call. = FALSE)
   }
-  new_data <- new_data |> 
-    select(all_of(training_cols)) |> 
-    mutate(across(everything(), as.double))
+  for (col in misses) {
+    # add as NA in the class of training_data:
+    new_data[, col] <- training_structure[0, col, drop = TRUE][1]
+  }
+  # sort according to training data
+  new_data <- new_data |> select(all_of(training_cols))
+  # check classes of each model variable
+  old_classes <- training_structure |> vapply(FUN.VALUE = character(1), type_sum)
+  new_classes <- new_data |> vapply(FUN.VALUE = character(1), type_sum)
+  class_diff <- which(old_classes != new_classes)
+  if (length(class_diff) > 0) {
+    warning("These variables are of different types than the training data of the model:\n",
+            paste0("  - Variable '", names(old_classes[class_diff]), "': <",
+                   old_classes[class_diff], "> in model, <",
+                   new_classes[class_diff], "> in the input data",
+                   collapse = "\n"),
+            "\n  Try to keep the input data structure equal to the original training data structure.",
+            call. = FALSE)
+  }
+  # transform in the same way the model data was transformed
+  new_data <- new_data |>
+    mutate(across(everything(),
+                  function(values) {
+                    if (is.character(values)) {
+                      values <- as.factor(values)
+                    }
+                    as.double(values)
+                  }))
   test_data <- bake(attributes(object)$recipe, new_data = new_data)
   
+  predicted <- tryCatch(stats::predict(object, test_data), error = function(e) NULL)
+  if (is.null(predicted)) {
+    # replace NAs with zeroes, since this type of model does not support NAs
+    test_data <- test_data |> 
+      mutate(across(everything(),
+                    function(values) {
+                      if (all(is.na(values))) {
+                        values <- 0
+                      }
+                      values
+                    }))
+    predicted <- stats::predict(object, test_data)
+  }
+  
   if (isTRUE(only_prediction)) {
-    out <- stats::predict(object, test_data)[[1]]
+    out <- predicted[[1]]
     if (all(out %in% c("TRUE", "FALSE", NA))) {
       out <- as.logical(out)
     }
   } else {
-    out <- bind_cols(stats::setNames(stats::predict(object, test_data), "predicted"),
+    out <- bind_cols(stats::setNames(predicted, "predicted"),
                      stats::predict(object, test_data, type = "prob"))
     if (all(out$predicted %in% c("TRUE", "FALSE", NA))) {
       out$predicted <- as.logical(out$predicted)
