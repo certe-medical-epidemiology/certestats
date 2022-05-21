@@ -12,6 +12,7 @@
 \alias{confusionMatrix.certestats_ml}
 \alias{metrics.certestats_ml}
 \alias{autoplot.certestats_ml}
+\alias{get_recipe}
 \alias{tune_parameters}
 \alias{autoplot.certestats_tuning}
 \title{Create a Traditional Machine Learning (ML) Model}
@@ -121,6 +122,8 @@ apply_model_to(object, new_data, only_prediction = FALSE)
 
 \method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
+get_recipe(object)
+
 tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
 
 \method{autoplot}{certestats_tuning}(object, type = c("marginals", "parameters", "performance"), ...)
@@ -128,9 +131,9 @@ tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
 \arguments{
 \item{.data}{Data set to train}
 
-\item{outcome}{Outcome variable to be used (the variable that must be predicted). The value will be evaluated in \link[dplyr:select]{select()} and thus supports the \code{tidyselect} language In case of classification prediction, this variable will be coerced to a \link{factor}.}
+\item{outcome}{Outcome variable to be used (the variable that must be predicted). The value will be evaluated in \code{\link[dplyr:select]{select()}} and thus supports the \code{tidyselect} language. In case of classification prediction, this variable will be coerced to a \link{factor}.}
 
-\item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}}. This value defaults to \link[tidyselect:everything]{everything()} and supports the \code{tidyselect} language.}
+\item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}} (\link{factor}s will be transformed to \link{character}s first). This value defaults to \code{\link[tidyselect:everything]{everything()}} and supports the \code{tidyselect} language.}
 
 \item{training_fraction}{Fraction of rows to be used for \emph{training}, defaults to 75\%. The rest will be used for \emph{testing}. If given a number over 1, the number will be considered to be the required number of rows for \emph{training}.}
 
@@ -173,7 +176,7 @@ the ensemble.}
 
 \item{new_data}{new input data that requires prediction, must have all columns present in the training data}
 
-\item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with reliabilities of the predictions}
+\item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with certainties of the predictions}
 
 \item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
 
@@ -234,7 +237,7 @@ The workflow of the \verb{ml_*()} functions is basically like this (thus saving 
              |                |
       recipe::step_corr()     |
              |                |
-      recipe::step_center()   |
+     recipe::step_center()    |
              |                |
       recipe::step_scale()    |
              |                |
@@ -247,7 +250,7 @@ generics::fit()      yardstick::metrics()
     output            attributes(output)
 }
 
-The \code{\link[=apply_model_to]{apply_model_to()}} function can be used to fit a model on a new data set, using \link[parsnip:predict.model_fit]{predict()}. If the new data misses variables that were in the training data, these variables will be generated with \code{NA}s if the model allows this (such as in \code{\link[=ml_decision_trees]{ml_decision_trees()}}) and with the \link[=mean]{mean} of the variable in the training data otherwise.
+The \code{\link[=apply_model_to]{apply_model_to()}} function can be used to fit a model on a new data set, using \code{\link[parsnip:predict.model_fit]{predict()}}. If the new data misses variables that were in the training data, these variables will be generated with \code{NA}s if the model allows this (such as in \code{\link[=ml_decision_trees]{ml_decision_trees()}}) and with the \link[=mean]{mean} of the variable in the training data otherwise.
 
 Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
 
@@ -270,29 +273,32 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 # 'esbl_tests' is an included data set, see ?esbl_tests
 print(esbl_tests, n = 5)
 
-# predict ESSBL test outcome based on MICs
+# predict ESBL test outcome based on MICs
 model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
 model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
 
 model1 |> metrics()
 model2 |> metrics()
 
-# apply a model using a base R function
-model1 |> predict(esbl_tests)
-# apply a model using apply_model_to() to also include reliabilities
+model1 |> confusionMatrix()
+
+
+## Applying A Model ##
+ 
+# do NOT apply a model using 'just' stats::predict():
+model1 |> predict(esbl_tests, type = "prob")
+
+# the recipe was not considered, and you must bake first:
+model1 |> predict(recipes::bake(recipe, new_data = esbl_tests), type = "prob")
+
+# as a shortcut, apply a model using apply_model_to() to get predictions and certainties
 model1 |> apply_model_to(esbl_tests)
 # apply_model_to() can also correct for missing variables:
 model1 |> apply_model_to(esbl_tests[, 1:17])
 
-# predict genus based on MICs
-genus <- esbl_tests |> ml_neural_network(genus, everything())
-genus |> metrics()
-genus |> autoplot()
-genus |> autoplot(plot_type = "gain")
 
-# confusion matrix of the model (trained data)
-model1 |> confusionMatrix()
-
+## Tuning A Model ##
+ 
 # tune the parameters of a model (will take some time)
 tuning <- model1 |> 
   tune_parameters(v = 5, levels = 3)
@@ -305,7 +311,7 @@ iris |>
                   trees = dials::trees())
 
 
-## Practical Example ##
+## Practical Example 1 ##
 
 # this is what iris data set looks like:
 head(iris)
@@ -313,16 +319,30 @@ head(iris)
 iris_model <- iris |> ml_random_forest(Species)
 # is it a bit reliable?
 metrics(iris_model)
+
 # now try to predict species from an arbitrary data set:
 to_predict <- data.frame(Sepal.Length = 5,
                          Sepal.Width = 3,
                          Petal.Length = 1.5,
                          Petal.Width = 0.5)
 to_predict
+
 # should be 'setosa' in the 'predicted' column:
 iris_model |> apply_model_to(to_predict)
+
 # how would the model do without the most important 'Sepal.Length' column?
 to_predict <- to_predict[, c("Sepal.Width", "Petal.Length", "Petal.Width")]
 to_predict
 iris_model |> apply_model_to(to_predict)
+
+
+## Practical Example 2 ##
+
+# this example shows plotting methods for a model
+
+# train model to predict genus based on MICs:
+genus <- esbl_tests |> ml_neural_network(genus, everything())
+genus |> metrics()
+genus |> autoplot()
+genus |> autoplot(plot_type = "gain") 
 }

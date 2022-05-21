@@ -21,8 +21,8 @@
 #'
 #' Create a traditional machine learning model based on different 'engines'. These function internally use the `tidymodels` packages by RStudio, which is the `tidyverse` variant for predictive modelling.
 #' @param .data Data set to train
-#' @param outcome Outcome variable to be used (the variable that must be predicted). The value will be evaluated in [select()][dplyr::select()] and thus supports the `tidyselect` language In case of classification prediction, this variable will be coerced to a [factor].
-#' @param predictors Variables to use as predictors - these will be transformed using [as.double()]. This value defaults to [everything()][tidyselect::everything()] and supports the `tidyselect` language.
+#' @param outcome Outcome variable to be used (the variable that must be predicted). The value will be evaluated in [`select()`][dplyr::select()] and thus supports the `tidyselect` language. In case of classification prediction, this variable will be coerced to a [factor].
+#' @param predictors Variables to use as predictors - these will be transformed using [as.double()] ([factor]s will be transformed to [character]s first). This value defaults to [`everything()`][tidyselect::everything()] and supports the `tidyselect` language.
 #' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*. If given a number over 1, the number will be considered to be the required number of rows for *training*.
 #' @param strata Groups to consider in the model (i.e., variables to stratify by)
 #' @param correlation_filter A [logical] to indicate whether the `predictors` should be removed that have to much correlation with each other, using [recipes::step_corr()]
@@ -56,7 +56,7 @@
 #'              |                |
 #'       recipe::step_corr()     |
 #'              |                |
-#'       recipe::step_center()   |
+#'      recipe::step_center()    |
 #'              |                |
 #'       recipe::step_scale()    |
 #'              |                |
@@ -103,29 +103,34 @@
 #' # 'esbl_tests' is an included data set, see ?esbl_tests
 #' print(esbl_tests, n = 5)
 #' 
-#' # predict ESSBL test outcome based on MICs
+#' # predict ESBL test outcome based on MICs
 #' model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
 #' model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
 #' 
 #' model1 |> metrics()
 #' model2 |> metrics()
 #' 
-#' # apply a model using a base R function
-#' model1 |> predict(esbl_tests)
-#' # apply a model using apply_model_to() to also include reliabilities
+#' model1 |> confusionMatrix()
+#' 
+#' 
+#' ## Applying A Model ##
+#'  
+#' # do NOT apply a model using 'just' stats::predict():
+#' model1 |> predict(esbl_tests, type = "prob")
+#' 
+#' # the recipe was not considered, and you must bake first:
+#  recipe <- get_recipe(model1)
+#  recipe
+#' model1 |> predict(recipes::bake(recipe, new_data = esbl_tests), type = "prob")
+#'
+#' # as a shortcut, apply a model using apply_model_to() to get predictions and certainties
 #' model1 |> apply_model_to(esbl_tests)
 #' # apply_model_to() can also correct for missing variables:
 #' model1 |> apply_model_to(esbl_tests[, 1:17])
 #' 
-#' # predict genus based on MICs
-#' genus <- esbl_tests |> ml_neural_network(genus, everything())
-#' genus |> metrics()
-#' genus |> autoplot()
-#' genus |> autoplot(plot_type = "gain")
 #' 
-#' # confusion matrix of the model (trained data)
-#' model1 |> confusionMatrix()
-#' 
+#' ## Tuning A Model ##
+#'  
 #' # tune the parameters of a model (will take some time)
 #' tuning <- model1 |> 
 #'   tune_parameters(v = 5, levels = 3)
@@ -138,7 +143,7 @@
 #'                   trees = dials::trees())
 #' 
 #' 
-#' ## Practical Example ##
+#' ## Practical Example 1 ##
 #' 
 #' # this is what iris data set looks like:
 #' head(iris)
@@ -146,18 +151,32 @@
 #' iris_model <- iris |> ml_random_forest(Species)
 #' # is it a bit reliable?
 #' metrics(iris_model)
+#' 
 #' # now try to predict species from an arbitrary data set:
 #' to_predict <- data.frame(Sepal.Length = 5,
 #'                          Sepal.Width = 3,
 #'                          Petal.Length = 1.5,
 #'                          Petal.Width = 0.5)
 #' to_predict
+#' 
 #' # should be 'setosa' in the 'predicted' column:
 #' iris_model |> apply_model_to(to_predict)
+#' 
 #' # how would the model do without the most important 'Sepal.Length' column?
 #' to_predict <- to_predict[, c("Sepal.Width", "Petal.Length", "Petal.Width")]
 #' to_predict
 #' iris_model |> apply_model_to(to_predict)
+#' 
+#' 
+#' ## Practical Example 2 ##
+#' 
+#' # this example shows plotting methods for a model
+#' 
+#' # train model to predict genus based on MICs:
+#' genus <- esbl_tests |> ml_neural_network(genus, everything())
+#' genus |> metrics()
+#' genus |> autoplot()
+#' genus |> autoplot(plot_type = "gain") 
 ml_decision_trees <- function(.data,
                               outcome,
                               predictors = everything(),
@@ -523,7 +542,7 @@ print.certestats_ml <- function(x, ...) {
       paste0(format(names(model_prop$properties)), " : ", model_prop$properties, "\n"),
       sep = "")
   if (model_prop$properties$mode == "classification") {
-    cat("\nClassification reliability (based on testing data):\n")
+    cat("\nClassification certainty (based on testing data):\n")
     intervals <- c(0, 0.5, 0.68, 0.95, 0.98, 1)
     q <- quantile(model_prop$predictions$max, intervals)
     names(q) <- paste0("p", intervals * 100)
@@ -543,8 +562,8 @@ print.certestats_ml <- function(x, ...) {
 #' @rdname machine_learning
 #' @param object,data outcome of machine learning model
 #' @param new_data new input data that requires prediction, must have all columns present in the training data
-#' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with reliabilities of the predictions
-#' @details The [apply_model_to()] function can be used to fit a model on a new data set, using [predict()][parsnip::predict.model_fit()]. If the new data misses variables that were in the training data, these variables will be generated with `NA`s if the model allows this (such as in [ml_decision_trees()]) and with the [mean][mean()] of the variable in the training data otherwise.
+#' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with certainties of the predictions
+#' @details The [apply_model_to()] function can be used to fit a model on a new data set, using [`predict()`][parsnip::predict.model_fit()]. If the new data misses variables that were in the training data, these variables will be generated with `NA`s if the model allows this (such as in [ml_decision_trees()]) and with the [mean][mean()] of the variable in the training data otherwise.
 #' @importFrom dplyr select all_of mutate across everything pull type_sum cur_column
 #' @importFrom recipes bake
 #' @export
@@ -592,7 +611,7 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
                     }
                     as.double(values)
                   }))
-  test_data <- bake(attributes(object)$recipe, new_data = new_data)
+  test_data <- bake(get_recipe(object), new_data = new_data)
   
   predicted <- tryCatch(stats::predict(object = object, new_data = test_data, type = NULL), error = function(e) NULL)
   if (is.null(predicted)) {
@@ -618,7 +637,7 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
     preds <- stats::predict(object, test_data, type = "prob")
     out <- bind_cols(stats::setNames(predicted, "predicted"),
                      preds) |> 
-        mutate(reliability = row_function(max, data = preds), .after = 1)
+        mutate(certainty = row_function(max, data = preds), .after = 1)
     if (all(out$predicted %in% c("TRUE", "FALSE", NA))) {
       out$predicted <- as.logical(out$predicted)
     }
@@ -743,6 +762,15 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
   }
   
   p
+}
+
+#' @rdname machine_learning
+#' @export
+get_recipe <- function(object) {
+  if (!inherits(object, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
+  }
+  attributes(object)$recipe
 }
 
 #' @rdname machine_learning

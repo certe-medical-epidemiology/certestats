@@ -35,6 +35,8 @@ test_that("ML works", {
   expect_s3_class(model_random_forest, "certestats_ml")
   
   expect_output(print(model_decision_trees))
+  expect_identical(get_recipe(model_decision_trees),
+                   attributes(model_decision_trees)$recipe)
   
   expect_s3_class(autoplot(model_decision_trees, plot_type = "roc"), "gg")
   expect_s3_class(autoplot(model_decision_trees, plot_type = "gain"), "gg")
