@@ -289,6 +289,8 @@ model1 |> confusionMatrix()
 model1 |> predict(esbl_tests, type = "prob")
 
 # the recipe was not considered, and you must bake first:
+recipe <- get_recipe(model1)
+recipe
 model1 |> predict(recipes::bake(recipe, new_data = esbl_tests), type = "prob")
 
 # as a shortcut, apply a model using apply_model_to() to get predictions and certainties
