@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.4.4
+Version: 1.4.5
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",

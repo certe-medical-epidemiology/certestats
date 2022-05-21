@@ -45,7 +45,7 @@
 #' 
 #' The workflow of the `ml_*()` functions is basically like this (thus saving a lot of `tidymodels` functions to type):
 #' 
-#' ```
+#' \preformatted{
 #'                        .data
 #'                          |
 #'                rsample::initial_split()
@@ -67,7 +67,7 @@
 #' generics::fit()      yardstick::metrics()
 #'        |                      |
 #'     output            attributes(output)
-#' ```
+#' }
 #' @return A machine learning model of class `certestats_ml` / `_rpart` / `model_fit`.
 #' 
 #' ## Attributes
@@ -101,15 +101,18 @@
 #' @export
 #' @examples
 #' # 'esbl_tests' is an included data set, see ?esbl_tests
+#' print(esbl_tests, n = 5)
 #' 
 #' # predict ESSBL test outcome based on MICs
 #' model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
 #' model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
-#'
+#' 
 #' model1 |> metrics()
 #' model2 |> metrics()
 #' 
-#' # applying a model
+#' # apply a model using a base R function
+#' model1 |> predict(esbl_tests)
+#' # apply a model using apply_model_to() to also include reliabilities
 #' model1 |> apply_model_to(esbl_tests)
 #' # apply_model_to() can also correct for missing variables:
 #' model1 |> apply_model_to(esbl_tests[, 1:17])
@@ -133,6 +136,28 @@
 #'   ml_random_forest(Species) |> 
 #'   tune_parameters(mtry = dials::mtry(range = c(1, 3)),
 #'                   trees = dials::trees())
+#' 
+#' 
+#' ## Practical Example ##
+#' 
+#' # this is what iris data set looks like:
+#' head(iris)
+#' # create a model to predict the species:
+#' iris_model <- iris |> ml_random_forest(Species)
+#' # is it a bit reliable?
+#' metrics(iris_model)
+#' # now try to predict species from an arbitrary data set:
+#' to_predict <- data.frame(Sepal.Length = 5,
+#'                          Sepal.Width = 3,
+#'                          Petal.Length = 1.5,
+#'                          Petal.Width = 0.5)
+#' to_predict
+#' # should be 'setosa' in the 'predicted' column:
+#' iris_model |> apply_model_to(to_predict)
+#' # how would the model do without the most important 'Sepal.Length' column?
+#' to_predict <- to_predict[, c("Sepal.Width", "Petal.Length", "Petal.Width")]
+#' to_predict
+#' iris_model |> apply_model_to(to_predict)
 ml_decision_trees <- function(.data,
                               outcome,
                               predictors = everything(),
@@ -519,7 +544,8 @@ print.certestats_ml <- function(x, ...) {
 #' @param object,data outcome of machine learning model
 #' @param new_data new input data that requires prediction, must have all columns present in the training data
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with reliabilities of the predictions
-#' @importFrom dplyr select all_of mutate across everything pull type_sum
+#' @details The [apply_model_to()] function can be used to fit a model on a new data set, using [predict()][parsnip::predict.model_fit()]. If the new data misses variables that were in the training data, these variables will be generated with `NA`s if the model allows this (such as in [ml_decision_trees()]) and with the [mean][mean()] of the variable in the training data otherwise.
+#' @importFrom dplyr select all_of mutate across everything pull type_sum cur_column
 #' @importFrom recipes bake
 #' @export
 apply_model_to <- function(object, new_data, only_prediction = FALSE) {
@@ -550,12 +576,11 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
   new_classes <- new_data |> vapply(FUN.VALUE = character(1), type_sum)
   class_diff <- which(old_classes != new_classes)
   if (length(class_diff) > 0) {
-    warning("These variables are of different types than the training data of the model:\n",
-            paste0("  - Variable '", names(old_classes[class_diff]), "': <",
+    warning("These variables are of different types than the training data of the model: ",
+            paste0(names(old_classes[class_diff]), " (<",
                    old_classes[class_diff], "> in model, <",
-                   new_classes[class_diff], "> in the input data",
-                   collapse = "\n"),
-            "\n  Try to keep the input data structure equal to the original training data structure.",
+                   new_classes[class_diff], "> in input)",
+                   collapse = ", "),
             call. = FALSE)
   }
   # transform in the same way the model data was transformed
@@ -569,18 +594,19 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
                   }))
   test_data <- bake(attributes(object)$recipe, new_data = new_data)
   
-  predicted <- tryCatch(stats::predict(object, test_data), error = function(e) NULL)
+  predicted <- tryCatch(stats::predict(object = object, new_data = test_data, type = NULL), error = function(e) NULL)
   if (is.null(predicted)) {
-    # replace NAs with zeroes, since this type of model does not support NAs
+    # replace NAs with mean of the training data, since this type of model apparently does not support NAs
     test_data <- test_data |> 
       mutate(across(everything(),
                     function(values) {
                       if (all(is.na(values))) {
-                        values <- 0
+                        values <- training_data |> pull(cur_column()) |> mean()
                       }
                       values
                     }))
-    predicted <- stats::predict(object, test_data)
+    # rerun prediction with new mean-fills
+    predicted <- stats::predict(object = object, new_data = test_data, type = NULL)
   }
   
   if (isTRUE(only_prediction)) {
@@ -589,8 +615,10 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE) {
       out <- as.logical(out)
     }
   } else {
+    preds <- stats::predict(object, test_data, type = "prob")
     out <- bind_cols(stats::setNames(predicted, "predicted"),
-                     stats::predict(object, test_data, type = "prob"))
+                     preds) |> 
+        mutate(reliability = row_function(max, data = preds), .after = 1)
     if (all(out$predicted %in% c("TRUE", "FALSE", NA))) {
       out$predicted <- as.logical(out$predicted)
     }

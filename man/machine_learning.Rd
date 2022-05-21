@@ -223,10 +223,11 @@ To predict \strong{classifications} (character values), the function \code{\link
 
 The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{                       .data
+\preformatted{
+                       .data
                          |
                rsample::initial_split()
-                     /        \\
+                     /        \
      rsample::training() rsample::testing()
              |                |
        recipe::recipe()       |
@@ -238,13 +239,15 @@ The workflow of the \verb{ml_*()} functions is basically like this (thus saving 
       recipe::step_scale()    |
              |                |
         recipe::prep()        |
-         /           \\        |
+         /           \        |
 recipes::bake()       recipes::bake()
        |                      |
 generics::fit()      yardstick::metrics()
        |                      |
     output            attributes(output)
-}\if{html}{\out{</div>}}
+}
+
+The \code{\link[=apply_model_to]{apply_model_to()}} function can be used to fit a model on a new data set, using \link[parsnip:predict.model_fit]{predict()}. If the new data misses variables that were in the training data, these variables will be generated with \code{NA}s if the model allows this (such as in \code{\link[=ml_decision_trees]{ml_decision_trees()}}) and with the \link[=mean]{mean} of the variable in the training data otherwise.
 
 Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
 
@@ -265,6 +268,7 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 
 \examples{
 # 'esbl_tests' is an included data set, see ?esbl_tests
+print(esbl_tests, n = 5)
 
 # predict ESSBL test outcome based on MICs
 model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
@@ -273,7 +277,9 @@ model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
 model1 |> metrics()
 model2 |> metrics()
 
-# applying a model
+# apply a model using a base R function
+model1 |> predict(esbl_tests)
+# apply a model using apply_model_to() to also include reliabilities
 model1 |> apply_model_to(esbl_tests)
 # apply_model_to() can also correct for missing variables:
 model1 |> apply_model_to(esbl_tests[, 1:17])
@@ -297,4 +303,26 @@ iris |>
   ml_random_forest(Species) |> 
   tune_parameters(mtry = dials::mtry(range = c(1, 3)),
                   trees = dials::trees())
+
+
+## Practical Example ##
+
+# this is what iris data set looks like:
+head(iris)
+# create a model to predict the species:
+iris_model <- iris |> ml_random_forest(Species)
+# is it a bit reliable?
+metrics(iris_model)
+# now try to predict species from an arbitrary data set:
+to_predict <- data.frame(Sepal.Length = 5,
+                         Sepal.Width = 3,
+                         Petal.Length = 1.5,
+                         Petal.Width = 0.5)
+to_predict
+# should be 'setosa' in the 'predicted' column:
+iris_model |> apply_model_to(to_predict)
+# how would the model do without the most important 'Sepal.Length' column?
+to_predict <- to_predict[, c("Sepal.Width", "Petal.Length", "Petal.Width")]
+to_predict
+iris_model |> apply_model_to(to_predict)
 }
