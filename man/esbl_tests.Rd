@@ -35,6 +35,6 @@ esbl_tests
 This data set contains phenotypic test outcomes of the presence of ESBL (Extended Spectrum Beta-Lactamase) genes, with the minimum inhibitory concentrations (MIC, in mg/L) for 17 antibiotic drugs.
 }
 \examples{
-head(esbl_tests)
+print(esbl_tests, n = 5)
 }
 \keyword{datasets}

@@ -41,5 +41,5 @@
 #' - `MEM`: MIC values of meropenem
 #' - `COL`: MIC values of colistin
 #' @examples 
-#' head(esbl_tests)
+#' print(esbl_tests, n = 5)
 "esbl_tests"
