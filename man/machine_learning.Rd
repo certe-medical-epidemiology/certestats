@@ -8,11 +8,14 @@
 \alias{ml_neural_network}
 \alias{ml_nearest_neighbour}
 \alias{ml_random_forest}
-\alias{apply_model_to}
 \alias{confusionMatrix.certestats_ml}
-\alias{metrics.certestats_ml}
 \alias{autoplot.certestats_ml}
+\alias{apply_model_to}
+\alias{get_metrics}
 \alias{get_recipe}
+\alias{get_specification}
+\alias{get_coefficients}
+\alias{get_variable_weights}
 \alias{tune_parameters}
 \alias{autoplot.certestats_tuning}
 \title{Create a Traditional Machine Learning (ML) Model}
@@ -114,15 +117,21 @@ ml_random_forest(
   ...
 )
 
-apply_model_to(object, new_data, only_prediction = FALSE)
-
 \method{confusionMatrix}{certestats_ml}(data, ...)
-
-\method{metrics}{certestats_ml}(data, ...)
 
 \method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
+apply_model_to(object, new_data, only_prediction = FALSE, ...)
+
+get_metrics(object)
+
 get_recipe(object)
+
+get_specification(object)
+
+get_coefficients(object)
+
+get_variable_weights(object)
 
 tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
 
@@ -131,9 +140,9 @@ tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
 \arguments{
 \item{.data}{Data set to train}
 
-\item{outcome}{Outcome variable to be used (the variable that must be predicted). The value will be evaluated in \code{\link[dplyr:select]{select()}} and thus supports the \code{tidyselect} language. In case of classification prediction, this variable will be coerced to a \link{factor}.}
+\item{outcome}{Outcome variable, also called the \emph{response variable} or the \emph{dependent variable}; the variable that must be predicted. The value will be evaluated in \code{\link[dplyr:select]{select()}} and thus supports the \code{tidyselect} language. In case of classification prediction, this variable will be coerced to a \link{factor}.}
 
-\item{predictors}{Variables to use as predictors - these will be transformed using \code{\link[=as.double]{as.double()}} (\link{factor}s will be transformed to \link{character}s first). This value defaults to \code{\link[tidyselect:everything]{everything()}} and supports the \code{tidyselect} language.}
+\item{predictors}{Explanatory variables, also called the \emph{predictors} or the \emph{independent variables}; the variables that are used to predict \code{outcome}. These variables will be transformed using \code{\link[=as.double]{as.double()}} (\link{factor}s will be transformed to \link{character}s first). This value defaults to \code{\link[tidyselect:everything]{everything()}} and supports the \code{tidyselect} language.}
 
 \item{training_fraction}{Fraction of rows to be used for \emph{training}, defaults to 75\%. The rest will be used for \emph{testing}. If given a number over 1, the number will be considered to be the required number of rows for \emph{training}.}
 
@@ -174,11 +183,11 @@ the ensemble.}
 
 \item{object, data}{outcome of machine learning model}
 
+\item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
+
 \item{new_data}{new input data that requires prediction, must have all columns present in the training data}
 
-\item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with certainties of the predictions}
-
-\item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
+\item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with the predictions and their certainties per variable}
 
 \item{only_params_in_model}{a \link{logical} to indicate whether only parameters in the model should be tuned}
 
@@ -203,7 +212,8 @@ The \verb{ml_*()} functions return the following \link[base:attributes]{attribut
 \itemize{
 \item \code{properties}: a \link{list} with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as \code{tree_depth} in \code{\link[=ml_decision_trees]{ml_decision_trees()}})
 \item \code{recipe}: a \link[recipes:recipe]{recipe} as generated with \code{\link[recipes:prep]{recipes::prep()}}, to be used for training and testing
-\item \code{data_structure}: a \link{data.frame} containing the original data structure with zero rows
+\item \code{data_structure}: a \link{data.frame} containing the original data structure (only trained variables) with zero rows
+\item \code{data_means}: a \link{data.frame} containing the means of the original data (only trained variables)
 \item \code{data_training}: a \link{data.frame} containing the training data
 \item \code{data_testing}: a \link{data.frame} containing the testing data
 \item \code{rows_training}: an \link{integer} vector of rows used for training
@@ -217,7 +227,7 @@ The \verb{ml_*()} functions return the following \link[base:attributes]{attribut
 }
 }
 \description{
-Create a traditional machine learning model based on different 'engines'. These function internally use the \code{tidymodels} packages by RStudio, which is the \code{tidyverse} variant for predictive modelling.
+Create a traditional machine learning model based on different 'engines'. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{parsnip}, \href{https://recipes.tidymodels.org}{recipes}, \href{https://rsample.tidymodels.org}{rsample}, \href{https://tune.tidymodels.org}{tune}, and \href{https://yardstick.tidymodels.org}{yardstick}) created by RStudio.
 }
 \details{
 To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
@@ -250,9 +260,11 @@ generics::fit()      yardstick::metrics()
     output            attributes(output)
 }
 
-The \code{\link[=apply_model_to]{apply_model_to()}} function can be used to fit a model on a new data set, using \code{\link[parsnip:predict.model_fit]{predict()}}. If the new data misses variables that were in the training data, these variables will be generated with \code{NA}s if the model allows this (such as in \code{\link[=ml_decision_trees]{ml_decision_trees()}}) and with the \link[=mean]{mean} of the variable in the training data otherwise.
-
 Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
+
+The \code{\link[=apply_model_to]{apply_model_to()}} function can be used to fit a model on a new data set, using \code{\link[parsnip:predict.model_fit]{predict()}}. It detects missing variables and missing data within variables (and fills them with either \code{NA}s if the model allows it, or with the trained mean), and detects data type differences between the trained data and the input data. All detected problems will throw a warning, but \code{\link[=apply_model_to]{apply_model_to()}} should always return a prediction.
+
+Use the \code{\link[=get_variable_weights]{get_variable_weights()}} function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a named numeric vector, that sums up to 1.
 
 Use the \code{\link[=tune_parameters]{tune_parameters()}} function to analyse tune parameters of any \verb{ml_*()} function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a \link[rsample:vfold_cv]{V-fold cross-validation}, of which the number of partitions can be set with \code{v}. The number of \code{levels} will be used to split the range of the parameters. For example, a range of 1-10 with \code{levels = 2} will lead to \verb{[1, 10]}, while \code{levels = 5} will lead to \verb{[1, 3, 5, 7, 9]}. The resulting \link{data.frame} will be sorted from best to worst. These results can also be plotted using \code{\link[=autoplot]{autoplot()}}.
 }
@@ -277,8 +289,8 @@ print(esbl_tests, n = 5)
 model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
 model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
 
-model1 |> metrics()
-model2 |> metrics()
+model1 |> get_metrics()
+model2 |> get_metrics()
 
 model1 |> confusionMatrix()
 
@@ -296,7 +308,7 @@ model1 |> predict(recipes::bake(recipe, new_data = esbl_tests), type = "prob")
 # as a shortcut, apply a model using apply_model_to() to get predictions and certainties
 model1 |> apply_model_to(esbl_tests)
 # apply_model_to() can also correct for missing variables:
-model1 |> apply_model_to(esbl_tests[, 1:17])
+model1 |> apply_model_to(esbl_tests[, 1:15])
 
 
 ## Tuning A Model ##
@@ -320,7 +332,7 @@ head(iris)
 # create a model to predict the species:
 iris_model <- iris |> ml_random_forest(Species)
 # is it a bit reliable?
-metrics(iris_model)
+get_metrics(iris_model)
 
 # now try to predict species from an arbitrary data set:
 to_predict <- data.frame(Sepal.Length = 5,
@@ -332,8 +344,11 @@ to_predict
 # should be 'setosa' in the 'predicted' column:
 iris_model |> apply_model_to(to_predict)
 
-# how would the model do without the most important 'Sepal.Length' column?
-to_predict <- to_predict[, c("Sepal.Width", "Petal.Length", "Petal.Width")]
+# which variables are generally important (only trained variables)?
+iris_model |> get_variable_weights()
+
+# how would the model do without the important 'Sepal.Length' column?
+to_predict <- to_predict[, c("Sepal.Width", "Petal.Width", "Petal.Length")]
 to_predict
 iris_model |> apply_model_to(to_predict)
 
@@ -344,7 +359,7 @@ iris_model |> apply_model_to(to_predict)
 
 # train model to predict genus based on MICs:
 genus <- esbl_tests |> ml_neural_network(genus, everything())
-genus |> metrics()
+genus |> get_metrics()
 genus |> autoplot()
 genus |> autoplot(plot_type = "gain") 
 }

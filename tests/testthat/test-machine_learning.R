@@ -43,7 +43,7 @@ test_that("ML works", {
   expect_s3_class(autoplot(model_decision_trees, plot_type = "lift"), "gg")
   expect_s3_class(autoplot(model_decision_trees, plot_type = "pr"), "gg")
   expect_s3_class(confusionMatrix(model_decision_trees), "confusionMatrix")
-  expect_true(is.data.frame(metrics(model_decision_trees)))
+  expect_true(is.data.frame(get_metrics(model_decision_trees)))
   expect_true(all(c("predicted", ".pred_setosa", ".pred_versicolor", ".pred_virginica") %in% colnames(apply_model_to(model_decision_trees, iris))))
   expect_true(model_decision_trees |> apply_model_to(iris, only_prediction = TRUE) |> is.factor())
   expect_warning(iris %>% ml_decision_trees(Species, where(is.double), training_fraction = 10000))
@@ -57,6 +57,12 @@ test_that("ML works", {
     select(-Petal.Width) |> 
     mutate(Sepal.Width = as.integer(Sepal.Width))
   expect_warning(mdl |> apply_model_to(new))
+  
+  # get weights
+  weights <- model_random_forest |> get_variable_weights()
+  expect_true(is.numeric(weights))
+  expect_equal(length(weights), # should be same as trained data without 'outcome' variables
+               ncol(attributes(model_random_forest)$data_training) - 1)
   
   # tuning parameters
   expect_error(tune_parameters("test"))
