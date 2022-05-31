@@ -12,12 +12,19 @@
 \alias{autoplot.certestats_ml}
 \alias{apply_model_to}
 \alias{get_metrics}
+\alias{get_accuracy}
+\alias{get_kappa}
 \alias{get_recipe}
 \alias{get_specification}
+\alias{get_rows_testing}
+\alias{get_rows_training}
+\alias{get_original_data}
+\alias{get_roc_data}
 \alias{get_coefficients}
 \alias{get_variable_weights}
 \alias{tune_parameters}
 \alias{autoplot.certestats_tuning}
+\alias{check_testing_predictions}
 \title{Create a Traditional Machine Learning (ML) Model}
 \usage{
 ml_decision_trees(
@@ -125,9 +132,21 @@ apply_model_to(object, new_data, only_prediction = FALSE, ...)
 
 get_metrics(object)
 
+get_accuracy(object)
+
+get_kappa(object)
+
 get_recipe(object)
 
 get_specification(object)
+
+get_rows_testing(object)
+
+get_rows_training(object)
+
+get_original_data(object)
+
+get_roc_data(object)
 
 get_coefficients(object)
 
@@ -136,6 +155,8 @@ get_variable_weights(object)
 tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
 
 \method{autoplot}{certestats_tuning}(object, type = c("marginals", "parameters", "performance"), ...)
+
+check_testing_predictions(object)
 }
 \arguments{
 \item{.data}{Data set to train}
@@ -214,12 +235,13 @@ The \verb{ml_*()} functions return the following \link[base:attributes]{attribut
 \itemize{
 \item \code{properties}: a \link{list} with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as \code{tree_depth} in \code{\link[=ml_decision_trees]{ml_decision_trees()}})
 \item \code{recipe}: a \link[recipes:recipe]{recipe} as generated with \code{\link[recipes:prep]{recipes::prep()}}, to be used for training and testing
+\item \code{data_original}: a \link{data.frame} containing the original data, possibly without invalid strata
 \item \code{data_structure}: a \link{data.frame} containing the original data structure (only trained variables) with zero rows
 \item \code{data_means}: a \link{data.frame} containing the means of the original data (only trained variables)
-\item \code{data_training}: a \link{data.frame} containing the training data
-\item \code{data_testing}: a \link{data.frame} containing the testing data
-\item \code{rows_training}: an \link{integer} vector of rows used for training
-\item \code{rows_testing}: an \link{integer} vector of rows used for training
+\item \code{data_training}: a \link{data.frame} containing the training data of \code{data_original}
+\item \code{data_testing}: a \link{data.frame} containing the testing data of \code{data_original}
+\item \code{rows_training}: an \link{integer} vector of rows used for training in \code{data_original}
+\item \code{rows_testing}: an \link{integer} vector of rows used for training in \code{data_original}
 \item \code{predictions}: a \link{data.frame} containing predicted values based on the testing data
 \item \code{metrics}: a \link{data.frame} with model metrics as returned by \code{\link[yardstick:metrics]{yardstick::metrics()}}
 \item \code{correlation_filter}: a \link{logical} indicating whether \code{\link[recipes:step_corr]{recipes::step_corr()}} has been applied
@@ -269,6 +291,8 @@ The \code{\link[=apply_model_to]{apply_model_to()}} function can be used to fit 
 Use the \code{\link[=get_variable_weights]{get_variable_weights()}} function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a named numeric vector, that sums up to 1.
 
 Use the \code{\link[=tune_parameters]{tune_parameters()}} function to analyse tune parameters of any \verb{ml_*()} function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a \link[rsample:vfold_cv]{V-fold cross-validation}, of which the number of partitions can be set with \code{v}. The number of \code{levels} will be used to split the range of the parameters. For example, a range of 1-10 with \code{levels = 2} will lead to \verb{[1, 10]}, while \code{levels = 5} will lead to \verb{[1, 3, 5, 7, 9]}. The resulting \link{data.frame} will be sorted from best to worst. These results can also be plotted using \code{\link[=autoplot]{autoplot()}}.
+
+The \code{\link[=check_testing_predictions]{check_testing_predictions()}} function combines the data used for testing from the original data with its predictions, so the original data can be reviewed per prediction.
 }
 \section{Model Functions}{
 

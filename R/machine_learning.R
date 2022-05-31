@@ -76,12 +76,13 @@
 #' 
 #' * `properties`: a [list] with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as `tree_depth` in [ml_decision_trees()])
 #' * `recipe`: a [recipe][recipes::recipe()] as generated with [recipes::prep()], to be used for training and testing
+#' * `data_original`: a [data.frame] containing the original data, possibly without invalid strata
 #' * `data_structure`: a [data.frame] containing the original data structure (only trained variables) with zero rows
 #' * `data_means`: a [data.frame] containing the means of the original data (only trained variables)
-#' * `data_training`: a [data.frame] containing the training data
-#' * `data_testing`: a [data.frame] containing the testing data
-#' * `rows_training`: an [integer] vector of rows used for training
-#' * `rows_testing`: an [integer] vector of rows used for training
+#' * `data_training`: a [data.frame] containing the training data of `data_original`
+#' * `data_testing`: a [data.frame] containing the testing data of `data_original`
+#' * `rows_training`: an [integer] vector of rows used for training in `data_original`
+#' * `rows_testing`: an [integer] vector of rows used for training in `data_original`
 #' * `predictions`: a [data.frame] containing predicted values based on the testing data
 #' * `metrics`: a [data.frame] with model metrics as returned by [yardstick::metrics()]
 #' * `correlation_filter`: a [logical] indicating whether [recipes::step_corr()] has been applied
@@ -402,7 +403,7 @@ ml_exec <- function(FUN,
   # select only required data
   df <- .data |>
     as.data.frame(stringsAsFactors = FALSE) |> 
-    select(outcome = {{ outcome }}, {{ predictors }}, .strata = {{ strata }})
+    mutate(.strata = {{ strata }})
   if (".strata" %in% colnames(df)) {
     .strata <- ".strata"
     # check NAs
@@ -426,7 +427,12 @@ ml_exec <- function(FUN,
   } else {
     .strata <- NULL
   }
-  df.bak <- df
+  # save this one for later
+  df.bak <- df |> 
+    select(-.strata)
+  # select only columns to keep in model
+  df <- df |> 
+    select(outcome = {{ outcome }}, {{ predictors }}, .strata)
   
   # this will allow `predictors = everything()`, without selecting the outcome var with it
   predictors <- df |> 
@@ -520,10 +526,10 @@ ml_exec <- function(FUN,
   
   # save structure of original input data
   df_structure <- df.bak |> 
-    select(all_of(colnames(df_training)), -outcome) |> 
+    select(all_of(colnames(df_training)[colnames(df_training) %in% colnames(df.bak)])) |> 
     slice(0)
   df_means <- df.bak |> 
-    select(all_of(colnames(df_training)), -outcome) |> 
+    select(all_of(colnames(df_training)[colnames(df_training) %in% colnames(df.bak)])) |> 
     summarise(across(everything(), function(x) mean(x, na.rm = TRUE)))
   
   metrics <- mdl |>
@@ -535,27 +541,28 @@ ml_exec <- function(FUN,
   if (properties$mode == "classification") {
     prediction <- stats::predict(mdl, df_testing, type = "prob")
     prediction <- prediction |>
-      mutate(max = row_function(max, data = prediction))
+      mutate(certainty = row_function(max, data = prediction), .before = 1)
   } else {
     prediction <- stats::predict(mdl, df_testing, type = "numeric")
   }
   pred_outcome <- stats::predict(mdl, df_testing)
   colnames(pred_outcome) <- "predicted"
-  prediction <- bind_cols(prediction,
-                          pred_outcome,
-                          data.frame(truth = df_testing$outcome, stringsAsFactors = FALSE))
+  predictions <- bind_cols(data.frame(truth = df_testing$outcome, stringsAsFactors = FALSE),
+                           pred_outcome,
+                           prediction)
   
   structure(mdl,
             class = c("certestats_ml", class(mdl)),
             properties = properties,
             recipe = df_recipe,
+            data_original = df.bak,
             data_structure = df_structure,
             data_means = df_means,
             data_training = df_training,
             data_testing = df_testing,
             rows_training = sort(df_split$in_id),
             rows_testing = seq_len(nrow(df))[!seq_len(nrow(df)) %in% df_split$in_id],
-            predictions = prediction,
+            predictions = predictions,
             metrics = metrics,
             correlation_filter = correlation_filter,
             centre = centre,
@@ -573,7 +580,7 @@ print.certestats_ml <- function(x, ...) {
   if (model_prop$properties$mode == "classification") {
     cat("\nClassification certainty (based on testing data):\n")
     intervals <- c(0, 0.5, 0.68, 0.95, 0.98, 1)
-    q <- quantile(model_prop$predictions$max, intervals)
+    q <- quantile(model_prop$predictions$certainty, intervals, na.rm = TRUE)
     names(q) <- paste0("p", intervals * 100)
     print(q)
   }
@@ -627,11 +634,11 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
   if (all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
     curve <- curve_fn(model_prop$predictions,
                       truth = truth,
-                      1)
+                      ".pred_TRUE")
     if (plot_type == "roc") {
       roc_auc <- roc_auc(model_prop$predictions,
                          truth = truth,
-                         1)
+                         ".pred_TRUE")
     }
   } else {
     curve <- curve_fn(model_prop$predictions,
@@ -643,7 +650,6 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
                          starts_with(".pred"))
     }
   }
-  
   if (plot_type == "roc") {
     if (".level" %in% colnames(curve) &&
         !all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
@@ -835,6 +841,20 @@ get_metrics <- function(object) {
 
 #' @rdname machine_learning
 #' @export
+get_accuracy <- function(object) {
+  m <- get_metrics(object)
+  m[which(m$.metric == "accuracy"), ".estimate", drop = TRUE]
+}
+
+#' @rdname machine_learning
+#' @export
+get_kappa <- function(object) {
+  m <- get_metrics(object)
+  m[which(m$.metric == "kap"), ".estimate", drop = TRUE]
+}
+
+#' @rdname machine_learning
+#' @export
 get_recipe <- function(object) {
   attributes(object)$recipe
 }
@@ -846,6 +866,53 @@ get_specification <- function(object) {
     stop("Only output from certestats::ml_*() functions can be used.")
   }
   object$spec
+}
+
+#' @rdname machine_learning
+#' @export
+get_rows_testing <- function(object) {
+  if (!inherits(object, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
+  }
+  attributes(object)$rows_testing
+}
+
+#' @rdname machine_learning
+#' @export
+get_rows_training <- function(object) {
+  if (!inherits(object, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
+  }
+  attributes(object)$rows_training
+}
+
+#' @rdname machine_learning
+#' @export
+get_original_data <- function(object) {
+  if (!inherits(object, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
+  }
+  attributes(object)$data_original
+}
+
+#' @rdname machine_learning
+#' @importFrom yardstick roc_curve
+#' @export
+get_roc_data <- function(object) {
+  if (!inherits(object, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
+  }
+  model_prop <- attributes(object)
+  if (all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
+    curve <- roc_curve(model_prop$predictions,
+                       truth = truth,
+                       ".pred_TRUE")
+  } else {
+    curve <- roc_curve(model_prop$predictions,
+                       truth = truth,
+                       starts_with(".pred"))
+  }
+  curve
 }
 
 #' @rdname machine_learning
@@ -1050,4 +1117,23 @@ autoplot.certestats_tuning <- function(object, type = c("marginals", "parameters
       certeplot2::scale_colour_certe_d()
   }
   p
+}
+
+#' @rdname machine_learning
+#' @details The [check_testing_predictions()] function combines the data used for testing from the original data with its predictions, so the original data can be reviewed per prediction.
+#' @importFrom dplyr as_tibble slice select bind_cols
+#' @export
+check_testing_predictions <- function(object) {
+  if (!inherits(object, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
+  }
+  out <- bind_cols(attributes(object)$predictions,
+                   get_original_data(object) |>
+                     slice(get_rows_testing(object))) |> 
+    as_tibble()
+  if (all(out$truth %in% c("TRUE", "FALSE", NA))) {
+    out$truth <- as.logical(out$truth)
+    out$predicted <- as.logical(out$predicted)
+  }
+  out
 }
