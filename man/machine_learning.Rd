@@ -146,7 +146,9 @@ tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
 
 \item{training_fraction}{Fraction of rows to be used for \emph{training}, defaults to 75\%. The rest will be used for \emph{testing}. If given a number over 1, the number will be considered to be the required number of rows for \emph{training}.}
 
-\item{strata}{Groups to consider in the model (i.e., variables to stratify by)}
+\item{strata}{A variable in \code{data} (single character or name) used to conduct
+stratified sampling. When not \code{NULL}, each resample is created within the
+stratification variable. Numeric \code{strata} are binned into quartiles.}
 
 \item{max_na_fraction}{Maximum fraction of \code{NA} values (defaults to \code{0.01}) of the \code{predictors} before they are removed from the model}
 

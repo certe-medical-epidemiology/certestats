@@ -24,7 +24,6 @@
 #' @param outcome Outcome variable, also called the *response variable* or the *dependent variable*; the variable that must be predicted. The value will be evaluated in [`select()`][dplyr::select()] and thus supports the `tidyselect` language. In case of classification prediction, this variable will be coerced to a [factor].
 #' @param predictors Explanatory variables, also called the *predictors* or the *independent variables*; the variables that are used to predict `outcome`. These variables will be transformed using [as.double()] ([factor]s will be transformed to [character]s first). This value defaults to [`everything()`][tidyselect::everything()] and supports the `tidyselect` language.
 #' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*. If given a number over 1, the number will be considered to be the required number of rows for *training*.
-#' @param strata Groups to consider in the model (i.e., variables to stratify by)
 #' @param correlation_filter A [logical] to indicate whether the `predictors` should be removed that have to much correlation with each other, using [recipes::step_corr()]
 #' @param centre A [logical] to indicate whether the `predictors` should be transformed so that their mean will be `0`, using [recipes::step_center()]
 #' @param scale A [logical] to indicate whether the `predictors` should be transformed so that their standard deviation will be `1`, using [recipes::step_scale()]
@@ -38,6 +37,7 @@
 #' @inheritParams parsnip::mlp
 #' @inheritParams parsnip::nearest_neighbor
 #' @inheritParams parsnip::rand_forest
+#' @inheritParams rsample::initial_split
 #' @details
 #' To predict **regression** (numeric values), the function [ml_logistic_regression()] cannot be used.
 #'
@@ -196,10 +196,10 @@ ml_decision_trees <- function(.data,
                               ...) {
   ml_exec(FUN = parsnip::decision_tree,
           .data = .data,
-          outcome = {{outcome}},
-          predictors = {{predictors}},
+          outcome = {{ outcome }},
+          predictors = {{ predictors }},
           training_fraction = training_fraction,
-          strata = {{strata}},
+          strata = {{ strata }},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -226,10 +226,10 @@ ml_linear_regression <- function(.data,
                                  ...) {
   ml_exec(FUN = parsnip::linear_reg,
           .data = .data,
-          outcome = {{outcome}},
-          predictors = {{predictors}},
+          outcome = {{ outcome }},
+          predictors = {{ predictors }},
           training_fraction = training_fraction,
-          strata = {{strata}},
+          strata = {{ strata }},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -256,10 +256,10 @@ ml_logistic_regression <- function(.data,
                                    ...) {
   ml_exec(FUN = parsnip::logistic_reg,
           .data = .data,
-          outcome = {{outcome}},
-          predictors = {{predictors}},
+          outcome = {{ outcome }},
+          predictors = {{ predictors }},
           training_fraction = training_fraction,
-          strata = {{strata}},
+          strata = {{ strata }},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -288,10 +288,10 @@ ml_neural_network <- function(.data,
                               ...) {
   ml_exec(FUN = parsnip::mlp,
           .data = .data,
-          outcome = {{outcome}},
-          predictors = {{predictors}},
+          outcome = {{ outcome }},
+          predictors = {{ predictors }},
           training_fraction = training_fraction,
-          strata = {{strata}},
+          strata = {{ strata }},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -321,10 +321,10 @@ ml_nearest_neighbour <- function(.data,
                                  ...) {
   ml_exec(FUN = parsnip::nearest_neighbor,
           .data = .data,
-          outcome = {{outcome}},
-          predictors = {{predictors}},
+          outcome = {{ outcome }},
+          predictors = {{ predictors }},
           training_fraction = training_fraction,
-          strata = {{strata}},
+          strata = {{ strata }},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -353,10 +353,10 @@ ml_random_forest <- function(.data,
                              ...) {
   ml_exec(FUN = parsnip::rand_forest,
           .data = .data,
-          outcome = {{outcome}},
-          predictors = {{predictors}},
+          outcome = {{ outcome }},
+          predictors = {{ predictors }},
           training_fraction = training_fraction,
-          strata = {{strata}},
+          strata = {{ strata }},
           max_na_fraction = max_na_fraction,
           correlation_filter = correlation_filter,
           centre = centre,
@@ -367,7 +367,7 @@ ml_random_forest <- function(.data,
           ...)
 }
 
-#' @importFrom dplyr mutate select across filter_all bind_cols all_of cur_column slice summarise type_sum
+#' @importFrom dplyr mutate select across filter_all filter bind_cols all_of cur_column slice summarise type_sum
 #' @importFrom yardstick metrics
 #' @importFrom parsnip set_engine
 #' @importFrom recipes recipe step_corr step_center step_scale all_predictors all_outcomes prep bake
@@ -386,22 +386,53 @@ ml_exec <- function(FUN,
                     engine,
                     ...) {
   
-  n_pred <- tryCatch(ncol(select(.data, {{predictors}})), error = function(e) NULL)
+  err_msg <- ""
+  n_pred <- tryCatch(ncol(select(.data, {{ predictors }})), 
+                     error = function(e) {
+                       err_msg <<- e$message
+                       NULL
+                     })
   if (is.null(n_pred) || n_pred == 0) {
-    stop("no columns found for argument 'predictors' (is argument 'predictors' missing?)", call. = FALSE)
+    if (err_msg == "") {
+      err_msg <- "is argument 'predictors' missing?"
+    }
+    stop("no columns found for argument 'predictors': ", err_msg, call. = FALSE)
   }
   
   # select only required data
   df <- .data |>
     as.data.frame(stringsAsFactors = FALSE) |> 
-    select(outcome = {{ outcome }}, {{predictors}}, strata = {{strata}})
+    select(outcome = {{ outcome }}, {{ predictors }}, .strata = {{ strata }})
+  if (".strata" %in% colnames(df)) {
+    .strata <- ".strata"
+    # check NAs
+    if (any(is.na(df$`.strata`))) {
+      warning("Some strata were NA, these rows were removed before training (n = ", sum(is.na(df$`.strata`)), ")", call. = FALSE)
+      df <- df |>
+        filter(!is.na(.strata))
+    }
+    # check strata with size 1
+    strata_tbl <- table(df$`.strata`)
+    if (any(as.double(strata_tbl) == 1)) {
+      strata_to_remove <- names(strata_tbl)[strata_tbl == 1]
+      warning(length(strata_to_remove), " strata only contained one row, these rows were removed before training (n = ",
+              df |>
+                filter(.strata %in% strata_to_remove) |>
+                nrow(),
+              ")", call. = FALSE)
+      df <- df |>
+        filter(!.strata %in% strata_to_remove)
+    }
+  } else {
+    .strata <- NULL
+  }
   df.bak <- df
   
   # this will allow `predictors = everything()`, without selecting the outcome var with it
   predictors <- df |> 
-    select(-c(outcome, strata)) |> 
+    select(-c(outcome, .strata)) |> 
     colnames()
-
+  
   # format data to work with it
   df <- df |>
     # force all predictors as double
@@ -448,11 +479,10 @@ ml_exec <- function(FUN,
     properties <- c(list(ml_function = deparse(substitute(FUN)),
                          engine_package = engine,
                          data_size = nrow(df),
-                         training_size = paste0(round(training_fraction * nrow(df)),
-                                                " (fraction: ", round(training_fraction, 3), ")"),
-                         testing_size = paste0(round((1 - training_fraction) * nrow(df)),
-                                               " (fraction: ", round(1 - training_fraction, 3), ")"),
-                         strata = paste(length(unique(df$strata)), "groups")),
+                         training_fraction = training_fraction,
+                         training_size = round(training_fraction * nrow(df)),
+                         testing_size = round((1 - training_fraction) * nrow(df)),
+                         strata = if (is.null(df$`.strata`)) NULL else table(df$`.strata`)),
                     list(...))
   )
   
@@ -460,37 +490,28 @@ ml_exec <- function(FUN,
     stop("No more rows left for analysis (max_na_fraction = ", max_na_fraction, "). Check column values.", call. = FALSE)
   }
   
-  if ("strata" %in% colnames(df)) {
-    strata_var <- "strata"
-  } else {
-    strata_var <- NULL
-  }
+  df_split <- initial_split(df, strata = .strata, prop = training_fraction)
+  df_split_train <- df_split |> training() |> select(-c(.strata))
+  df_split_test <- df_split |> testing() |> select(-c(.strata))
   
-  df_split <- initial_split(df, strata = strata_var, prop = training_fraction)
-  
-  df_recipe <- df_split |>
-    training() |>
-    recipe(outcome ~ .)
-  
+  # create recipe
+  df_recipe <- df_split_train |> recipe(outcome ~ .)
   if (isTRUE(correlation_filter)) {
-    df_recipe <- df_recipe |> step_corr(all_predictors(), -strata_var)
+    df_recipe <- df_recipe |> step_corr(all_predictors())
   }
   if (isTRUE(centre)) {
-    df_recipe <- df_recipe |> step_center(all_predictors(), -all_outcomes(), -strata_var)
+    df_recipe <- df_recipe |> step_center(all_predictors(), -all_outcomes())
   }
   if (isTRUE(scale)) {
-    df_recipe <- df_recipe |> step_scale(all_predictors(), -all_outcomes(), -strata_var)
+    df_recipe <- df_recipe |> step_scale(all_predictors(), -all_outcomes())
   }
-  df_recipe <- df_recipe |>
-    prep()
+  df_recipe <- df_recipe |> prep()
   
   # train
-  df_training <- df_recipe |>
-    bake(new_data = NULL)
+  df_training <- df_recipe |> bake(new_data = NULL)
   
   # test
-  df_testing <- df_recipe |>
-    bake(testing(df_split))
+  df_testing <- df_recipe |> bake(df_split_test)
   
   # create actual model
   mdl <- FUN(...) |>
@@ -973,7 +994,7 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   tree_wf <- workflow() |>
     add_model(model_spec) |>
     add_formula(outcome ~ .)
-
+  
   # create the V-fold cross-validation (also known as k-fold cross-validation)
   vfold <- vfold_cv(model_prop$data_training, v = v)
   

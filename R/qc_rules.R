@@ -89,7 +89,7 @@ qc_rule4 <- function(x, m = mean(x), threshold = 14, direction_mean = FALSE) {
   if (direction_mean == TRUE) {
     signs <- sign(x - m)
   } else {
-    signs <- sign(c(x[-1],x[n]) - x)
+    signs <- sign(c(x[-1], x[n]) - x)
   }
   counts <- signs
   fac <- -1

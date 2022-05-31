@@ -64,6 +64,17 @@ test_that("ML works", {
   expect_equal(length(weights), # should be same as trained data without 'outcome' variables
                ncol(attributes(model_random_forest)$data_training) - 1)
   
+  # stratified sampling using strata
+  stratified <- esbl_tests |> ml_random_forest(esbl, where(is.double), strata = genus)
+  expect_true(is.table(attributes(stratified)$properties$strata))
+  # should return warnings for NAs and strata of size 1
+  e <- esbl_tests
+  e[1, "genus"] <- NA_character_
+  expect_warning(e |> ml_random_forest(esbl, where(is.double), strata = genus))
+  rows_to_remove <- which(esbl_tests$genus == esbl_tests$genus[1])
+  rows_to_remove <- rows_to_remove[c(2:length(rows_to_remove))]
+  expect_warning(esbl_tests |> slice(-rows_to_remove) |> ml_random_forest(esbl, where(is.double), strata = genus))
+  
   # tuning parameters
   expect_error(tune_parameters("test"))
   tuned <- model_neural_network %>% tune_parameters(levels = 1, v = 2)
