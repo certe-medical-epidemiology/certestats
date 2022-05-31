@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.6.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.6.1</span>
       </span>
     </div>
 
@@ -208,7 +208,9 @@
 <dt>training_fraction</dt>
 <dd><p>Fraction of rows to be used for <em>training</em>, defaults to 75%. The rest will be used for <em>testing</em>. If given a number over 1, the number will be considered to be the required number of rows for <em>training</em>.</p></dd>
 <dt>strata</dt>
-<dd><p>Groups to consider in the model (i.e., variables to stratify by)</p></dd>
+<dd><p>A variable in <code>data</code> (single character or name) used to conduct
+stratified sampling. When not <code>NULL</code>, each resample is created within the
+stratification variable. Numeric <code>strata</code> are binned into quartiles.</p></dd>
 <dt>max_na_fraction</dt>
 <dd><p>Maximum fraction of <code>NA</code> values (defaults to <code>0.01</code>) of the <code>predictors</code> before they are removed from the model</p></dd>
 <dt>correlation_filter</dt>
@@ -354,41 +356,41 @@ generics::fit()      yardstick::metrics()
 <span class="r-in"></span>
 <span class="r-in"><span class="va">model1</span> |&gt; <span class="fu">get_metrics</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    .metric .estimator .estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy     binary  0.952000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap     binary  0.903599</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy     binary 0.9360000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap     binary 0.8723187</span>
 <span class="r-in"><span class="va">model2</span> |&gt; <span class="fu">get_metrics</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    .metric .estimator .estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy     binary  0.928000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap     binary  0.855417</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy     binary 0.9040000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap     binary 0.8074454</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="va">model1</span> |&gt; <span class="fu"><a href="https://rdrr.io/pkg/caret/man/confusionMatrix.html" class="external-link">confusionMatrix</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Confusion Matrix and Statistics</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         TRUE FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   TRUE    55     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   FALSE    5    64</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Accuracy : 0.952           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  95% CI : (0.8985, 0.9822)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     No Information Rate : 0.52            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     P-Value [Acc &gt; NIR] : &lt;2e-16          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                   Kappa : 0.9036          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Mcnemar's Test P-Value : 0.2207          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Sensitivity : 0.9167          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Specificity : 0.9846          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Pos Pred Value : 0.9821          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Neg Pred Value : 0.9275          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              Prevalence : 0.4800          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Detection Rate : 0.4400          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    Detection Prevalence : 0.4480          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Balanced Accuracy : 0.9506          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        'Positive' Class : TRUE            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   TRUE    61     0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   FALSE    8    56</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Accuracy : 0.936          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                  95% CI : (0.8778, 0.972)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     No Information Rate : 0.552          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     P-Value [Acc &gt; NIR] : &lt; 2e-16        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   Kappa : 0.8723         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Mcnemar's Test P-Value : 0.01333        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Sensitivity : 0.8841         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Specificity : 1.0000         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Pos Pred Value : 1.0000         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Neg Pred Value : 0.8750         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Prevalence : 0.5520         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Detection Rate : 0.4880         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    Detection Prevalence : 0.4880         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Balanced Accuracy : 0.9420         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        'Positive' Class : TRUE           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
 <span class="r-in"></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Applying A Model ##</span></span>
@@ -398,16 +400,16 @@ generics::fit()      yardstick::metrics()
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 500 × 2</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    .pred_TRUE .pred_FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>      0.439       0.561</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>      0.439       0.561</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>      0.538       0.462</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>      0.393       0.607</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>      0.334       0.666</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>      0.393       0.607</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>      0.366       0.634</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>      0.464       0.536</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>      0.393       0.607</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>      0.468       0.532</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>      0.533       0.467</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>      0.533       0.467</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>      0.647       0.353</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>      0.472       0.528</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>      0.401       0.599</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>      0.472       0.528</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>      0.441       0.559</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>      0.516       0.484</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>      0.472       0.528</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>      0.555       0.445</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 490 more rows</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># the recipe was not considered, and you must bake first:</span></span>
@@ -432,16 +434,16 @@ generics::fit()      yardstick::metrics()
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 500 × 2</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    .pred_TRUE .pred_FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     0.044<span style="text-decoration: underline;">6</span>       0.955</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     0.041<span style="text-decoration: underline;">8</span>       0.958</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>     0.208        0.792</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     0.010<span style="text-decoration: underline;">4</span>       0.990</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>     0.062<span style="text-decoration: underline;">9</span>       0.937</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     0.289        0.711</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     0.011<span style="text-decoration: underline;">5</span>       0.989</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     0.028<span style="text-decoration: underline;">7</span>       0.971</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     0.098<span style="text-decoration: underline;">6</span>       0.901</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>     0.081<span style="text-decoration: underline;">1</span>       0.919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>    0.036<span style="text-decoration: underline;">3</span>        0.964</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>    0.036<span style="text-decoration: underline;">3</span>        0.964</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>    0.400         0.600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>    0.009<span style="text-decoration: underline;">11</span>       0.991</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>    0.040<span style="text-decoration: underline;">1</span>        0.960</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>    0.226         0.774</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>    0.015<span style="text-decoration: underline;">4</span>        0.985</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>    0.024<span style="text-decoration: underline;">6</span>        0.975</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>    0.051<span style="text-decoration: underline;">2</span>        0.949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>    0.096<span style="text-decoration: underline;">7</span>        0.903</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 490 more rows</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># as a shortcut, apply a model using apply_model_to() to get predictions and certainties</span></span>
@@ -449,16 +451,16 @@ generics::fit()      yardstick::metrics()
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 500 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    predicted certainty .pred_TRUE .pred_FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> FALSE         0.955     0.044<span style="text-decoration: underline;">6</span>       0.955</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> FALSE         0.958     0.041<span style="text-decoration: underline;">8</span>       0.958</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> FALSE         0.792     0.208        0.792</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> FALSE         0.990     0.010<span style="text-decoration: underline;">4</span>       0.990</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> FALSE         0.937     0.062<span style="text-decoration: underline;">9</span>       0.937</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> FALSE         0.711     0.289        0.711</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> FALSE         0.989     0.011<span style="text-decoration: underline;">5</span>       0.989</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> FALSE         0.971     0.028<span style="text-decoration: underline;">7</span>       0.971</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> FALSE         0.901     0.098<span style="text-decoration: underline;">6</span>       0.901</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> FALSE         0.919     0.081<span style="text-decoration: underline;">1</span>       0.919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> FALSE         0.964    0.036<span style="text-decoration: underline;">3</span>        0.964</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> FALSE         0.964    0.036<span style="text-decoration: underline;">3</span>        0.964</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> FALSE         0.600    0.400         0.600</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> FALSE         0.991    0.009<span style="text-decoration: underline;">11</span>       0.991</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> FALSE         0.960    0.040<span style="text-decoration: underline;">1</span>        0.960</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> FALSE         0.774    0.226         0.774</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> FALSE         0.985    0.015<span style="text-decoration: underline;">4</span>        0.985</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> FALSE         0.975    0.024<span style="text-decoration: underline;">6</span>        0.975</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> FALSE         0.949    0.051<span style="text-decoration: underline;">2</span>        0.949</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> FALSE         0.903    0.096<span style="text-decoration: underline;">7</span>        0.903</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 490 more rows</span></span>
 <span class="r-in"><span class="co"># apply_model_to() can also correct for missing variables:</span></span>
 <span class="r-in"><span class="va">model1</span> |&gt; <span class="fu">apply_model_to</span><span class="op">(</span><span class="va">esbl_tests</span><span class="op">[</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">15</span><span class="op">]</span><span class="op">)</span></span>
@@ -466,16 +468,16 @@ generics::fit()      yardstick::metrics()
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 500 × 4</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    predicted certainty .pred_TRUE .pred_FALSE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> FALSE         0.922     0.078<span style="text-decoration: underline;">2</span>       0.922</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> FALSE         0.926     0.073<span style="text-decoration: underline;">9</span>       0.926</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> FALSE         0.813     0.187        0.813</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> FALSE         0.957     0.043<span style="text-decoration: underline;">4</span>       0.957</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> FALSE         0.954     0.046<span style="text-decoration: underline;">1</span>       0.954</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> FALSE         0.633     0.367        0.633</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> FALSE         0.866     0.134        0.866</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> FALSE         0.897     0.103        0.897</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> FALSE         0.851     0.149        0.851</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> FALSE         0.918     0.082<span style="text-decoration: underline;">3</span>       0.918</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> FALSE         0.918     0.082<span style="text-decoration: underline;">4</span>       0.918</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> FALSE         0.918     0.082<span style="text-decoration: underline;">4</span>       0.918</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> FALSE         0.634     0.366        0.634</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> FALSE         0.915     0.085<span style="text-decoration: underline;">4</span>       0.915</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> FALSE         0.953     0.046<span style="text-decoration: underline;">7</span>       0.953</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> FALSE         0.620     0.380        0.620</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> FALSE         0.744     0.256        0.744</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> FALSE         0.931     0.068<span style="text-decoration: underline;">6</span>       0.931</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> FALSE         0.751     0.249        0.751</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> FALSE         0.903     0.097<span style="text-decoration: underline;">1</span>       0.903</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># … with 490 more rows</span></span>
 <span class="r-in"></span>
 <span class="r-in"></span>
@@ -487,8 +489,8 @@ generics::fit()      yardstick::metrics()
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Assuming tuning analysis for the 3 parameters 'mtry', 'trees', 'min_n'.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Use e.g. `mtry = dials::mtry()` to specify tuning for less parameters.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Assuming upper range of 16 for `dials::mtry()` because of number of available predictors.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-05-30 13:35:06] Running tuning analysis using a 5-fold cross-validation for 27 combinations...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-05-30 13:36:01] Done.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-05-31 09:45:12] Running tuning analysis using a 5-fold cross-validation for 27 combinations...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-05-31 09:46:02] Done.</span>
 <span class="r-in"><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">tuning</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="machine_learning-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"></span>
@@ -497,27 +499,26 @@ generics::fit()      yardstick::metrics()
 <span class="r-in">  <span class="fu">ml_random_forest</span><span class="op">(</span><span class="va">Species</span><span class="op">)</span> |&gt; </span>
 <span class="r-in">  <span class="fu">tune_parameters</span><span class="op">(</span>mtry <span class="op">=</span> <span class="fu">dials</span><span class="fu">::</span><span class="fu"><a href="https://dials.tidymodels.org/reference/mtry.html" class="external-link">mtry</a></span><span class="op">(</span>range <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span>,</span>
 <span class="r-in">                  trees <span class="op">=</span> <span class="fu">dials</span><span class="fu">::</span><span class="fu"><a href="https://dials.tidymodels.org/reference/trees.html" class="external-link">trees</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-05-30 13:36:02] Running tuning analysis using a 10-fold cross-validation for 15 combinations...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> <span style="color: #BBBB00;">Fold04: internal: No observations were detected in `truth` for level(s): 'virgin...</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-05-30 13:36:47] Done.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-05-31 09:46:03] Running tuning analysis using a 10-fold cross-validation for 15 combinations...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2022-05-31 09:46:44] Done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 15 × 8</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     mtry trees     n .config             accuracy roc_auc accuracy_se roc_auc_se</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     1   500    10 Preprocessor1_Mode…    0.964   0.987      0.019<span style="text-decoration: underline;">9</span>    0.010<span style="text-decoration: underline;">1</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     1  <span style="text-decoration: underline;">1</span>000    10 Preprocessor1_Mode…    0.964   0.987      0.019<span style="text-decoration: underline;">9</span>    0.010<span style="text-decoration: underline;">1</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>     1  <span style="text-decoration: underline;">1</span>500    10 Preprocessor1_Mode…    0.964   0.987      0.019<span style="text-decoration: underline;">9</span>    0.010<span style="text-decoration: underline;">1</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     1  <span style="text-decoration: underline;">2</span>000    10 Preprocessor1_Mode…    0.964   0.987      0.019<span style="text-decoration: underline;">9</span>    0.010<span style="text-decoration: underline;">1</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>     2   500    10 Preprocessor1_Mode…    0.964   0.987      0.019<span style="text-decoration: underline;">9</span>    0.008<span style="text-decoration: underline;">08</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     2  <span style="text-decoration: underline;">1</span>500    10 Preprocessor1_Mode…    0.964   0.985      0.019<span style="text-decoration: underline;">9</span>    0.009<span style="text-decoration: underline;">38</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     2  <span style="text-decoration: underline;">1</span>000    10 Preprocessor1_Mode…    0.964   0.983      0.019<span style="text-decoration: underline;">9</span>    0.010<span style="text-decoration: underline;">8</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     2  <span style="text-decoration: underline;">2</span>000    10 Preprocessor1_Mode…    0.964   0.983      0.019<span style="text-decoration: underline;">9</span>    0.010<span style="text-decoration: underline;">8</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     3   500    10 Preprocessor1_Mode…    0.955   0.984      0.020<span style="text-decoration: underline;">2</span>    0.010<span style="text-decoration: underline;">9</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>     3  <span style="text-decoration: underline;">1</span>000    10 Preprocessor1_Mode…    0.955   0.984      0.020<span style="text-decoration: underline;">2</span>    0.010<span style="text-decoration: underline;">9</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span>     3  <span style="text-decoration: underline;">1</span>500    10 Preprocessor1_Mode…    0.955   0.984      0.020<span style="text-decoration: underline;">2</span>    0.010<span style="text-decoration: underline;">9</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>     3  <span style="text-decoration: underline;">2</span>000    10 Preprocessor1_Mode…    0.955   0.984      0.020<span style="text-decoration: underline;">2</span>    0.010<span style="text-decoration: underline;">9</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span>     2     1    10 Preprocessor1_Mode…    0.955   0.963      0.020<span style="text-decoration: underline;">2</span>    0.019<span style="text-decoration: underline;">8</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span>     3     1    10 Preprocessor1_Mode…    0.946   0.968      0.024<span style="text-decoration: underline;">1</span>    0.020<span style="text-decoration: underline;">1</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span>     1     1    10 Preprocessor1_Mode…    0.829   0.891      0.053<span style="text-decoration: underline;">5</span>    0.039<span style="text-decoration: underline;">3</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>     2  <span style="text-decoration: underline;">1</span>000    10 Preprocessor1_Mode…    0.946   0.992      0.014<span style="text-decoration: underline;">7</span>    0.004<span style="text-decoration: underline;">38</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>     2  <span style="text-decoration: underline;">2</span>000    10 Preprocessor1_Mode…    0.946   0.992      0.014<span style="text-decoration: underline;">7</span>    0.004<span style="text-decoration: underline;">38</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>     2   500    10 Preprocessor1_Mode…    0.946   0.992      0.014<span style="text-decoration: underline;">7</span>    0.004<span style="text-decoration: underline;">48</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>     2  <span style="text-decoration: underline;">1</span>500    10 Preprocessor1_Mode…    0.946   0.992      0.014<span style="text-decoration: underline;">7</span>    0.004<span style="text-decoration: underline;">97</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>     3   500    10 Preprocessor1_Mode…    0.946   0.990      0.014<span style="text-decoration: underline;">7</span>    0.004<span style="text-decoration: underline;">52</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>     3  <span style="text-decoration: underline;">1</span>000    10 Preprocessor1_Mode…    0.946   0.990      0.014<span style="text-decoration: underline;">7</span>    0.004<span style="text-decoration: underline;">52</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>     3  <span style="text-decoration: underline;">1</span>500    10 Preprocessor1_Mode…    0.946   0.990      0.014<span style="text-decoration: underline;">7</span>    0.004<span style="text-decoration: underline;">52</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>     3  <span style="text-decoration: underline;">2</span>000    10 Preprocessor1_Mode…    0.946   0.990      0.014<span style="text-decoration: underline;">7</span>    0.004<span style="text-decoration: underline;">52</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>     1  <span style="text-decoration: underline;">1</span>000    10 Preprocessor1_Mode…    0.938   0.99       0.018<span style="text-decoration: underline;">4</span>    0.006<span style="text-decoration: underline;">31</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>     1  <span style="text-decoration: underline;">1</span>500    10 Preprocessor1_Mode…    0.938   0.989      0.018<span style="text-decoration: underline;">4</span>    0.007<span style="text-decoration: underline;">03</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span>     1   500    10 Preprocessor1_Mode…    0.938   0.988      0.018<span style="text-decoration: underline;">4</span>    0.006<span style="text-decoration: underline;">93</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>     1  <span style="text-decoration: underline;">2</span>000    10 Preprocessor1_Mode…    0.938   0.988      0.018<span style="text-decoration: underline;">4</span>    0.006<span style="text-decoration: underline;">93</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span>     2     1    10 Preprocessor1_Mode…    0.920   0.958      0.015<span style="text-decoration: underline;">3</span>    0.010<span style="text-decoration: underline;">0</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">14</span>     3     1    10 Preprocessor1_Mode…    0.919   0.969      0.016<span style="text-decoration: underline;">3</span>    0.010<span style="text-decoration: underline;">6</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">15</span>     1     1    10 Preprocessor1_Mode…    0.833   0.901      0.039<span style="text-decoration: underline;">6</span>    0.019<span style="text-decoration: underline;">7</span> </span>
 <span class="r-in"></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Practical Example 1 ##</span></span>
@@ -537,7 +538,7 @@ generics::fit()      yardstick::metrics()
 <span class="r-in"><span class="fu">get_metrics</span><span class="op">(</span><span class="va">iris_model</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    .metric .estimator .estimate</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy multiclass 0.9210526</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap multiclass 0.8819876</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap multiclass 0.8788523</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># now try to predict species from an arbitrary data set:</span></span>
 <span class="r-in"><span class="va">to_predict</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>Sepal.Length <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -553,12 +554,12 @@ generics::fit()      yardstick::metrics()
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   predicted certainty .pred_setosa .pred_versicolor .pred_virginica</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> setosa        0.914        0.914           0.081<span style="text-decoration: underline;">7</span>         0.004<span style="text-decoration: underline;">53</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> setosa        0.946        0.946           0.050<span style="text-decoration: underline;">6</span>         0.003<span style="text-decoration: underline;">21</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># which variables are generally important (only trained variables)?</span></span>
 <span class="r-in"><span class="va">iris_model</span> |&gt; <span class="fu">get_variable_weights</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Sepal.Length  Sepal.Width  Petal.Width </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    0.6060733    0.1196358    0.2742909 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   0.63389620   0.05260369   0.31350010 </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># how would the model do without the important 'Sepal.Length' column?</span></span>
 <span class="r-in"><span class="va">to_predict</span> <span class="op">&lt;-</span> <span class="va">to_predict</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Sepal.Width"</span>, <span class="st">"Petal.Width"</span>, <span class="st">"Petal.Length"</span><span class="op">)</span><span class="op">]</span></span>
@@ -570,7 +571,7 @@ generics::fit()      yardstick::metrics()
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   predicted certainty .pred_setosa .pred_versicolor .pred_virginica</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;fct&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> setosa        0.541        0.541            0.422          0.037<span style="text-decoration: underline;">7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> setosa        0.470        0.470            0.463          0.067<span style="text-decoration: underline;">2</span></span>
 <span class="r-in"></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">## Practical Example 2 ##</span></span>
@@ -581,8 +582,8 @@ generics::fit()      yardstick::metrics()
 <span class="r-in"><span class="va">genus</span> <span class="op">&lt;-</span> <span class="va">esbl_tests</span> |&gt; <span class="fu">ml_neural_network</span><span class="op">(</span><span class="va">genus</span>, <span class="fu"><a href="https://tidyselect.r-lib.org/reference/everything.html" class="external-link">everything</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-in"><span class="va">genus</span> |&gt; <span class="fu">get_metrics</span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    .metric .estimator .estimate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy multiclass 0.6960000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap multiclass 0.5311883</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 accuracy multiclass 0.7680000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      kap multiclass 0.6320544</span>
 <span class="r-in"><span class="va">genus</span> |&gt; <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="op">)</span></span>
 <span class="r-plt img"><img src="machine_learning-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span class="va">genus</span> |&gt; <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span>plot_type <span class="op">=</span> <span class="st">"gain"</span><span class="op">)</span> </span>
