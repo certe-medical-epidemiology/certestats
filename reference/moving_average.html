@@ -76,31 +76,42 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">moving_average</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, side <span class="op">=</span> <span class="st">"centre"</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">moving_sum</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, side <span class="op">=</span> <span class="st">"centre"</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">moving_Q1</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, side <span class="op">=</span> <span class="st">"centre"</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">moving_Q3</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, side <span class="op">=</span> <span class="st">"centre"</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">moving_fn</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, <span class="va">fun</span>, side <span class="op">=</span> <span class="st">"centre"</span>, <span class="va">...</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">moving_average</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, side <span class="op">=</span> <span class="st">"centre"</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">moving_sum</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, side <span class="op">=</span> <span class="st">"centre"</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">moving_Q1</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, side <span class="op">=</span> <span class="st">"centre"</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">moving_Q3</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, side <span class="op">=</span> <span class="st">"centre"</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">moving_fn</span><span class="op">(</span><span class="va">x</span>, <span class="va">w</span>, <span class="va">fun</span>, side <span class="op">=</span> <span class="st">"centre"</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>vector of values</p></dd>
+
+
 <dt>w</dt>
 <dd><p>window length; total number of observations to include. This should preferably be an odd number, so that the same number of values to the left and right of <code>x</code> are included.</p></dd>
+
+
 <dt>side</dt>
 <dd><p>default is <code>"centre"</code>, can also be <code>"left"</code> or <code>"right"</code>. This can be used to take a moving average (or sum, or ...) of e.g. the last 7 days.</p></dd>
+
+
 <dt>na.rm</dt>
 <dd><p>a <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether empty must be removed from <code>x</code></p></dd>
+
+
 <dt>fun</dt>
 <dd><p>function to apply</p></dd>
+
+
 <dt>...</dt>
 <dd><p>arguments passed on to <code>fun</code></p></dd>
+
 </dl></div>
     <div id="details">
     <h2>Details</h2>
@@ -127,7 +138,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

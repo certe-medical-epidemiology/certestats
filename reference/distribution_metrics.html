@@ -76,51 +76,66 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">se</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">ci</span><span class="op">(</span><span class="va">x</span>, level <span class="op">=</span> <span class="fl">0.95</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">sum_of_squares</span><span class="op">(</span><span class="va">x</span>, correct_mean <span class="op">=</span> <span class="cn">TRUE</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">cv</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">cqv</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">z_score</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">midhinge</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">ewma</span><span class="op">(</span><span class="va">x</span>, <span class="va">lambda</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">rr_ewma</span><span class="op">(</span><span class="va">x</span>, <span class="va">lambda</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">normalise</span><span class="op">(</span><span class="va">n</span>, <span class="va">n_ref</span>, per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>
-
-<span class="fu">normalize</span><span class="op">(</span><span class="va">n</span>, <span class="va">n_ref</span>, per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span>
-
-<span class="fu">scale_sd</span><span class="op">(</span><span class="va">x</span><span class="op">)</span>
-
-<span class="fu">centre_mean</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">se</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ci</span><span class="op">(</span><span class="va">x</span>, level <span class="op">=</span> <span class="fl">0.95</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">sum_of_squares</span><span class="op">(</span><span class="va">x</span>, correct_mean <span class="op">=</span> <span class="cn">TRUE</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">cv</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">cqv</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">z_score</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">midhinge</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ewma</span><span class="op">(</span><span class="va">x</span>, <span class="va">lambda</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">rr_ewma</span><span class="op">(</span><span class="va">x</span>, <span class="va">lambda</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">normalise</span><span class="op">(</span><span class="va">n</span>, <span class="va">n_ref</span>, per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">normalize</span><span class="op">(</span><span class="va">n</span>, <span class="va">n_ref</span>, per <span class="op">=</span> <span class="fl">1000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">scale_sd</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">centre_mean</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>x</dt>
 <dd><p>values</p></dd>
+
+
 <dt>na.rm</dt>
 <dd><p>a <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether empty must be removed from <code>x</code></p></dd>
+
+
 <dt>level</dt>
 <dd><p>alpha level, defaults to 95%</p></dd>
+
+
 <dt>correct_mean</dt>
 <dd><p>with <code>TRUE</code> (the default) correct for the mean will be applied, by summing each square of <code>x</code> after the mean of <code>x</code> has been subtracted, so that this says something about <code>x</code>. With <code>FALSE</code>, all <code>x^2</code> are simply added together, so this says something about <code>x</code>'s location in the data.</p></dd>
+
+
 <dt>lambda</dt>
 <dd><p>smoothing parameter, a value between 0 and 1. A value of 0 is equal to <code>x</code>, a value of 1 equal to the <em>mean</em> of <code>x</code>. The EWMA looks back and has a delay - the rrEWMA takes the mean of a 'forward' and 'backward' EWMA.</p></dd>
+
+
 <dt>n</dt>
 <dd><p>number to be normalised</p></dd>
+
+
 <dt>n_ref</dt>
 <dd><p>reference to use for normalisation</p></dd>
+
+
 <dt>per</dt>
 <dd><p>normalisation factor</p></dd>
+
 </dl></div>
     <div id="details">
     <h2>Details</h2>
@@ -161,7 +176,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>

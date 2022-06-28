@@ -76,47 +76,47 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">any</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">all</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">mean</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">sum</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">prod</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">min</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">max</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">pmin</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">pmax</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">range</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">sd</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">var</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">median</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span>
-
-<span class="fu">fivenum</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>
-
-<span class="fu">quantile</span><span class="op">(</span>
-  <span class="va">x</span>,
-  <span class="va">...</span>,
-  na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span>,
-  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"quantile.type"</span>, <span class="fl">7</span><span class="op">)</span>
-<span class="op">)</span>
-
-<span class="fu">IQR</span><span class="op">(</span>
-  <span class="va">x</span>,
-  <span class="va">...</span>,
-  na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span>,
-  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"quantile.type"</span>, <span class="fl">7</span><span class="op">)</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">any</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">all</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">mean</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">sum</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">prod</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">min</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">max</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">pmin</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">pmax</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">range</span><span class="op">(</span><span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">sd</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">var</span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">median</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">fivenum</span><span class="op">(</span><span class="va">x</span>, na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">quantile</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"quantile.type"</span>, <span class="fl">7</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">IQR</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  na.rm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"na.rm"</span>, <span class="cn">FALSE</span><span class="op">)</span>,</span>
+<span>  type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">getOption</a></span><span class="op">(</span><span class="st">"quantile.type"</span>, <span class="fl">7</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="source">
@@ -144,17 +144,24 @@
 <dd><p>zero or more logical vectors.  Other objects of zero
     length are ignored, and the rest are coerced to logical ignoring
     any class.</p></dd>
+
+
 <dt>na.rm</dt>
 <dd><p>logical.  If true <code>NA</code> values are removed before
     the result is computed.</p></dd>
+
+
 <dt>x</dt>
 <dd><p>An <span style="R">R</span> object.  Currently there are methods for
     numeric/logical vectors and <a href="https://rdrr.io/r/base/Dates.html" class="external-link">date</a>,
     <a href="https://rdrr.io/r/base/DateTimeClasses.html" class="external-link">date-time</a> and <a href="https://rdrr.io/r/base/difftime.html" class="external-link">time interval</a> objects.  Complex vectors
     are allowed for <code>trim = 0</code>, only.</p></dd>
+
+
 <dt>type</dt>
 <dd><p>an integer between 1 and 9 selecting one of the
     nine quantile algorithms detailed below to be used.</p></dd>
+
 </dl></div>
     <div id="default-values-of-na-rm">
     <h2>Default values of <code>na.rm</code></h2>
@@ -176,7 +183,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.5.</p>
 </div>
 
       </footer></div>
