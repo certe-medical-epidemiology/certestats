@@ -94,4 +94,12 @@ test_that("ML works", {
   expect_true(model_nearest_neighbour |> tune_parameters(levels = 1, v = 2) |> is.data.frame())
   expect_true(model_random_forest |> tune_parameters(levels = 1, v = 2) |> is.data.frame())
   expect_s3_class(autoplot(tuned), "gg")
+  
+  # imputation
+  model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
+  esbl_tests2 <- esbl_tests
+  esbl_tests2[c(1, 3, 5), "AMC"] <- NA
+  expect_warning(model1 |> apply_model_to(esbl_tests2))
+  expect_warning(model1 |> apply_model_to(esbl_tests2, imputation = "single"))
+  expect_error(model1 |> apply_model_to(esbl_tests2, imputation = FALSE))
 })
