@@ -47,7 +47,7 @@ check_is_installed <- function(pkgs) {
     if (isTRUE(choice)) {
       utils::install.packages(to_install)
       # try again:
-      is_installed(pkgs)
+      check_is_installed(pkgs)
     } else {
       stop("Required package(s) ",
            paste0("'", to_install, "'", collapse = ", "), 
@@ -59,6 +59,7 @@ check_is_installed <- function(pkgs) {
 }
 
 globalVariables(c(".",
+                  ".id",
                   ".estimator",
                   ".level",
                   ".metric",

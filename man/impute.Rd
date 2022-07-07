@@ -50,8 +50,9 @@ Use \code{\link[=is_imputed]{is_imputed()}} to get a \link{data.frame} with \cod
 }
 \examples{
 iris2 <- dplyr::as_tibble(iris)
-iris2[3, 2] <- NA
-iris2[3, 9] <- NA
+iris2[2, 2] <- NA
+iris2[3, 3] <- NA
+iris2[4, 5] <- NA
 iris
 iris2
 
