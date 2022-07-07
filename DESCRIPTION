@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.7.0
+Version: 1.8.0
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -21,26 +21,25 @@ Depends:
   R (>= 4.1.0)
 Imports:
   caret (>= 6.0),
-  dials (>= 0.0.10),
+  dials (>= 1.0.0),
   dplyr (>= 1.0.3),
   generics (>= 0.1.0),
   ggplot2 (>= 3.3.0),
-  hardhat (>= 0.2.0),
+  hardhat (>= 1.2.0),
   kknn,
   nnet,
-  parsnip (>= 0.1.7),
+  parsnip (>= 1.0.0),
   ranger,
-  recipes (>= 0.1.16),
+  recipes (>= 1.0.0),
   rpart,
-  rsample (>= 0.1.0),
+  rsample (>= 1.0.0),
   tidyr (>= 1.0.0),
   tune (>= 0.1.6),
-  workflows (>= 0.2.5),
+  workflows (>= 1.0.0),
   yaml (>= 2.2.0),
-  yardstick (>= 0.0.8)
+  yardstick (>= 1.0.0)
 Suggests:
   certeplot2,
-  e1071,
   testthat (>= 2.0.0)
 License: GPL-2
 Encoding: UTF-8

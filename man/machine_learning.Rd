@@ -21,6 +21,7 @@
 \alias{get_original_data}
 \alias{get_roc_data}
 \alias{get_coefficients}
+\alias{get_model_variables}
 \alias{get_variable_weights}
 \alias{tune_parameters}
 \alias{autoplot.certestats_tuning}
@@ -150,6 +151,8 @@ get_roc_data(object)
 
 get_coefficients(object)
 
+get_model_variables(object)
+
 get_variable_weights(object)
 
 tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
@@ -208,7 +211,7 @@ the ensemble.}
 
 \item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
 
-\item{new_data}{new input data that requires prediction, must have all columns present in the training data}
+\item{new_data}{new input data that requires prediction, must have all columns present in the training data. Missing variables and \code{NA}s in variables will be replaced with the mean of the training data if the model does not support \code{NA}s.}
 
 \item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with the predictions and their certainties per variable}
 
@@ -251,7 +254,7 @@ The \verb{ml_*()} functions return the following \link[base:attributes]{attribut
 }
 }
 \description{
-Create a traditional machine learning model based on different 'engines'. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{parsnip}, \href{https://recipes.tidymodels.org}{recipes}, \href{https://rsample.tidymodels.org}{rsample}, \href{https://tune.tidymodels.org}{tune}, and \href{https://yardstick.tidymodels.org}{yardstick}) created by RStudio.
+This functions can be used to create a traditional machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{parsnip}, \href{https://recipes.tidymodels.org}{recipes}, \href{https://rsample.tidymodels.org}{rsample}, \href{https://tune.tidymodels.org}{tune}, and \href{https://yardstick.tidymodels.org}{yardstick}) created by RStudio.
 }
 \details{
 To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
@@ -287,6 +290,8 @@ generics::fit()      yardstick::metrics()
 Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
 
 The \code{\link[=apply_model_to]{apply_model_to()}} function can be used to fit a model on a new data set, using \code{\link[parsnip:predict.model_fit]{predict()}}. It detects missing variables and missing data within variables (and fills them with either \code{NA}s if the model allows it, or with the trained mean), and detects data type differences between the trained data and the input data. All detected problems will throw a warning, but \code{\link[=apply_model_to]{apply_model_to()}} should always return a prediction.
+
+Use the \code{\link[=get_model_variables]{get_model_variables()}} function to return a zero-row \link{data.frame} with the variables that were used for training, even before the recipe steps.
 
 Use the \code{\link[=get_variable_weights]{get_variable_weights()}} function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a named numeric vector, that sums up to 1.
 

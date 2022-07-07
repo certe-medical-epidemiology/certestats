@@ -19,7 +19,7 @@
 
 #' Create a Traditional Machine Learning (ML) Model
 #'
-#' Create a traditional machine learning model based on different 'engines'. These functions are wrappers around `tidymodels` packages (especially [parsnip](https://parsnip.tidymodels.org), [recipes](https://recipes.tidymodels.org), [rsample](https://rsample.tidymodels.org), [tune](https://tune.tidymodels.org), and [yardstick](https://yardstick.tidymodels.org)) created by RStudio.
+#' This functions can be used to create a traditional machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around `tidymodels` packages (especially [parsnip](https://parsnip.tidymodels.org), [recipes](https://recipes.tidymodels.org), [rsample](https://rsample.tidymodels.org), [tune](https://tune.tidymodels.org), and [yardstick](https://yardstick.tidymodels.org)) created by RStudio.
 #' @param .data Data set to train
 #' @param outcome Outcome variable, also called the *response variable* or the *dependent variable*; the variable that must be predicted. The value will be evaluated in [`select()`][dplyr::select()] and thus supports the `tidyselect` language. In case of classification prediction, this variable will be coerced to a [factor].
 #' @param predictors Explanatory variables, also called the *predictors* or the *independent variables*; the variables that are used to predict `outcome`. These variables will be transformed using [as.double()] ([factor]s will be transformed to [character]s first). This value defaults to [`everything()`][tidyselect::everything()] and supports the `tidyselect` language.
@@ -529,8 +529,8 @@ ml_exec <- function(FUN,
     select(all_of(colnames(df_training)[colnames(df_training) %in% colnames(df.bak)])) |> 
     slice(0)
   df_means <- df.bak |> 
-    select(all_of(colnames(df_training)[colnames(df_training) %in% colnames(df.bak)])) |> 
-    summarise(across(everything(), function(x) mean(x, na.rm = TRUE)))
+    summarise(across(where(function(col) mode(col) == "numeric"),
+                     function(x) suppressWarnings(as.double(mean(x, na.rm = TRUE)))))
   
   metrics <- mdl |>
     stats::predict(df_testing) |>
@@ -707,7 +707,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 
 #' @rdname machine_learning
 #' @param object,data outcome of machine learning model
-#' @param new_data new input data that requires prediction, must have all columns present in the training data
+#' @param new_data new input data that requires prediction, must have all columns present in the training data. Missing variables and `NA`s in variables will be replaced with the mean of the training data if the model does not support `NA`s.
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with the predictions and their certainties per variable
 #' @details The [apply_model_to()] function can be used to fit a model on a new data set, using [`predict()`][parsnip::predict.model_fit()]. It detects missing variables and missing data within variables (and fills them with either `NA`s if the model allows it, or with the trained mean), and detects data type differences between the trained data and the input data. All detected problems will throw a warning, but [apply_model_to()] should always return a prediction.
 #' @importFrom dplyr select all_of mutate across everything pull type_sum cur_column bind_cols summarise
@@ -738,13 +738,25 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE, ...) {
     # add as NA in the class of training_data:
     new_data[, col] <- training_structure[0, col, drop = TRUE][1]
   }
+   
+  # silently add columns to new_data that are not in the training data but
+  # are in the recipe, e.g. because of a correlation filter
+  model_vars <- get_model_variables(object)
+  recipe_cols <- colnames(model_vars)
+  recipe_cols <- recipe_cols[recipe_cols != "outcome"]
+  misses_from_recipe <- recipe_cols[!recipe_cols %in% training_cols]
+  for (col in misses_from_recipe) {
+    # add as NA in the class of training_data:
+    new_data[, col] <- model_vars[0, col, drop = TRUE][1]
+  }
   
-  # sort according to training data
-  new_data <- new_data |> select(all_of(training_cols))
-  
+  # sort according to recipe input
+  new_data <- new_data |> select(all_of(recipe_cols))
+
   # detect data type differences between training model and input data
   old_classes <- training_structure |> vapply(FUN.VALUE = character(1), type_sum)
   new_classes <- new_data |> vapply(FUN.VALUE = character(1), type_sum)
+  new_classes <- new_classes[names(new_classes) %in% names(old_classes)]
   class_diff <- which(old_classes != new_classes)
   if (length(class_diff) > 0) {
     warning(ifelse(length(misses) > 1, "These variables are", "This variable is"),
@@ -766,22 +778,21 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE, ...) {
                     as.double(values)
                   }))
   if (!isFALSE(list(...)$train)) {
-    test_data <- bake(get_recipe(object), new_data = new_data)
+    new_data <- bake(get_recipe(object), new_data = new_data)
     means <- training_data |>
       select(-outcome) |> 
       summarise(across(everything(), mean, na.rm = TRUE))
   } else {
     # data is already trained, as is the case when coming from e.g. get_variable_weights()
-    test_data <- new_data
     means <- attributes(object)$data_means
   }
   
   # predict the outcome, while correcting for missing data
-  predicted <- tryCatch(stats::predict(object = object, new_data = test_data, type = NULL), error = function(e) NULL)
+  predicted <- tryCatch(stats::predict(object = object, new_data = new_data, type = NULL), error = function(e) NULL)
   if (is.null(predicted) || all(is.na(predicted$.pred_class))) {
     warn_filled <- character(0)
     # replace NAs with mean of the training data, since this type of model apparently does not support NAs
-    test_data <- test_data |> 
+    new_data <- new_data |> 
       mutate(across(everything(),
                     function(values) {
                       col <- cur_column()
@@ -801,7 +812,7 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE, ...) {
               call. = FALSE)
     }
     # rerun predictions with new mean-fills
-    predicted <- stats::predict(object = object, new_data = test_data, type = NULL)
+    predicted <- stats::predict(object = object, new_data = new_data, type = NULL)
   }
   
   # return the predictions
@@ -811,7 +822,7 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE, ...) {
       out <- as.logical(out)
     }
   } else {
-    preds <- stats::predict(object, test_data, type = "prob")
+    preds <- stats::predict(object, new_data, type = "prob")
     out <- bind_cols(stats::setNames(predicted, "predicted"),
                      preds) |> 
       mutate(certainty = row_function(max, data = preds), .after = 1)
@@ -929,6 +940,15 @@ get_coefficients <- function(object) {
 }
 
 #' @rdname machine_learning
+#' @details Use the [get_model_variables()] function to return a zero-row [data.frame] with the variables that were used for training, even before the recipe steps.
+#' @export
+get_model_variables <- function(object) {
+  vars <- get_recipe(object)$var_info$variable
+  vars <- vars[vars != "outcome"]
+  attributes(object)$data_original[0, vars, drop = FALSE]
+}
+
+#' @rdname machine_learning
 #' @details Use the [get_variable_weights()] function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a named numeric vector, that sums up to 1.
 #' @importFrom dplyr select slice pull mutate across everything
 #' @export
@@ -952,7 +972,7 @@ get_variable_weights <- function(object) {
       pull(certainty)
   )
   
-  # get min and max from trained variables (might be scaled and centred)
+  # get min and max from trained variables (since they might be scaled and centred)
   ranges <- training_data |>
     select(-outcome) |>
     lapply(function(col) range(col, na.rm = TRUE)) |> 
