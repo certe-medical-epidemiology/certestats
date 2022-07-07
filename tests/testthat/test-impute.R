@@ -17,5 +17,15 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-#' @keywords internal
-"_PACKAGE"
+test_that("imputation works", {
+  iris2 <- dplyr::as_tibble(iris)
+  iris2[1, 2] <- NA
+  iris2[3, 4] <- NA
+  iris2[4, 5] <- NA
+  
+  imp <- impute(iris2)
+  expect_false(any(is.na(imp)))
+  expect_false(any(is.na(impute(iris2, algorithm = "single-point"))))
+  expect_true(any(is.na(impute(iris2, vars = where(is.double), algorithm = "single-point"))))
+  
+})

@@ -19,7 +19,7 @@
 
 #' Create a Traditional Machine Learning (ML) Model
 #'
-#' This functions can be used to create a traditional machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around `tidymodels` packages (especially [parsnip](https://parsnip.tidymodels.org), [recipes](https://recipes.tidymodels.org), [rsample](https://rsample.tidymodels.org), [tune](https://tune.tidymodels.org), and [yardstick](https://yardstick.tidymodels.org)) created by RStudio.
+#' These functions can be used to create a traditional machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around `tidymodels` packages (especially [`parsnip`](https://parsnip.tidymodels.org), [`recipes`](https://recipes.tidymodels.org), [`rsample`](https://rsample.tidymodels.org), [`tune`](https://tune.tidymodels.org), and [`yardstick`](https://yardstick.tidymodels.org)) created by RStudio.
 #' @param .data Data set to train
 #' @param outcome Outcome variable, also called the *response variable* or the *dependent variable*; the variable that must be predicted. The value will be evaluated in [`select()`][dplyr::select()] and thus supports the `tidyselect` language. In case of classification prediction, this variable will be coerced to a [factor].
 #' @param predictors Explanatory variables, also called the *predictors* or the *independent variables*; the variables that are used to predict `outcome`. These variables will be transformed using [as.double()] ([factor]s will be transformed to [character]s first). This value defaults to [`everything()`][tidyselect::everything()] and supports the `tidyselect` language.
@@ -42,6 +42,17 @@
 #' To predict **regression** (numeric values), the function [ml_logistic_regression()] cannot be used.
 #'
 #' To predict **classifications** (character values), the function [ml_linear_regression()] cannot be used.
+#' 
+#' To get predictions, the function [apply_model_to()] can be used as a wrapper around [predict()]. This function is basically equal to:
+#' 
+#' ```{r, eval = FALSE}
+#' predict(your_model,
+#'         recipes::bake(get_recipe(your_model),
+#'                       new_data = your_input_data),
+#'         type = "prob")
+#' ```
+#' 
+#' Although [apply_model_to()] can also correct for missing values and even missing variables by applying imputation where needed (and informing about it).
 #' 
 #' The workflow of the `ml_*()` functions is basically like this (thus saving a lot of `tidymodels` functions to type):
 #' 
@@ -387,6 +398,11 @@ ml_exec <- function(FUN,
                     engine,
                     ...) {
   
+  if (!engine %in% c("lm", "glm")) {
+    # this will ask to install packages like ranger or rpart
+    check_is_installed(engine)
+  }
+  
   err_msg <- ""
   n_pred <- tryCatch(ncol(select(.data, {{ predictors }})), 
                      error = function(e) {
@@ -610,7 +626,7 @@ confusionMatrix.certestats_ml <- function(data, ...) {
 #' @method autoplot certestats_ml
 #' @rdname machine_learning
 #' @param plot_type the plot type, can be `"roc"` (default), `"gain"`, `"lift"` or `"pr"`. These functions rely on [yardstick::roc_curve()], [yardstick::gain_curve()], [yardstick::lift_curve()] and [yardstick::pr_curve()] to construct the curves.
-#' @details Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses [yardstick::roc_curve()] to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
+#' @details Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, the gain curve, the lift curve, or the precision-recall (PR) curve. For the ROC curve, the (overall) area under the curve (AUC) will be printed as subtitle.
 #' @importFrom ggplot2 autoplot ggplot aes geom_path geom_abline coord_equal scale_x_continuous scale_y_continuous labs element_line
 #' @importFrom dplyr bind_cols starts_with
 #' @importFrom yardstick roc_curve roc_auc gain_curve lift_curve pr_curve
@@ -709,11 +725,12 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 #' @param object,data outcome of machine learning model
 #' @param new_data new input data that requires prediction, must have all columns present in the training data. Missing variables and `NA`s in variables will be replaced with the mean of the training data if the model does not support `NA`s.
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with the predictions and their certainties per variable
+#' @param imputation imputation algorithm to use for missing values, see [impute()]. Can be `FALSE` to disable imputation, `"mice"` for the MICE algorithm, or `"single-point"` for a trained mean.
 #' @details The [apply_model_to()] function can be used to fit a model on a new data set, using [`predict()`][parsnip::predict.model_fit()]. It detects missing variables and missing data within variables (and fills them with either `NA`s if the model allows it, or with the trained mean), and detects data type differences between the trained data and the input data. All detected problems will throw a warning, but [apply_model_to()] should always return a prediction.
 #' @importFrom dplyr select all_of mutate across everything pull type_sum cur_column bind_cols summarise
 #' @importFrom recipes bake
 #' @export
-apply_model_to <- function(object, new_data, only_prediction = FALSE, ...) {
+apply_model_to <- function(object, new_data, only_prediction = FALSE, imputation = "mice", ...) {
   if (!inherits(object, "certestats_ml")) {
     stop("Only output from certestats::ml_*() functions can be used.")
   }
@@ -790,26 +807,42 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE, ...) {
   # predict the outcome, while correcting for missing data
   predicted <- tryCatch(stats::predict(object = object, new_data = new_data, type = NULL), error = function(e) NULL)
   if (is.null(predicted) || all(is.na(predicted$.pred_class))) {
-    warn_filled <- character(0)
-    # replace NAs with mean of the training data, since this type of model apparently does not support NAs
-    new_data <- new_data |> 
-      mutate(across(everything(),
-                    function(values) {
-                      col <- cur_column()
-                      if (any(is.na(values))) {
-                        if (!col %in% misses) {
-                          warn_filled <<- c(warn_filled, paste0(col, " <", type_sum(values), ">"))
+    if (imputation %like% "single") {
+      # replace NAs with mean of the training data, since this type of model apparently does not support NAs
+      warn_filled <- character(0)
+      new_data <- new_data |> 
+        mutate(across(everything(),
+                      function(values) {
+                        col <- cur_column()
+                        if (any(is.na(values))) {
+                          if (!col %in% misses) {
+                            warn_filled <<- c(warn_filled, paste0(col, " <", type_sum(values), ">"))
+                          }
+                          values[is.na(values)] <- means |> pull(col)
                         }
-                        values[is.na(values)] <- means |> pull(col)
-                      }
-                      values
-                    }))
-    if (length(warn_filled) > 0) {
-      warning("Missing values in ",
-              ifelse(length(warn_filled) > 1, "these variables", "this variable"),
-              " were replaced with the trained mean: ",
-              paste0(sort(warn_filled), collapse = ", "),
-              call. = FALSE)
+                        values
+                      }))
+      if (length(warn_filled) > 0) {
+        warning("Missing values in ",
+                ifelse(length(warn_filled) > 1, "these variables", "this variable"),
+                " were replaced with the trained mean: ",
+                paste0(sort(warn_filled), collapse = ", "),
+                call. = FALSE)
+      }
+    } else if (imputation %like% "mice") {
+      new_data <- new_data |> 
+        impute(algorithm = "mice", info = FALSE)
+      warn_filled <- vapply(FUN.VALUE = logical(1), x, any, na.rm = TRUE)
+      warn_filled <- names(warn_filled[warn_filled])
+      if (length(warn_filled) > 0) {
+        warning("Missing values in ",
+                ifelse(length(warn_filled) > 1, "these variables", "this variable"),
+                " were imputed using MICE: ",
+                paste0(sort(warn_filled), collapse = ", "),
+                call. = FALSE)
+      }
+    } else {
+      stop("Missing values are not allowed in the current model - use an imputation algorithm")
     }
     # rerun predictions with new mean-fills
     predicted <- stats::predict(object = object, new_data = new_data, type = NULL)

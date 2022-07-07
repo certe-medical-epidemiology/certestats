@@ -129,7 +129,13 @@ ml_random_forest(
 
 \method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
-apply_model_to(object, new_data, only_prediction = FALSE, ...)
+apply_model_to(
+  object,
+  new_data,
+  only_prediction = FALSE,
+  imputation = "mice",
+  ...
+)
 
 get_metrics(object)
 
@@ -215,6 +221,8 @@ the ensemble.}
 
 \item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with the predictions and their certainties per variable}
 
+\item{imputation}{imputation algorithm to use for missing values, see \code{\link[=impute]{impute()}}. Can be \code{FALSE} to disable imputation, \code{"mice"} for the MICE algorithm, or \code{"single-point"} for a trained mean.}
+
 \item{only_params_in_model}{a \link{logical} to indicate whether only parameters in the model should be tuned}
 
 \item{levels}{An integer for the number of values of each parameter to use
@@ -254,12 +262,22 @@ The \verb{ml_*()} functions return the following \link[base:attributes]{attribut
 }
 }
 \description{
-This functions can be used to create a traditional machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{parsnip}, \href{https://recipes.tidymodels.org}{recipes}, \href{https://rsample.tidymodels.org}{rsample}, \href{https://tune.tidymodels.org}{tune}, and \href{https://yardstick.tidymodels.org}{yardstick}) created by RStudio.
+These functions can be used to create a traditional machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{\code{parsnip}}, \href{https://recipes.tidymodels.org}{\code{recipes}}, \href{https://rsample.tidymodels.org}{\code{rsample}}, \href{https://tune.tidymodels.org}{\code{tune}}, and \href{https://yardstick.tidymodels.org}{\code{yardstick}}) created by RStudio.
 }
 \details{
 To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
 
 To predict \strong{classifications} (character values), the function \code{\link[=ml_linear_regression]{ml_linear_regression()}} cannot be used.
+
+To get predictions, the function \code{\link[=apply_model_to]{apply_model_to()}} can be used as a wrapper around \code{\link[=predict]{predict()}}. This function is basically equal to:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{predict(your_model,
+        recipes::bake(get_recipe(your_model),
+                      new_data = your_input_data),
+        type = "prob")
+}\if{html}{\out{</div>}}
+
+Although \code{\link[=apply_model_to]{apply_model_to()}} can also correct for missing values and even missing variables by applying imputation where needed (and informing about it).
 
 The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):
 
@@ -287,7 +305,7 @@ generics::fit()      yardstick::metrics()
     output            attributes(output)
 }
 
-Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, showing the relation between sensitivity and specificity. This plotting function uses \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}} to construct the curve. The (overall) area under the curve (AUC) will be printed as subtitle.
+Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, the gain curve, the lift curve, or the precision-recall (PR) curve. For the ROC curve, the (overall) area under the curve (AUC) will be printed as subtitle.
 
 The \code{\link[=apply_model_to]{apply_model_to()}} function can be used to fit a model on a new data set, using \code{\link[parsnip:predict.model_fit]{predict()}}. It detects missing variables and missing data within variables (and fills them with either \code{NA}s if the model allows it, or with the trained mean), and detects data type differences between the trained data and the input data. All detected problems will throw a warning, but \code{\link[=apply_model_to]{apply_model_to()}} should always return a prediction.
 

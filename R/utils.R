@@ -33,6 +33,31 @@ yardstick::metrics
 #' @export
 ggplot2::autoplot
 
+check_is_installed <- function(pkgs) {
+  to_install <- pkgs[which(!pkgs %in% rownames(utils::installed.packages(.libPaths())))]
+  if (length(to_install) > 0) {
+    if (interactive()) {
+      # ask to install
+      choice <- utils::askYesNo(paste0("Package(s) required but not installed: ",
+                                       paste0("'", to_install, "'", collapse = ", "), ". ",
+                                       "Install now?"))
+    } else {
+      choice <- FALSE
+    }
+    if (isTRUE(choice)) {
+      utils::install.packages(to_install)
+      # try again:
+      is_installed(pkgs)
+    } else {
+      stop("Required package(s) ",
+           paste0("'", to_install, "'", collapse = ", "), 
+           " not installed", call. = FALSE)
+    }
+  } else {
+    return(TRUE)
+  }
+}
+
 globalVariables(c(".",
                   ".estimator",
                   ".level",
