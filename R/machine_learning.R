@@ -52,7 +52,7 @@
 #'         type = "prob")
 #' ```
 #' 
-#' Although [apply_model_to()] can also correct for missing values and even missing variables by applying imputation where needed (and informing about it).
+#' Although [apply_model_to()] can also correct for missing variables and even (randomly) missing values by applying imputation with [impute()] where needed (defaults to the MICE algorithm).
 #' 
 #' The workflow of the `ml_*()` functions is basically like this (thus saving a lot of `tidymodels` functions to type):
 #' 
@@ -725,7 +725,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 #' @param object,data outcome of machine learning model
 #' @param new_data new input data that requires prediction, must have all columns present in the training data. Missing variables and `NA`s in variables will be replaced with the mean of the training data if the model does not support `NA`s.
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with the predictions and their certainties per variable
-#' @param imputation imputation algorithm to use for missing values, see [impute()]. Can be `FALSE` to disable imputation, `"mice"` for the MICE algorithm, or `"single-point"` for a trained mean.
+#' @param imputation imputation algorithm to use for missing values, see [impute()]. Can be `FALSE` to disable imputation, `"mice"` for the [Multivariate Imputations by Chained Equations (MICE) algorithm][mice::mice], or `"single-point"` for a trained mean.
 #' @details The [apply_model_to()] function can be used to fit a model on a new data set, using [`predict()`][parsnip::predict.model_fit()]. It detects missing variables and missing data within variables (and fills them with either `NA`s if the model allows it, or with the trained mean), and detects data type differences between the trained data and the input data. All detected problems will throw a warning, but [apply_model_to()] should always return a prediction.
 #' @importFrom dplyr select all_of mutate across everything pull type_sum cur_column bind_cols summarise
 #' @importFrom recipes bake
@@ -831,9 +831,12 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE, imputation
       }
     } else if (imputation %like% "mice") {
       new_data <- new_data |> 
-        impute(algorithm = "mice", info = FALSE)
-      warn_filled <- vapply(FUN.VALUE = logical(1), x, any, na.rm = TRUE)
+        impute(algorithm = "mice", m = 5, info = FALSE)
+      warn_filled <- vapply(FUN.VALUE = logical(1), suppressMessages(is_imputed(new_data)), any, na.rm = TRUE)
       warn_filled <- names(warn_filled[warn_filled])
+      for (i in seq_len(length(warn_filled))) {
+        warn_filled[i] <- paste0(warn_filled[i], " <", type_sum(new_data[, warn_filled[i], drop = TRUE]), ">")
+      }
       if (length(warn_filled) > 0) {
         warning("Missing values in ",
                 ifelse(length(warn_filled) > 1, "these variables", "this variable"),

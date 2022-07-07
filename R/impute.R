@@ -22,14 +22,14 @@
 #' Imputation is the process of replacing missing data with substituted values. This is done because of three main problems that missing data causes: missing data can introduce a substantial amount of bias, make the handling and analysis of the data more arduous, and create reductions in efficiency.
 #' @param .data data set with missing values to impute
 #' @param vars variables of `.data` that must be imputed, defaults to [`everything()`][tidyselect::everything()] and supports the `tidyselect` language.
-#' @param algorithm algorithm to use for imputation, must be `"mice"` or `"single-point"`. For the latter, `FUN` must be given.
+#' @param algorithm algorithm to use for imputation, must be `"mice"` or `"single-point"`, see *Details*. For the latter, `FUN` must be given.
 #' @param m number of multiple imputations if using MICE, see [mice::mice()]. The mean of all imputations will be used as result.
 #' @param method method to use if using MICE, see [mice::mice()]
 #' @param FUN function to use for single-point imputation (directly) or for MICE to summarise the results over all `m` iterations
 #' @param info print info about imputation
 #' @param ... arguments to pass on to [mice::mice()]
 #' @details 
-#' Imputation can be done using single-point, such as the mean or the median, or using [multivariate imputation by chained equations][mice::mice()] (MICE). Using MICE is a lot more reliable, but also a lot slower, than single-point imputation.
+#' Imputation can be done using single-point, such as the mean or the median, or using [Multivariate Imputations by Chained Equations (MICE)][mice::mice()]. Using MICE is a lot more reliable, but also a lot slower, than single-point imputation.
 #' 
 #' The suggested and default method is MICE. The generated MICE object will be stored as an [attribute][attributes()] with the data, and can be retrieved with [get_mice()], containing all specifics about the imputation. MICE is also known as *fully conditional specification* and *sequential regression multiple imputation*. It was designed for data with randomly missing values, though there is simulation evidence to suggest that with a sufficient number of auxiliary variables it can also work on data that are missing not at random. 
 #' 

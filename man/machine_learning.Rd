@@ -221,7 +221,7 @@ the ensemble.}
 
 \item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with the predictions and their certainties per variable}
 
-\item{imputation}{imputation algorithm to use for missing values, see \code{\link[=impute]{impute()}}. Can be \code{FALSE} to disable imputation, \code{"mice"} for the MICE algorithm, or \code{"single-point"} for a trained mean.}
+\item{imputation}{imputation algorithm to use for missing values, see \code{\link[=impute]{impute()}}. Can be \code{FALSE} to disable imputation, \code{"mice"} for the \link[mice:mice]{Multivariate Imputations by Chained Equations (MICE) algorithm}, or \code{"single-point"} for a trained mean.}
 
 \item{only_params_in_model}{a \link{logical} to indicate whether only parameters in the model should be tuned}
 
@@ -277,7 +277,7 @@ To get predictions, the function \code{\link[=apply_model_to]{apply_model_to()}}
         type = "prob")
 }\if{html}{\out{</div>}}
 
-Although \code{\link[=apply_model_to]{apply_model_to()}} can also correct for missing values and even missing variables by applying imputation where needed (and informing about it).
+Although \code{\link[=apply_model_to]{apply_model_to()}} can also correct for missing variables and even (randomly) missing values by applying imputation with \code{\link[=impute]{impute()}} where needed (defaults to the MICE algorithm).
 
 The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):
 

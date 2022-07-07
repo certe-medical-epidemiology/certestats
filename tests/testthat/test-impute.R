@@ -28,4 +28,7 @@ test_that("imputation works", {
   expect_false(any(is.na(impute(iris2, algorithm = "single-point"))))
   expect_true(any(is.na(impute(iris2, vars = where(is.double), algorithm = "single-point"))))
   
+  expect_true(any(is_imputed(imp)))
+  expect_s3_class(get_mice(imp), "mids")
+  
 })

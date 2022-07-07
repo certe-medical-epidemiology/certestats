@@ -26,7 +26,7 @@ get_mice(.data)
 
 \item{vars}{variables of \code{.data} that must be imputed, defaults to \code{\link[tidyselect:everything]{everything()}} and supports the \code{tidyselect} language.}
 
-\item{algorithm}{algorithm to use for imputation, must be \code{"mice"} or \code{"single-point"}. For the latter, \code{FUN} must be given.}
+\item{algorithm}{algorithm to use for imputation, must be \code{"mice"} or \code{"single-point"}, see \emph{Details}. For the latter, \code{FUN} must be given.}
 
 \item{m}{number of multiple imputations if using MICE, see \code{\link[mice:mice]{mice::mice()}}. The mean of all imputations will be used as result.}
 
@@ -42,7 +42,7 @@ get_mice(.data)
 Imputation is the process of replacing missing data with substituted values. This is done because of three main problems that missing data causes: missing data can introduce a substantial amount of bias, make the handling and analysis of the data more arduous, and create reductions in efficiency.
 }
 \details{
-Imputation can be done using single-point, such as the mean or the median, or using \link[mice:mice]{multivariate imputation by chained equations} (MICE). Using MICE is a lot more reliable, but also a lot slower, than single-point imputation.
+Imputation can be done using single-point, such as the mean or the median, or using \link[mice:mice]{Multivariate Imputations by Chained Equations (MICE)}. Using MICE is a lot more reliable, but also a lot slower, than single-point imputation.
 
 The suggested and default method is MICE. The generated MICE object will be stored as an \link[=attributes]{attribute} with the data, and can be retrieved with \code{\link[=get_mice]{get_mice()}}, containing all specifics about the imputation. MICE is also known as \emph{fully conditional specification} and \emph{sequential regression multiple imputation}. It was designed for data with randomly missing values, though there is simulation evidence to suggest that with a sufficient number of auxiliary variables it can also work on data that are missing not at random.
 
