@@ -32,7 +32,7 @@ ml_decision_trees(
   .data,
   outcome,
   predictors = everything(),
-  training_fraction = 3/4,
+  training_fraction = 0.75,
   strata = NULL,
   max_na_fraction = 0.01,
   correlation_filter = TRUE,
@@ -48,7 +48,7 @@ ml_linear_regression(
   .data,
   outcome,
   predictors = everything(),
-  training_fraction = 3/4,
+  training_fraction = 0.75,
   strata = NULL,
   max_na_fraction = 0.01,
   correlation_filter = TRUE,
@@ -63,7 +63,7 @@ ml_logistic_regression(
   .data,
   outcome,
   predictors = everything(),
-  training_fraction = 3/4,
+  training_fraction = 0.75,
   strata = NULL,
   max_na_fraction = 0.01,
   correlation_filter = TRUE,
@@ -79,7 +79,7 @@ ml_neural_network(
   .data,
   outcome,
   predictors = everything(),
-  training_fraction = 3/4,
+  training_fraction = 0.75,
   strata = NULL,
   max_na_fraction = 0.01,
   correlation_filter = TRUE,
@@ -96,7 +96,7 @@ ml_nearest_neighbour(
   .data,
   outcome,
   predictors = everything(),
-  training_fraction = 3/4,
+  training_fraction = 0.75,
   strata = NULL,
   max_na_fraction = 0.01,
   correlation_filter = TRUE,
@@ -113,7 +113,7 @@ ml_random_forest(
   .data,
   outcome,
   predictors = everything(),
-  training_fraction = 3/4,
+  training_fraction = 0.75,
   strata = NULL,
   max_na_fraction = 0.01,
   correlation_filter = TRUE,
@@ -358,7 +358,7 @@ model1 |> predict(recipes::bake(recipe, new_data = esbl_tests), type = "prob")
 model1 |> apply_model_to(esbl_tests)
 # apply_model_to() can also correct for missing variables:
 model1 |> apply_model_to(esbl_tests[, 1:15])
-# and for missing single values by imputing them with MICE (default)
+# and for missing single values by imputing them using MICE (default)
 esbl_tests2 <- esbl_tests
 esbl_tests2[2, "CIP"] <- NA
 esbl_tests2[5, "AMC"] <- NA
@@ -414,5 +414,6 @@ iris_model |> apply_model_to(to_predict)
 genus <- esbl_tests |> ml_neural_network(genus, everything())
 genus |> get_metrics()
 genus |> autoplot()
-genus |> autoplot(plot_type = "gain") 
+genus |> autoplot(plot_type = "gain")
+genus |> autoplot(plot_type = "pr")
 }

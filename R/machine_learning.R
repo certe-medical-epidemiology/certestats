@@ -196,11 +196,12 @@
 #' genus <- esbl_tests |> ml_neural_network(genus, everything())
 #' genus |> get_metrics()
 #' genus |> autoplot()
-#' genus |> autoplot(plot_type = "gain") 
+#' genus |> autoplot(plot_type = "gain")
+#' genus |> autoplot(plot_type = "pr")
 ml_decision_trees <- function(.data,
                               outcome,
                               predictors = everything(),
-                              training_fraction = 3/4,
+                              training_fraction = 0.75,
                               strata = NULL,
                               max_na_fraction = 0.01,
                               correlation_filter = TRUE,
@@ -231,7 +232,7 @@ ml_decision_trees <- function(.data,
 ml_linear_regression <- function(.data,
                                  outcome,
                                  predictors = everything(),
-                                 training_fraction = 3/4,
+                                 training_fraction = 0.75,
                                  strata = NULL,
                                  max_na_fraction = 0.01,
                                  correlation_filter = TRUE,
@@ -260,7 +261,7 @@ ml_linear_regression <- function(.data,
 ml_logistic_regression <- function(.data,
                                    outcome,
                                    predictors = everything(),
-                                   training_fraction = 3/4,
+                                   training_fraction = 0.75,
                                    strata = NULL,
                                    max_na_fraction = 0.01,
                                    correlation_filter = TRUE,
@@ -291,7 +292,7 @@ ml_logistic_regression <- function(.data,
 ml_neural_network <- function(.data,
                               outcome,
                               predictors = everything(),
-                              training_fraction = 3/4,
+                              training_fraction = 0.75,
                               strata = NULL,
                               max_na_fraction = 0.01,
                               correlation_filter = TRUE,
@@ -324,7 +325,7 @@ ml_neural_network <- function(.data,
 ml_nearest_neighbour <- function(.data,
                                  outcome,
                                  predictors = everything(),
-                                 training_fraction = 3/4,
+                                 training_fraction = 0.75,
                                  strata = NULL,
                                  max_na_fraction = 0.01,
                                  correlation_filter = TRUE,
@@ -357,7 +358,7 @@ ml_nearest_neighbour <- function(.data,
 ml_random_forest <- function(.data,
                              outcome,
                              predictors = everything(),
-                             training_fraction = 3/4,
+                             training_fraction = 0.75,
                              strata = NULL,
                              max_na_fraction = 0.01,
                              correlation_filter = TRUE,
@@ -1023,7 +1024,10 @@ get_variable_weights <- function(object) {
       apply_model_to(training_data |>
                        select(-outcome) |>
                        slice(1) |>
-                       mutate(across(everything(), function(x) NA_real_))) |> 
+                       mutate(across(everything(), function(x) NA_real_)),
+                     # impossible to use MICE for imputation, it would say:
+                     # `mice` detected constant and/or collinear variables. No predictors were left after their removal.
+                     imputation = "single-point") |> 
       pull(certainty)
   )
   
