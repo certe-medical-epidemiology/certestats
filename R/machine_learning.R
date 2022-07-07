@@ -140,7 +140,11 @@
 #' model1 |> apply_model_to(esbl_tests)
 #' # apply_model_to() can also correct for missing variables:
 #' model1 |> apply_model_to(esbl_tests[, 1:15])
-#' 
+#' # and for missing single values by imputing them using MICE (default)
+#' esbl_tests2 <- esbl_tests
+#' esbl_tests2[2, "CIP"] <- NA
+#' esbl_tests2[5, "AMC"] <- NA
+#' model1 |> apply_model_to(esbl_tests2)
 #' 
 #' ## Tuning A Model ##
 #'  
@@ -727,7 +731,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with the predictions and their certainties per variable
 #' @param imputation imputation algorithm to use for missing values, see [impute()]. Can be `FALSE` to disable imputation, `"mice"` for the [Multivariate Imputations by Chained Equations (MICE) algorithm][mice::mice], or `"single-point"` for a trained mean.
 #' @details The [apply_model_to()] function can be used to fit a model on a new data set, using [`predict()`][parsnip::predict.model_fit()]. It detects missing variables and missing data within variables (and fills them with either `NA`s if the model allows it, or with the trained mean), and detects data type differences between the trained data and the input data. All detected problems will throw a warning, but [apply_model_to()] should always return a prediction.
-#' @importFrom dplyr select all_of mutate across everything pull type_sum cur_column bind_cols summarise
+#' @importFrom dplyr select all_of any_of mutate across everything pull type_sum cur_column bind_cols summarise
 #' @importFrom recipes bake
 #' @export
 apply_model_to <- function(object, new_data, only_prediction = FALSE, imputation = "mice", ...) {
@@ -818,6 +822,7 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE, imputation
                           if (!col %in% misses) {
                             warn_filled <<- c(warn_filled, paste0(col, " <", type_sum(values), ">"))
                           }
+                          # add trained mean, also for columns that were missing from new_data but were used for training
                           values[is.na(values)] <- means |> pull(col)
                         }
                         values
@@ -830,8 +835,12 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE, imputation
                 call. = FALSE)
       }
     } else if (imputation %like% "mice") {
+      # only impute the variables that contain missing value, not the entirely missing variables from new_data
       new_data <- new_data |> 
-        impute(algorithm = "mice", m = 5, info = FALSE)
+        impute(vars = !any_of(misses),
+               algorithm = "mice",
+               m = 5,
+               info = FALSE)
       warn_filled <- vapply(FUN.VALUE = logical(1), suppressMessages(is_imputed(new_data)), any, na.rm = TRUE)
       warn_filled <- names(warn_filled[warn_filled])
       for (i in seq_len(length(warn_filled))) {
@@ -844,6 +853,16 @@ apply_model_to <- function(object, new_data, only_prediction = FALSE, imputation
                 paste0(sort(warn_filled), collapse = ", "),
                 call. = FALSE)
       }
+      # add trained means to the variables that were entirely missing from new_data but were used for training
+      new_data <- new_data |> 
+        mutate(across(all_of(misses),
+                      function(values) {
+                        col <- cur_column()
+                        if (any(is.na(values))) {
+                          values[is.na(values)] <- means |> pull(col)
+                        }
+                        values
+                      }))
     } else {
       stop("Missing values are not allowed in the current model - use an imputation algorithm")
     }

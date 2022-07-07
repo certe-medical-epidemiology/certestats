@@ -358,7 +358,11 @@ model1 |> predict(recipes::bake(recipe, new_data = esbl_tests), type = "prob")
 model1 |> apply_model_to(esbl_tests)
 # apply_model_to() can also correct for missing variables:
 model1 |> apply_model_to(esbl_tests[, 1:15])
-
+# and for missing single values by imputing them with MICE (default)
+esbl_tests2 <- esbl_tests
+esbl_tests2[2, "CIP"] <- NA
+esbl_tests2[5, "AMC"] <- NA
+model1 |> apply_model_to(esbl_tests2)
 
 ## Tuning A Model ##
  
