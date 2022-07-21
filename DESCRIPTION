@@ -42,6 +42,7 @@ Suggests:
   nnet,
   ranger,
   rpart,
+  survival,
   testthat (>= 2.0.0)
 License: GPL-2
 Encoding: UTF-8
