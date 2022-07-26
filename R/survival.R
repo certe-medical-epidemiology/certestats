@@ -17,33 +17,74 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
+# JULY 2022 - THIS IS WORK IN PROGRESS
+
 #' Survival Analysis and Censored Regression
 #'
 #' Perform survival analysis using tidymodels
+#' @importFrom dplyr transmute
+#' @importFrom parsnip set_engine set_mode
 survival_exec <- function(.data,
                           days,
                           status,
-                          training_fraction = 0.1,
+                          predictors = everything(),
+                          training_fraction = 0.9,
+                          time = c("6 months", "2 years", "3 years"),
                           engine,
                           FUN,
                           ...) {
-  check_is_installed("survival")
+  check_is_installed(c("censored", "survival"))
+  # support mode 'censored regression' for different engines:
+  loadNamespace("censored")
   
   df <- .data |>
-    transmute(days = {{ days }},
-              status = {{ status }})
-  rows_train <- sort(sample())
-  df_train <- .data[rows_train, , drop = FALSE]
+    select(days = {{ days }},
+           status = {{ status }},
+           {{ predictors }})
   
-  ph_spec <- FUN(...) |>
+  if (training_fraction > 1) {
+    # per the documentation, this is the number of rows for training, so:
+    training_fraction <- training_fraction / nrow(df)
+  }
+  if (training_fraction >= 1) {
+    # in case of a higher training_fraction than nrow(df), or if training_fraction = 1
+    warning("Training size set to ", round(training_fraction * nrow(df)),
+            ", while data size is ", nrow(df),
+            " - training size has been set to ", nrow(df) - 1, call. = FALSE)
+    training_fraction <- (nrow(df) - 1) / nrow(df)
+  }
+  
+  rows_train <- sort(sample(seq_len(nrow(df)),
+                            size = round(training_fraction * nrow(df)),
+                            replace = FALSE))
+  df_train <- df[rows_train, , drop = FALSE]
+  df_test <- df[-rows_train, , drop = FALSE]
+  
+  mdl_recipe <- FUN(...) |>
     set_engine(engine) |>
     set_mode("censored regression")
   
-  ph_spec |>
+  fit <- mdl_recipe |>
     fit(survival::Surv(days, status) ~ ., data = df_train)
+  
+  pred_survival <- fit |> 
+    stats::predict(df_test, 
+                   type = "survival",
+                   time = text_in_days(time))
+  pred_time <- fit |> 
+    stats::predict(df_test,
+                   type = "time")
+  
+  structure(fit,
+            class = c("certestats_survival", class(fit)),
+            data_training = df_train,
+            data_testing = df_test,
+            recipe = mdl_recipe,
+            predicton_survival = pred_survival,
+            prediction_time = pred_time)
 }
 
-time2days <- function(x) {
+text_in_days <- function(x) {
   out <- rep(NA_real_, times = length(x))
   # remove spaces
   x <- gsub(" +", "", x)
