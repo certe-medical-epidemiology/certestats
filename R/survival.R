@@ -43,3 +43,15 @@ survival_exec <- function(.data,
     fit(survival::Surv(days, status) ~ ., data = df_train)
 }
 
+time2days <- function(x) {
+  out <- rep(NA_real_, times = length(x))
+  # remove spaces
+  x <- gsub(" +", "", x)
+  # convert times
+  out[x %like% "year"] <- as.double(gsub("years?", "", x[x %like% "year"])) * 365
+  out[x %like% "month"] <- round((as.double(gsub("months?", "", x[x %like% "month"])) / 12) * 365)
+  out[x %like% "week"] <- as.double(gsub("weeks?", "", x[x %like% "week"])) * 7
+  out[x %like% "day"] <- as.double(gsub("days?", "", x[x %like% "day"]))
+  out[is.na(out)] <- as.double(x[is.na(out)])
+  out
+}

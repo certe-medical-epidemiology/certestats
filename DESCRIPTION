@@ -30,7 +30,7 @@ Imports:
   recipes (>= 1.0.0),
   rsample (>= 1.0.0),
   tidyr (>= 1.0.0),
-  tune (>= 0.1.6),
+  tune (>= 1.0.0),
   workflows (>= 1.0.0),
   yaml (>= 2.2.0),
   yardstick (>= 1.0.0)
