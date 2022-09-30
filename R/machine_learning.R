@@ -522,23 +522,23 @@ ml_exec <- function(FUN,
   df_split_test <- df_split |> testing() |> select(-c(.strata))
   
   # create recipe
-  df_recipe <- df_split_train |> recipe(outcome ~ .)
+  mdl_recipe <- df_split_train |> recipe(outcome ~ .)
   if (isTRUE(correlation_filter)) {
-    df_recipe <- df_recipe |> step_corr(all_predictors())
+    mdl_recipe <- mdl_recipe |> step_corr(all_predictors())
   }
   if (isTRUE(centre)) {
-    df_recipe <- df_recipe |> step_center(all_predictors(), -all_outcomes())
+    mdl_recipe <- mdl_recipe |> step_center(all_predictors(), -all_outcomes())
   }
   if (isTRUE(scale)) {
-    df_recipe <- df_recipe |> step_scale(all_predictors(), -all_outcomes())
+    mdl_recipe <- mdl_recipe |> step_scale(all_predictors(), -all_outcomes())
   }
-  df_recipe <- df_recipe |> prep()
+  mdl_recipe <- mdl_recipe |> prep()
   
   # train
-  df_training <- df_recipe |> bake(new_data = NULL)
+  df_training <- mdl_recipe |> bake(new_data = NULL)
   
   # test
-  df_testing <- df_recipe |> bake(df_split_test)
+  df_testing <- mdl_recipe |> bake(df_split_test)
   
   # create actual model
   mdl <- FUN(...) |>
@@ -575,7 +575,7 @@ ml_exec <- function(FUN,
   structure(mdl,
             class = c("certestats_ml", class(mdl)),
             properties = properties,
-            recipe = df_recipe,
+            recipe = mdl_recipe,
             data_original = df.bak,
             data_structure = df_structure,
             data_means = df_means,

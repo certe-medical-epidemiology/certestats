@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.9.0
+Version: 1.10.0
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -30,21 +30,23 @@ Imports:
   recipes (>= 1.0.0),
   rsample (>= 1.0.0),
   tidyr (>= 1.0.0),
-  tune (>= 0.1.6),
+  tune (>= 1.0.0),
   workflows (>= 1.0.0),
   yaml (>= 2.2.0),
   yardstick (>= 1.0.0)
 Suggests:
+  censored (>= 0.1.0),
   certeplot2,
   kknn,
   mice (>= 3.7.5),
   nnet,
   ranger,
   rpart,
+  survival,
   testthat (>= 2.0.0)
 License: GPL-2
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1
 Config/testthat/edition: 2
 LazyData: true

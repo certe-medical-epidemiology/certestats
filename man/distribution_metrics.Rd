@@ -15,6 +15,8 @@
 \alias{normalize}
 \alias{scale_sd}
 \alias{centre_mean}
+\alias{percentiles}
+\alias{deciles}
 \title{Distribution Metrics}
 \usage{
 se(x, na.rm = getOption("na.rm", FALSE))
@@ -42,6 +44,10 @@ normalize(n, n_ref, per = 1000)
 scale_sd(x)
 
 centre_mean(x)
+
+percentiles(x, na.rm = getOption("na.rm", FALSE))
+
+deciles(x, na.rm = getOption("na.rm", FALSE))
 }
 \arguments{
 \item{x}{values}
@@ -112,6 +118,10 @@ These are the explanations of the functions:
 \itemize{
 \item \code{\link[=centre_mean]{centre_mean()}} normalises the data to have a mean of 0, while retaining the standard deviation
 }
+
+\itemize{
+\item \code{\link[=percentiles]{percentiles()}} and \code{\link[=deciles]{deciles()}} take a numeric vector as input, and return the lowest \href{https://en.wikipedia.org/wiki/Percentile}{percentiles} or \href{https://en.wikipedia.org/wiki/Decile}{deciles} for each value
+}
 }
 \section{Default values of \code{na.rm}}{
 
@@ -120,6 +130,21 @@ This 'certestats' package supports a global default setting for \code{na.rm} in 
 For \code{\link[=quantile]{quantile()}} and \code{\link[=IQR]{IQR()}}, this also applies to the \code{type} argument. The default, \code{type = 7}, is the default of base \R. Use \code{type = 6} to comply with SPSS.
 }
 
+\examples{
+x <- c(0, 1, 2, 3, 4, 5, 5, 5, 5, 5, 5, 5, 6)
+percentiles(x)
+deciles(x)
+
+percentiles(rnorm(10))
+
+library(dplyr, warn.conflicts = FALSE)
+tib <- as_tibble(matrix(as.integer(runif(40, min = 1, max = 7)), ncol = 4),
+                 .name_repair = function(...) LETTERS[1:4])
+tib
+
+# percentiles per column
+tib |> mutate_all(percentiles)
+}
 \seealso{
 For the sum of squares: \url{https://www.thoughtco.com/sum-of-squares-formula-shortcut-3126266}
 }

@@ -153,3 +153,40 @@ scale_sd <- function(x) {
 centre_mean <- function(x) {
   x - mean(x, na.rm = TRUE)
 }
+
+#' @rdname distribution_metrics
+#' @details * [percentiles()] and [deciles()] take a numeric vector as input, and return the lowest [percentiles](https://en.wikipedia.org/wiki/Percentile) or [deciles](https://en.wikipedia.org/wiki/Decile) for each value
+#' @export
+#' @examples 
+#' x <- c(0, 1, 2, 3, 4, 5, 5, 5, 5, 5, 5, 5, 6)
+#' percentiles(x)
+#' deciles(x)
+#' 
+#' percentiles(rnorm(10))
+#' 
+#' library(dplyr, warn.conflicts = FALSE)
+#' tib <- as_tibble(matrix(as.integer(runif(40, min = 1, max = 7)), ncol = 4),
+#'                  .name_repair = function(...) LETTERS[1:4])
+#' tib
+#' 
+#' # percentiles per column
+#' tib |> mutate_all(percentiles)
+percentiles <- function(x, na.rm = getOption("na.rm", FALSE)) {
+  ntiles(x, resolution = 0.01, na.rm = na.rm)
+}
+
+#' @rdname distribution_metrics
+#' @export
+deciles <- function(x, na.rm = getOption("na.rm", FALSE)) {
+  ntiles(x, resolution = 0.1, na.rm = na.rm)
+}
+
+ntiles <- function(x, resolution, na.rm) {
+  if (isTRUE(na.rm)) {
+    x <- x[!is.na(x)]
+  }
+  # get quantile range, remove first entry (0th pct)
+  q <- quantile(x, seq(0, 1, resolution), na.rm = TRUE)[-1]
+  # get index of nearest ntile for each value
+  vapply(FUN.VALUE = double(1), x[!is.na(x)], function(y) which.min(abs(q - y)))
+}
