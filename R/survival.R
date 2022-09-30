@@ -24,6 +24,7 @@
 #' Perform survival analysis using tidymodels
 #' @importFrom dplyr transmute
 #' @importFrom parsnip set_engine set_mode
+#' @noRd
 survival_exec <- function(.data,
                           days,
                           status,
