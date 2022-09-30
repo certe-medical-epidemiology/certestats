@@ -172,23 +172,21 @@ centre_mean <- function(x) {
 #' # percentiles per column
 #' tib |> mutate_all(percentiles)
 percentiles <- function(x, na.rm = getOption("na.rm", FALSE)) {
-  ntiles(x, resolution = 0.01)
+  ntiles(x, resolution = 0.01, na.rm = na.rm)
 }
 
 #' @rdname distribution_metrics
 #' @export
 deciles <- function(x, na.rm = getOption("na.rm", FALSE)) {
-  ntiles(x, resolution = 0.1)
+  ntiles(x, resolution = 0.1, na.rm = na.rm)
 }
 
 ntiles <- function(x, resolution, na.rm) {
+  if (isTRUE(na.rm)) {
+    x <- x[!is.na(x)]
+  }
   # get quantile range, remove first entry (0th pct)
   q <- quantile(x, seq(0, 1, resolution), na.rm = TRUE)[-1]
   # get index of nearest ntile for each value
-  out <- rep(NA_real_, length(x))
-  out[!is.na(x)] <- vapply(FUN.VALUE = double(1), x[!is.na(x)], function(y) which.min(abs(q - y)))
-  if (isTRUE(na.rm)) {
-    out <- out[!is.na(out)]
-  }
-  out
+  vapply(FUN.VALUE = double(1), x[!is.na(x)], function(y) which.min(abs(q - y)))
 }
