@@ -1092,7 +1092,11 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   # get the parsnip function and its parameters
   FUN <- eval(parse(text = model_prop$properties$ml_function))
   params <- names(formals(FUN))
-  params <- params[!params %in% c("mode", "engine")]
+  params <- params[!params %in% c("mode", "engine",
+                                  # neural network models
+                                  "activation", "dropout", "learn_rate",
+                                  # linear and logistic regression models
+                                  "penalty", "mixture")]
   if (isTRUE(only_params_in_model)) {
     params <- params[params %in% names(model_prop$properties)]
   }
@@ -1108,6 +1112,10 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
     dials_fns <- dots
     names(dials_fns) <- NULL
   } else {
+    if (length(params) == 0) {
+      message("No parameters to tune in ", model_prop$properties$ml_function, "().")
+      return(invisible(NULL))
+    }
     message("Assuming tuning analysis for the ", length(params), " parameters ", paste0("'", names(params), "'", collapse = ", "),
             ".\nUse e.g. `", names(params)[1], " = dials::", names(params)[1], "()` to specify tuning for less parameters.")
     dials_fns <- lapply(names(params), function(p) {

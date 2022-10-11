@@ -83,17 +83,23 @@ test_that("ML works", {
   
   # tuning parameters
   expect_error(tune_parameters("test"))
-  tuned <- model_neural_network |> tune_parameters(levels = 1, v = 2)
+  tuned_decision_trees <- model_decision_trees |> tune_parameters(levels = 1, v = 2)
+  tuned_linear_regression <- model_linear_regression |> tune_parameters(levels = 1, v = 2)
+  tuned_logistic_regression <- model_logistic_regression |> tune_parameters(levels = 1, v = 2)
+  tuned_neural_network <- model_neural_network |> tune_parameters(levels = 1, v = 2)
+  tuned_nearest_neighbour <- model_nearest_neighbour |> tune_parameters(levels = 1, v = 2)
+  tuned_random_forest <- model_random_forest |> tune_parameters(levels = 1, v = 2)
+  
   tuned2 <- model_neural_network |> tune_parameters(epochs = dials::epochs(), levels = 1, v = 2)
   expect_error(model_neural_network |> tune_parameters(dials::epochs()))
   # try to run on any of our ML functions
-  expect_true(model_decision_trees |> tune_parameters(levels = 1, v = 2) |> is.data.frame())
-  expect_true(model_linear_regression |> tune_parameters(levels = 1, v = 2) |> is.data.frame())
-  # expect_true(model_logistic_regression |> tune_parameters(levels = 1, v = 2) |> is.data.frame())
-  expect_true(model_neural_network |> tune_parameters(levels = 1, v = 2) |> is.data.frame())
-  expect_true(model_nearest_neighbour |> tune_parameters(levels = 1, v = 2) |> is.data.frame())
-  expect_true(model_random_forest |> tune_parameters(levels = 1, v = 2) |> is.data.frame())
-  expect_s3_class(autoplot(tuned), "gg")
+  expect_true(tuned_decision_trees |> is.data.frame())
+  expect_null(tuned_linear_regression)
+  expect_null(tuned_logistic_regression)
+  expect_true(tuned_neural_network |> is.data.frame())
+  expect_true(tuned_nearest_neighbour |> is.data.frame())
+  expect_true(tuned_random_forest |> is.data.frame())
+  expect_s3_class(autoplot(tuned_decision_trees), "gg")
   
   # imputation
   model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
