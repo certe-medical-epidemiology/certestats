@@ -31,11 +31,9 @@
 se <- function(x, na.rm = getOption("na.rm", FALSE)) {
   x <- as.double(x)
   if (isTRUE(na.rm)) {
-    n <- length(stats::na.omit(x))
-  } else {
-    n <- length(x)
+    x <- x[!is.na(x)]
   }
-  sd(x, na.rm = na.rm) / sqrt(n)
+  sd(x) / sqrt(length(x))
 }
 
 #' @rdname distribution_metrics
@@ -43,13 +41,13 @@ se <- function(x, na.rm = getOption("na.rm", FALSE)) {
 #' @details * [ci()] calculates the confidence intervals for a mean (defaults at 95%), which returns length 2 
 #' @export
 ci <- function(x, level = 0.95, na.rm = getOption("na.rm", FALSE)) {
+  x <- as.double(x)
+  level <- as.double(level)
   if (isTRUE(na.rm)) {
-    n <- length(stats::na.omit(x))
-  } else {
-    n <- length(x)
+    x <- x[!is.na(x)]
   }
-  out <- stats::qt(p = 1 - (1 - 0.95) / 2, df = n - 1) * se(x, na.rm = na.rm)
-  mean(x, na.rm = na.rm) + c(- out, out)
+  out <- stats::qt(p = 1 - (1 - level[1]) / 2, df = length(x) - 1) * se(x)
+  mean(x) + c(- out, out)
 }
 
 #' @rdname distribution_metrics
