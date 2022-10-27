@@ -45,19 +45,19 @@ moving_sum <- function(x, w, side = "centre", na.rm = getOption("na.rm", FALSE))
 #' @rdname moving_average
 #' @export
 moving_Q1 <- function(x, w, side = "centre", na.rm = getOption("na.rm", FALSE)) {
-  moving_fn(x = x, w = w, fun = quantile, side = side, na.rm = na.rm, 0.25)
+  unname(moving_fn(x = x, w = w, fun = quantile, side = side, na.rm = na.rm, 0.25))
 }
 
 #' @rdname moving_average
 #' @export
 moving_Q3 <- function(x, w, side = "centre", na.rm = getOption("na.rm", FALSE)) {
-  moving_fn(x = x, w = w, fun = quantile, side = side, na.rm = na.rm, 0.75)
+  unname(moving_fn(x = x, w = w, fun = quantile, side = side, na.rm = na.rm, 0.75))
 }
 
 #' @rdname moving_average
 #' @export
 moving_fn <- function(x, w, fun, side = "centre", ...) {
-  stopifnot(is.numeric(x), is.numeric(w))
+  stopifnot(is.numeric(x), is.numeric(w), is.function(fun))
   if (length(w) != 1 || ceiling(w != floor(w)) || w <= 1) {
     stop("'w' must be a single integer greater 1.")
   }
