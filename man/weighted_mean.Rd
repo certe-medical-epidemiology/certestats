@@ -21,7 +21,7 @@ weighted_fn(x, w, fun, ...)
 \arguments{
 \item{x}{vector of values}
 
-\item{w}{weights}
+\item{w}{weights, length 1 or length of \code{x}}
 
 \item{na.rm}{a \link{logical} to indicate whether empty must be removed from \code{x}}
 
@@ -48,4 +48,13 @@ weighted_mean(x, y)
 
 # essentially equal to:
 mean(rep(x, y))
+
+x <- c(0:1000)
+y <- c(0:1000)
+mean(x)
+weighted_mean(x, y)
+weighted_median(x, y)
+weighted_Q1(x, y)
+weighted_Q3(x, y)
+weighted_fn(x, y, quantile, c(0.01, 0.99))
 }
