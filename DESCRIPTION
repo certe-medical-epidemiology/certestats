@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.11.0
+Version: 1.12.0
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -20,6 +20,7 @@ URL: https://certe-medical-epidemiology.github.io/certestats, https://github.com
 Depends: 
   R (>= 4.1.0)
 Imports:
+  broom (>= 1.0.0),
   caret (>= 6.0),
   dials (>= 1.0.0),
   dplyr (>= 1.0.3),
@@ -47,6 +48,6 @@ Suggests:
 License: GPL-2
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.3
 Config/testthat/edition: 2
 LazyData: true
