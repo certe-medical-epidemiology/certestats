@@ -17,62 +17,13 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-#' Different Means
-#' 
-#' Functions to determine harmonic and geometric means.
-#' @param x numeric vector
-#' @param ... arguments passed on to [base::mean()]
-#' @param na.rm ignore empty values
-#' @details The harmonic mean can be expressed as the reciprocal of the arithmetic mean of the reciprocals.
-#' @rdname different_means
-#' @name different_means
-#' @export
-mean_harmonic <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
-  1 / mean(1 / x, ..., na.rm = na.rm)
-}
-
-#' @rdname different_means
-#' @details The geometric mean is defined as the nth root of the product of n numbers.
-#' @export
-mean_geometric <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
-  exp(mean(log(abs(x)), ..., na.rm = na.rm))
-  # or prod(x) ^ (1 / length(x))
-}
-
-#' Apply Function per Row
-#' 
-#' This can be used to e.g. add a maximum of certain rows.
-#' @param fn function to apply, such as [max()]
-#' @param ... tidyverse selector helpers, passed on to [`select()`][dplyr::select()]
-#' @param data data set, will be determined with [`cur_data_all()`][dplyr::cur_data_all()] if left blank
-#' @importFrom dplyr select cur_data_all
-#' @export
-#' @examples
-#' if (require("dplyr")) {
-#'   iris |> 
-#'     mutate(max = row_function(max, where(is.numeric)),
-#'            sepal_mean = row_function(mean, starts_with("Sepal"))) |> 
-#'     head()
-#' }
-row_function <- function(fn, ..., data = NULL) {
-  if (is.null(data)) {
-    data <- cur_data_all()
-  } else if (!is.data.frame(data)) {
-    stop("'data' must be a data.frame", call. = FALSE)
-  }
-  if (tryCatch(length(list(...)) > 0, error = function(e) TRUE)) {
-    data <- data |> select(...)
-  } 
-  apply(data, 1, fn)
-}
-
 #' Mathematical Functions With Global `na.rm`
 #' 
 #' These functions call their original base \R namesake, but with a global settable `na.rm` argument.
 #' @section Default values of `na.rm`:
 #' This 'certestats' package supports a global default setting for `na.rm` in many mathematical functions. This can be set with `options(na.rm = TRUE)` or `options(na.rm = FALSE)`.
 #' 
-#' For [quantile()] and [IQR()], this also applies to the `type` argument. The default, `type = 7`, is the default of base \R. Use `type = 6` to comply with SPSS.
+#' For [normality()], [quantile()] and [IQR()], this also applies to the `type` argument. The default, `type = 7`, is the default of base \R. Use `type = 6` to comply with SPSS.
 #' @rdname math_functions
 #' @name math_functions
 #' @inheritParams base::any
@@ -200,4 +151,53 @@ quantile <- function(x, ..., na.rm = getOption("na.rm", FALSE), type = getOption
 #' @export
 IQR <- function(x, ..., na.rm = getOption("na.rm", FALSE), type = getOption("quantile.type", 7)) {
   stats::IQR(x, ..., na.rm = na.rm, type = type)
+}
+
+#' Different Means
+#' 
+#' Functions to determine harmonic and geometric means.
+#' @param x numeric vector
+#' @param ... arguments passed on to [base::mean()]
+#' @param na.rm ignore empty values
+#' @details The harmonic mean can be expressed as the reciprocal of the arithmetic mean of the reciprocals.
+#' @rdname different_means
+#' @name different_means
+#' @export
+mean_harmonic <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
+  1 / mean(1 / x, ..., na.rm = na.rm)
+}
+
+#' @rdname different_means
+#' @details The geometric mean is defined as the nth root of the product of n numbers.
+#' @export
+mean_geometric <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
+  exp(mean(log(abs(x)), ..., na.rm = na.rm))
+  # or prod(x) ^ (1 / length(x))
+}
+
+#' Apply Function per Row
+#' 
+#' This can be used to e.g. add a maximum of certain rows.
+#' @param fn function to apply, such as [max()]
+#' @param ... tidyverse selector helpers, passed on to [`select()`][dplyr::select()]
+#' @param data data set, will be determined with [`cur_data_all()`][dplyr::cur_data_all()] if left blank
+#' @importFrom dplyr select cur_data_all
+#' @export
+#' @examples
+#' if (require("dplyr")) {
+#'   iris |> 
+#'     mutate(max = row_function(max, where(is.numeric)),
+#'            sepal_mean = row_function(mean, starts_with("Sepal"))) |> 
+#'     head()
+#' }
+row_function <- function(fn, ..., data = NULL) {
+  if (is.null(data)) {
+    data <- cur_data_all()
+  } else if (!is.data.frame(data)) {
+    stop("'data' must be a data.frame", call. = FALSE)
+  }
+  if (tryCatch(length(list(...)) > 0, error = function(e) TRUE)) {
+    data <- data |> select(...)
+  } 
+  apply(data, 1, fn)
 }

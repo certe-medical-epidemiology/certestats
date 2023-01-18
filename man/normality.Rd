@@ -4,10 +4,19 @@
 \alias{normality}
 \title{Normality Analysis}
 \usage{
-normality(x, na.rm = getOption("na.rm", FALSE), ...)
+normality(
+  x,
+  na.rm = getOption("na.rm", FALSE),
+  type = getOption("quantile.type", 7)
+)
 }
 \arguments{
 \item{x}{vector of values}
+
+\item{na.rm}{Remove empty values}
+
+\item{type}{an integer between 1 and 9 selecting one of the
+    nine quantile algorithms detailed below to be used.}
 }
 \description{
 Check normality of a vector of values.
@@ -16,7 +25,7 @@ Check normality of a vector of values.
 
 This 'certestats' package supports a global default setting for \code{na.rm} in many mathematical functions. This can be set with \code{options(na.rm = TRUE)} or \code{options(na.rm = FALSE)}.
 
-For \code{\link[=quantile]{quantile()}} and \code{\link[=IQR]{IQR()}}, this also applies to the \code{type} argument. The default, \code{type = 7}, is the default of base \R. Use \code{type = 6} to comply with SPSS.
+For \code{\link[=normality]{normality()}}, \code{\link[=quantile]{quantile()}} and \code{\link[=IQR]{IQR()}}, this also applies to the \code{type} argument. The default, \code{type = 7}, is the default of base \R. Use \code{type = 6} to comply with SPSS.
 }
 
 \examples{

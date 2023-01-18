@@ -450,14 +450,14 @@ ml_exec <- function(FUN,
   }
   # save this one for later
   df.bak <- df |> 
-    select(-.strata)
+    select(-all_of(.strata))
   # select only columns to keep in model
   df <- df |> 
-    select(outcome = {{ outcome }}, {{ predictors }}, .strata)
+    select(outcome = {{ outcome }}, {{ predictors }}, all_of(.strata))
   
   # this will allow `predictors = everything()`, without selecting the outcome var with it
   predictors <- df |> 
-    select(-c(outcome, .strata)) |> 
+    select(-c(outcome, all_of(.strata))) |> 
     colnames()
   
   # format data to work with it
@@ -517,9 +517,9 @@ ml_exec <- function(FUN,
     stop("No more rows left for analysis (max_na_fraction = ", max_na_fraction, "). Check column values.", call. = FALSE)
   }
   
-  df_split <- initial_split(df, strata = .strata, prop = training_fraction)
-  df_split_train <- df_split |> training() |> select(-c(.strata))
-  df_split_test <- df_split |> testing() |> select(-c(.strata))
+  df_split <- initial_split(df, strata = all_of(.strata), prop = training_fraction)
+  df_split_train <- df_split |> training() |> select(-all_of(.strata))
+  df_split_test <- df_split |> testing() |> select(-all_of(.strata))
   
   # create recipe
   mdl_recipe <- df_split_train |> recipe(outcome ~ .)
@@ -686,7 +686,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
       p <- ggplot(curve, aes(x = 1 - specificity, y = sensitivity))
     }
     p <- p +
-      geom_path(size = 0.75) +
+      geom_path(linewidth = 0.75) +
       geom_abline(lty = 3) +
       coord_equal() +
       scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
