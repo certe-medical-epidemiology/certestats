@@ -78,7 +78,8 @@ globalVariables(c(".",
                   "t_diff",
                   "truth",
                   "value",
-                  "where"))
+                  "where",
+                  "y"))
 
 #' @importFrom dplyr mutate starts_with
 #' @importFrom yardstick roc_auc

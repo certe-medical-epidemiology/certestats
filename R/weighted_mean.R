@@ -47,26 +47,26 @@
 #' weighted_Q3(x, y)
 #' weighted_fn(x, y, quantile, c(0.01, 0.99))
 weighted_mean <- function(x, w, na.rm = getOption("na.rm", FALSE)) {
-  weighted_fn(x = x, w = w, fun = mean, side = side, na.rm = na.rm)
+  weighted_fn(x = x, w = w, fun = mean, na.rm = na.rm)
 }
 
 #' @rdname weighted_mean
 #' @export
 weighted_median <- function(x, w, na.rm = getOption("na.rm", FALSE)) {
-  weighted_fn(x = x, w = w, fun = median, side = side, na.rm = na.rm)
+  weighted_fn(x = x, w = w, fun = median, na.rm = na.rm)
 }
 
 
 #' @rdname weighted_mean
 #' @export
 weighted_Q1 <- function(x, w, na.rm = getOption("na.rm", FALSE)) {
-  unname(weighted_fn(x = x, w = w, fun = quantile, side = side, na.rm = na.rm, 0.25))
+  unname(weighted_fn(x = x, w = w, fun = quantile, na.rm = na.rm, 0.25))
 }
 
 #' @rdname weighted_mean
 #' @export
 weighted_Q3 <- function(x, w, na.rm = getOption("na.rm", FALSE)) {
-  unname(weighted_fn(x = x, w = w, fun = quantile, side = side, na.rm = na.rm, 0.75))
+  unname(weighted_fn(x = x, w = w, fun = quantile, na.rm = na.rm, 0.75))
 }
 
 #' @rdname weighted_mean

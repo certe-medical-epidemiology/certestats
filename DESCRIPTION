@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.12.1
+Version: 1.13.0
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -20,6 +20,7 @@ URL: https://certe-medical-epidemiology.github.io/certestats, https://github.com
 Depends: 
   R (>= 4.1.0)
 Imports:
+  certestyle,
   broom (>= 1.0.0),
   caret (>= 6.0),
   dials (>= 1.0.0),
@@ -28,6 +29,7 @@ Imports:
   ggplot2 (>= 3.4.0),
   hardhat (>= 1.2.0),
   parsnip (>= 1.0.0),
+  performance (>= 0.10.0),
   recipes (>= 1.0.0),
   rsample (>= 1.0.0),
   tidyr (>= 1.0.0),

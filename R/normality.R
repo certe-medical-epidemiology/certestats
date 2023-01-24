@@ -62,12 +62,12 @@ normality <- function(x, na.rm = getOption("na.rm", FALSE), type = getOption("qu
    kurt$interpretation <- "3 in normal distribution"
    
    # plots
-   par_bak <- par()$mfrow
-   par(mfrow = c(1, 2)) 
-   hist(x, col = "steelblue", main = "Histogram", xlab = "Observed Values")
+   par_bak <- graphics::par()$mfrow
+   graphics::par(mfrow = c(1, 2)) 
+   graphics::hist(x, col = "steelblue", main = "Histogram", xlab = "Observed Values")
    stats::qqnorm(x, col = "steelblue")
    stats::qqline(x, qtype = getOption("quantile.type", 7), lwd = 2)
-   par(mfrow = par_bak)
+   graphics::par(mfrow = par_bak)
    
    bind_rows(stat_tests, skew, kurt)
 }
