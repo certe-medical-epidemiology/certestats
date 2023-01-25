@@ -36,12 +36,12 @@
 #' data.frame(x = 1:50, y = runif(50)) |>
 #'   regression(x, y)
 #' 
-#' exponential_growth <- rexp(50, rate = 3)
-#' exponential_growth |> plot()
+#' mrsa_from_blood_years <- c(0, 1, 0, 0, 2, 0, 1, 3, 1, 2, 3, 1, 2)
+#' mrsa_from_blood_years |> plot()
 #' 
-#' exponential_growth |> regression()
+#' mrsa_from_blood_years |> regression()
 #' 
-#' exponential_growth |> regression() |> plot()
+#' mrsa_from_blood_years |> regression() |> plot()
 regression <- function(x, ...) {
   UseMethod("regression")
 }
@@ -67,25 +67,20 @@ regression.default <- function(x, y = NULL, type = "lm", family = stats::gaussia
 #' @export
 #' @importFrom dplyr select pull
 #' @rdname regression
-regression.data.frame <- function(x, var1, var2 = NULL, type = "lm", ...) {
+regression.data.frame <- function(x, var1, var2 = NULL, type = "lm", family = stats::gaussian, ...) {
   var_x <- x |> select({{ var1 }}) |> pull(1)
   if (tryCatch(is.null(var2), error = function(e) FALSE)) {
     var_y <- seq_len(length(var1))
   } else {
     var_y <- x |> select({{ var2 }}) |> pull(1)
   }
-  regression(var_x, var_y, ...)
+  regression(var_x, var_y, type = type, family = family, ...)
 }
 
 #' @export
-#' @importFrom performance check_model
-#  # we need {see} for {performance} but it is not installed automatically, so as a placeholder:
-#' @importFrom see see_colors
-#' @importFrom certestyle colourpicker
 #' @rdname regression
 plot.certestats_reg <- function(x, ...) {
-  mdl <- attributes(x)$mdl
-  check_model(mdl, colors = colourpicker(c("certeroze", "certeroze3", "certeblauw")))
+  autoplot(x)
 }
 
 #' @export
@@ -102,9 +97,9 @@ autoplot.certestats_reg <- function(object, ...) {
   
   out <- ggplot(data = mdl,
          mapping = aes(x = y, y = x)) +
-    geom_point(colour = colourpicker("certeroze3")) +
+    geom_point(colour = "steelblue") +
     geom_smooth(method = ifelse(type == "lm", "lm", "loess"),
-                colour = colourpicker("certeroze")) +
+                colour = "steelblue", linewidth = 0.5, alpha = 0.25)+
     theme_minimal() +
     labs(x = "x",
          y = "y",

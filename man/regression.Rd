@@ -12,7 +12,7 @@ regression(x, ...)
 
 \method{regression}{default}(x, y = NULL, type = "lm", family = stats::gaussian, ...)
 
-\method{regression}{data.frame}(x, var1, var2 = NULL, type = "lm", ...)
+\method{regression}{data.frame}(x, var1, var2 = NULL, type = "lm", family = stats::gaussian, ...)
 
 \method{plot}{certestats_reg}(x, ...)
 
@@ -42,10 +42,10 @@ runif(10) |> regression()
 data.frame(x = 1:50, y = runif(50)) |>
   regression(x, y)
 
-exponential_growth <- rexp(50, rate = 3)
-exponential_growth |> plot()
+mrsa_from_blood_years <- c(0, 1, 0, 0, 2, 0, 1, 3, 1, 2, 3, 1, 2)
+mrsa_from_blood_years |> plot()
 
-exponential_growth |> regression()
+mrsa_from_blood_years |> regression()
 
-exponential_growth |> regression() |> plot()
+mrsa_from_blood_years |> regression() |> plot()
 }
