@@ -79,6 +79,8 @@ regression.data.frame <- function(x, var1, var2 = NULL, type = "lm", ...) {
 
 #' @export
 #' @importFrom performance check_model
+#  # we need {see} for {performance} but it is not installed automatically, so as a placeholder:
+#' @importFrom see see_colors
 #' @importFrom certestyle colourpicker
 #' @rdname regression
 plot.certestats_reg <- function(x, ...) {

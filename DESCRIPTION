@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.13.0
+Version: 1.13.1
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -32,6 +32,7 @@ Imports:
   performance (>= 0.10.0),
   recipes (>= 1.0.0),
   rsample (>= 1.0.0),
+  see (>= 0.7.0),
   tidyr (>= 1.0.0),
   tune (>= 1.0.0),
   workflows (>= 1.0.0),
