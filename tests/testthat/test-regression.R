@@ -20,7 +20,7 @@
 test_that("regression works", {
   expect_s3_class(regression(runif(10)), "certestats_reg")
   expect_s3_class(regression(1:10, runif(10)), "certestats_reg")
-  expect_s3_class(regression(runif(10)) |> plot(), "check_model")
+  expect_s3_class(regression(runif(10)) |> plot(), "gg")
   expect_s3_class(regression(runif(10)) |> autoplot(), "gg")
   expect_s3_class(data.frame(x = 1:50, y = runif(50)) |> regression(x, y), "certestats_reg")
 })
