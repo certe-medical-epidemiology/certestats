@@ -1177,7 +1177,7 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   
   # return the results, arranging according the best metrics on average
   structure(out |> 
-              pivot_wider(-.estimator, names_from = .metric, values_from = c(mean, std_err)) |>
+              pivot_wider(id_cols = -.estimator, names_from = .metric, values_from = c(mean, std_err)) |>
               arrange(desc(across(starts_with("mean_"))),
                       across(everything())) |>
               rename_with(function(x) gsub("^mean_", "", x)) |>
