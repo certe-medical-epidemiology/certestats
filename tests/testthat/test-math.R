@@ -78,4 +78,9 @@ test_that("math functions work", {
   
   expect_equal(sd(scale_sd(x)), 1)
   expect_equal(round(mean(centre_mean(x)), 5), 0)
+  
+  expect_equal(remove_outliers(c(1,2,1,2,1,2,8)),
+               c(1,2,1,2,1,2))
+  expect_equal(remove_outliers(c(1,2,1,2,1,2)),
+               c(1,2,1,2,1,2))
 })

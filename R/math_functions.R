@@ -153,6 +153,22 @@ IQR <- function(x, ..., na.rm = getOption("na.rm", FALSE), type = getOption("qua
   stats::IQR(x, ..., na.rm = na.rm, type = type)
 }
 
+#' Remove Outliers
+#' 
+#' This simple function uses [boxplot.stats()] to determine outliers and removes them from the vector.
+#' @param x a vector of values
+#' @param coef a multiple of the IQR that is allowed at maximum to keep values within the accepted range
+#' @export
+#' @examples
+#' remove_outliers(c(1,2,1,2,1,2,8))
+#' 
+#' remove_outliers(c(1,2,1,2,1,2))
+remove_outliers <- function(x, coef = 1.5) {
+  out <- boxplot.stats(x)$out
+  message(length(out), " outlier", ifelse(length(out) != 1, "s", ""), " removed")
+  x[!x %in% out]
+}
+
 #' Different Means
 #' 
 #' Functions to determine harmonic and geometric means.
