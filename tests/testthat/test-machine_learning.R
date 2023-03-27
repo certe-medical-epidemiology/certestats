@@ -62,13 +62,13 @@ test_that("ML works", {
     slice(1:3) |>
     select(-Petal.Width) |> 
     mutate(Sepal.Width = as.integer(Sepal.Width))
-  expect_warning(mdl |> apply_model_to(new))
+  expect_message(mdl |> apply_model_to(new))
   
   # get weights
   weights <- model_random_forest |> get_variable_weights()
-  expect_true(is.numeric(weights))
-  expect_equal(length(weights), # should be same as trained data without 'outcome' variables
-               ncol(attributes(model_random_forest)$data_training) - 1)
+  expect_true(is.numeric(unlist(weights)))
+  expect_equal(length(weights), # should be same as trained data without the dependent variable
+               ncol(attributes(model_random_forest)$data_original) - 1)
   
   # stratified sampling using strata
   stratified <- esbl_tests |> ml_random_forest(esbl, where(is.double), strata = genus)
@@ -105,7 +105,12 @@ test_that("ML works", {
   model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
   esbl_tests2 <- esbl_tests
   esbl_tests2[c(1, 3, 5), "AMC"] <- NA
-  expect_warning(model1 |> apply_model_to(esbl_tests2))
-  expect_warning(model1 |> apply_model_to(esbl_tests2, imputation = "single"))
-  expect_error(model1 |> apply_model_to(esbl_tests2, imputation = FALSE))
+  expect_message(model1 |> apply_model_to(esbl_tests2))
+  expect_message(model1 |> apply_model_to(esbl_tests2, impute_algorithm = "single"))
+  expect_error(model1 |> apply_model_to(esbl_tests2, impute_algorithm = FALSE))
+  
+  # internals
+  var_info <- get_recipe(model1)$var_info
+  expect_true(all(c("variable", "role") %in% colnames(var_info)))
+  expect_true(all(var_info$variable[var_info$variable != "outcome"] %in% colnames(attributes(model1)$data_original)))
 })

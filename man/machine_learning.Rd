@@ -10,6 +10,7 @@
 \alias{ml_random_forest}
 \alias{confusionMatrix.certestats_ml}
 \alias{autoplot.certestats_ml}
+\alias{predict.certestats_ml}
 \alias{apply_model_to}
 \alias{get_metrics}
 \alias{get_accuracy}
@@ -129,11 +130,15 @@ ml_random_forest(
 
 \method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
+\method{predict}{certestats_ml}(object, new_data, type = NULL, ...)
+
 apply_model_to(
   object,
   new_data,
+  add_certainty = TRUE,
   only_prediction = FALSE,
-  imputation = "mice",
+  correct_mistakes = TRUE,
+  impute_algorithm = "mice",
   ...
 )
 
@@ -194,7 +199,11 @@ stratification variable. Numeric \code{strata} are binned into quartiles.}
 
 \item{tree_depth}{An integer for maximum depth of the tree.}
 
-\item{...}{Arguments to be passed on to the \code{parsnip} functions, see \emph{Model Functions}. For the \code{\link[=tune_parameters]{tune_parameters()}} function, these must be \code{dials} package calls, such as \code{dials::trees()} (see Examples).}
+\item{...}{Arguments to be passed on to the \code{parsnip} functions, see \emph{Model Functions}.
+
+For the \code{\link[=tune_parameters]{tune_parameters()}} function, these must be \code{dials} package calls, such as \code{dials::trees()} (see Examples).
+
+For \code{\link[parsnip:predict.model_fit]{predict()}}, these must be arguments passed on to \code{\link[parsnip:predict.model_fit]{parsnip::predict.model_fit()}}}
 
 \item{penalty}{A non-negative number representing the total
 amount of regularization (specific engines only).}
@@ -217,11 +226,20 @@ the ensemble.}
 
 \item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
 
-\item{new_data}{new input data that requires prediction, must have all columns present in the training data. Missing variables and \code{NA}s in variables will be replaced with the mean of the training data if the model does not support \code{NA}s.}
+\item{new_data}{A rectangular data object, such as a data frame.}
 
-\item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame} with the predictions and their certainties per variable}
+\item{type}{A single character value or \code{NULL}. Possible values
+are "numeric", "class", "prob", "conf_int", "pred_int", "quantile", "time",
+"hazard", "survival", or "raw". When \code{NULL}, \code{predict()} will choose an
+appropriate value based on the model's mode.}
 
-\item{imputation}{imputation algorithm to use for missing values, see \code{\link[=impute]{impute()}}. Can be \code{FALSE} to disable imputation, \code{"mice"} for the \link[mice:mice]{Multivariate Imputations by Chained Equations (MICE) algorithm}, or \code{"single-point"} for a trained mean.}
+\item{add_certainty}{a \link{logical} to indicate whether certainties should be added to the output \link{data.frame}}
+
+\item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame}}
+
+\item{correct_mistakes}{a \link{logical} to indicate whether missing variables and missing values should be added to \code{new_data}}
+
+\item{impute_algorithm}{the algorithm to use in \code{\link[=impute]{impute()}} if \code{correct_mistakes = TRUE}. Can be \code{"mice"} (default) for the \link[mice:mice]{Multivariate Imputations by Chained Equations (MICE) algorithm}, or \code{"single-point"} for a trained median.}
 
 \item{only_params_in_model}{a \link{logical} to indicate whether only parameters in the model should be tuned}
 
@@ -232,34 +250,9 @@ integers that is the same length as the number of parameters in \code{...}.
 of parameters.}
 
 \item{v}{The number of partitions of the data set.}
-
-\item{type}{A single character value. Choices are \code{"marginals"} (for a plot
-of each predictor versus performance; see Details below), \code{"parameters"}
-(each parameter versus search iteration), or \code{"performance"} (performance
-versus iteration). The latter two choices are only used for \code{\link[tune:tune_bayes]{tune_bayes()}}.}
 }
 \value{
 A machine learning model of class \code{certestats_ml} / \verb{_rpart} / \code{model_fit}.
-\subsection{Attributes}{
-
-The \verb{ml_*()} functions return the following \link[base:attributes]{attributes}:
-\itemize{
-\item \code{properties}: a \link{list} with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as \code{tree_depth} in \code{\link[=ml_decision_trees]{ml_decision_trees()}})
-\item \code{recipe}: a \link[recipes:recipe]{recipe} as generated with \code{\link[recipes:prep]{recipes::prep()}}, to be used for training and testing
-\item \code{data_original}: a \link{data.frame} containing the original data, possibly without invalid strata
-\item \code{data_structure}: a \link{data.frame} containing the original data structure (only trained variables) with zero rows
-\item \code{data_means}: a \link{data.frame} containing the means of the original data (only trained variables)
-\item \code{data_training}: a \link{data.frame} containing the training data of \code{data_original}
-\item \code{data_testing}: a \link{data.frame} containing the testing data of \code{data_original}
-\item \code{rows_training}: an \link{integer} vector of rows used for training in \code{data_original}
-\item \code{rows_testing}: an \link{integer} vector of rows used for training in \code{data_original}
-\item \code{predictions}: a \link{data.frame} containing predicted values based on the testing data
-\item \code{metrics}: a \link{data.frame} with model metrics as returned by \code{\link[yardstick:metrics]{yardstick::metrics()}}
-\item \code{correlation_filter}: a \link{logical} indicating whether \code{\link[recipes:step_corr]{recipes::step_corr()}} has been applied
-\item \code{centre}: a \link{logical} indicating whether \code{\link[recipes:step_center]{recipes::step_center()}} has been applied
-\item \code{scale}: a \link{logical} indicating whether \code{\link[recipes:step_scale]{recipes::step_scale()}} has been applied
-}
-}
 }
 \description{
 These functions can be used to create a traditional machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{\code{parsnip}}, \href{https://recipes.tidymodels.org}{\code{recipes}}, \href{https://rsample.tidymodels.org}{\code{rsample}}, \href{https://tune.tidymodels.org}{\code{tune}}, and \href{https://yardstick.tidymodels.org}{\code{yardstick}}) created by RStudio.
@@ -268,16 +261,6 @@ These functions can be used to create a traditional machine learning model based
 To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
 
 To predict \strong{classifications} (character values), the function \code{\link[=ml_linear_regression]{ml_linear_regression()}} cannot be used.
-
-To get predictions, the function \code{\link[=apply_model_to]{apply_model_to()}} can be used as a wrapper around \code{\link[=predict]{predict()}}. This function is basically equal to:
-
-\if{html}{\out{<div class="sourceCode r">}}\preformatted{predict(your_model,
-        recipes::bake(get_recipe(your_model),
-                      new_data = your_input_data),
-        type = "prob")
-}\if{html}{\out{</div>}}
-
-Although \code{\link[=apply_model_to]{apply_model_to()}} can also correct for missing variables and even (randomly) missing values by applying imputation with \code{\link[=impute]{impute()}} where needed (defaults to the MICE algorithm).
 
 The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):
 
@@ -307,16 +290,37 @@ generics::fit()      yardstick::metrics()
 
 Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, the gain curve, the lift curve, or the precision-recall (PR) curve. For the ROC curve, the (overall) area under the curve (AUC) will be printed as subtitle.
 
-The \code{\link[=apply_model_to]{apply_model_to()}} function can be used to fit a model on a new data set, using \code{\link[parsnip:predict.model_fit]{predict()}}. It detects missing variables and missing data within variables (and fills them with either \code{NA}s if the model allows it, or with the trained mean), and detects data type differences between the trained data and the input data. All detected problems will throw a warning, but \code{\link[=apply_model_to]{apply_model_to()}} should always return a prediction.
+The \code{\link[parsnip:predict.model_fit]{predict()}} function can be used to fit a model on a new data set. Its wrapper \code{\link[=apply_model_to]{apply_model_to()}} works in the same way, but can also detect missing variables and missing data points within variables (and can add or fill them), and detects data type differences between the trained data and the input data.
 
 Use the \code{\link[=get_model_variables]{get_model_variables()}} function to return a zero-row \link{data.frame} with the variables that were used for training, even before the recipe steps.
 
-Use the \code{\link[=get_variable_weights]{get_variable_weights()}} function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a named numeric vector, that sums up to 1.
+Use the \code{\link[=get_variable_weights]{get_variable_weights()}} function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a data set with 1 row, of which the values sum up to 1.
 
 Use the \code{\link[=tune_parameters]{tune_parameters()}} function to analyse tune parameters of any \verb{ml_*()} function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a \link[rsample:vfold_cv]{V-fold cross-validation}, of which the number of partitions can be set with \code{v}. The number of \code{levels} will be used to split the range of the parameters. For example, a range of 1-10 with \code{levels = 2} will lead to \verb{[1, 10]}, while \code{levels = 5} will lead to \verb{[1, 3, 5, 7, 9]}. The resulting \link{data.frame} will be sorted from best to worst. These results can also be plotted using \code{\link[=autoplot]{autoplot()}}.
 
 The \code{\link[=check_testing_predictions]{check_testing_predictions()}} function combines the data used for testing from the original data with its predictions, so the original data can be reviewed per prediction.
 }
+\section{Attributes}{
+
+The \verb{ml_*()} functions return the following \link[base:attributes]{attributes}:
+\itemize{
+\item \code{properties}: a \link{list} with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as \code{tree_depth} in \code{\link[=ml_decision_trees]{ml_decision_trees()}})
+\item \code{recipe}: a \link[recipes:recipe]{recipe} as generated with \code{\link[recipes:prep]{recipes::prep()}}, to be used for training and testing
+\item \code{data_original}: a \link{data.frame} containing the original data, possibly without invalid strata
+\item \code{data_structure}: a \link{data.frame} containing the original data structure (only trained variables) with zero rows
+\item \code{data_means}: a \link{data.frame} containing the means of the original data (only trained variables)
+\item \code{data_training}: a \link{data.frame} containing the training data of \code{data_original}
+\item \code{data_testing}: a \link{data.frame} containing the testing data of \code{data_original}
+\item \code{rows_training}: an \link{integer} vector of rows used for training in \code{data_original}
+\item \code{rows_testing}: an \link{integer} vector of rows used for training in \code{data_original}
+\item \code{predictions}: a \link{data.frame} containing predicted values based on the testing data
+\item \code{metrics}: a \link{data.frame} with model metrics as returned by \code{\link[yardstick:metrics]{yardstick::metrics()}}
+\item \code{correlation_filter}: a \link{logical} indicating whether \code{\link[recipes:step_corr]{recipes::step_corr()}} has been applied
+\item \code{centre}: a \link{logical} indicating whether \code{\link[recipes:step_center]{recipes::step_center()}} has been applied
+\item \code{scale}: a \link{logical} indicating whether \code{\link[recipes:step_scale]{recipes::step_scale()}} has been applied
+}
+}
+
 \section{Model Functions}{
 
 These are the called functions from the \code{parsnip} package. Arguments set in \code{...} will be passed on to these \code{parsnip} functions:
@@ -344,27 +348,21 @@ model2 |> get_metrics()
 model1 |> confusionMatrix()
 
 
-## Applying A Model ##
+# Applying A Model -----------------------------------------------------
  
-# do NOT apply a model using 'just' stats::predict():
-model1 |> predict(esbl_tests, type = "prob")
+# simply use base R `predict()` to apply a model:
+model1 |> predict(esbl_tests)
 
-# the recipe was not considered, and you must bake first:
-recipe <- get_recipe(model1)
-recipe
-model1 |> predict(recipes::bake(recipe, new_data = esbl_tests), type = "prob")
-
-# as a shortcut, apply a model using apply_model_to() to get predictions and certainties
+# but apply_model_to() contains more info and can apply corrections:
 model1 |> apply_model_to(esbl_tests)
-# apply_model_to() can also correct for missing variables:
 model1 |> apply_model_to(esbl_tests[, 1:15])
-# and for missing single values by imputing them using MICE (default)
 esbl_tests2 <- esbl_tests
 esbl_tests2[2, "CIP"] <- NA
 esbl_tests2[5, "AMC"] <- NA
 model1 |> apply_model_to(esbl_tests2)
 
-## Tuning A Model ##
+
+# Tuning A Model -------------------------------------------------------
  
 # tune the parameters of a model (will take some time)
 tuning <- model1 |> 
@@ -378,7 +376,7 @@ iris |>
                   trees = dials::trees())
 
 
-## Practical Example 1 ##
+# Practical Example #1 --------------------------------------------------
 
 # this is what iris data set looks like:
 head(iris)
@@ -406,7 +404,7 @@ to_predict
 iris_model |> apply_model_to(to_predict)
 
 
-## Practical Example 2 ##
+# Practical Example #2 -------------------------------------------------
 
 # this example shows plotting methods for a model
 

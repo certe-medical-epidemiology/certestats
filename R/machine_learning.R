@@ -30,7 +30,11 @@
 #' @param max_na_fraction Maximum fraction of `NA` values (defaults to `0.01`) of the `predictors` before they are removed from the model
 #' @param mode Type of predicted value - defaults to `"classification"`, but can also be `"unknown"` or `"regression"`
 #' @param engine \R package or function name to be used for the model, will be passed on to [parsnip::set_engine()]
-#' @param ... Arguments to be passed on to the `parsnip` functions, see *Model Functions*. For the [tune_parameters()] function, these must be `dials` package calls, such as `dials::trees()` (see Examples).
+#' @param ... Arguments to be passed on to the `parsnip` functions, see *Model Functions*.
+#' 
+#' For the [tune_parameters()] function, these must be `dials` package calls, such as `dials::trees()` (see Examples).
+#' 
+#' For [`predict()`][parsnip::predict.model_fit()], these must be arguments passed on to [parsnip::predict.model_fit()]
 #' @inheritParams parsnip::decision_tree
 #' @inheritParams parsnip::linear_reg
 #' @inheritParams parsnip::logistic_reg
@@ -42,17 +46,6 @@
 #' To predict **regression** (numeric values), the function [ml_logistic_regression()] cannot be used.
 #'
 #' To predict **classifications** (character values), the function [ml_linear_regression()] cannot be used.
-#' 
-#' To get predictions, the function [apply_model_to()] can be used as a wrapper around [predict()]. This function is basically equal to:
-#' 
-#' ```{r, eval = FALSE}
-#' predict(your_model,
-#'         recipes::bake(get_recipe(your_model),
-#'                       new_data = your_input_data),
-#'         type = "prob")
-#' ```
-#' 
-#' Although [apply_model_to()] can also correct for missing variables and even (randomly) missing values by applying imputation with [impute()] where needed (defaults to the MICE algorithm).
 #' 
 #' The workflow of the `ml_*()` functions is basically like this (thus saving a lot of `tidymodels` functions to type):
 #' 
@@ -81,8 +74,7 @@
 #' }
 #' @return A machine learning model of class `certestats_ml` / `_rpart` / `model_fit`.
 #' 
-#' ## Attributes
-#' 
+#' @section Attributes:
 #' The `ml_*()` functions return the following [attributes][base::attributes()]:
 #' 
 #' * `properties`: a [list] with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as `tree_depth` in [ml_decision_trees()])
@@ -126,27 +118,21 @@
 #' model1 |> confusionMatrix()
 #' 
 #' 
-#' ## Applying A Model ##
+#' # Applying A Model -----------------------------------------------------
 #'  
-#' # do NOT apply a model using 'just' stats::predict():
-#' model1 |> predict(esbl_tests, type = "prob")
+#' # simply use base R `predict()` to apply a model:
+#' model1 |> predict(esbl_tests)
 #' 
-#' # the recipe was not considered, and you must bake first:
-#' recipe <- get_recipe(model1)
-#' recipe
-#' model1 |> predict(recipes::bake(recipe, new_data = esbl_tests), type = "prob")
-#'
-#' # as a shortcut, apply a model using apply_model_to() to get predictions and certainties
+#' # but apply_model_to() contains more info and can apply corrections:
 #' model1 |> apply_model_to(esbl_tests)
-#' # apply_model_to() can also correct for missing variables:
 #' model1 |> apply_model_to(esbl_tests[, 1:15])
-#' # and for missing single values by imputing them using MICE (default)
 #' esbl_tests2 <- esbl_tests
 #' esbl_tests2[2, "CIP"] <- NA
 #' esbl_tests2[5, "AMC"] <- NA
 #' model1 |> apply_model_to(esbl_tests2)
 #' 
-#' ## Tuning A Model ##
+#' 
+#' # Tuning A Model -------------------------------------------------------
 #'  
 #' # tune the parameters of a model (will take some time)
 #' tuning <- model1 |> 
@@ -160,7 +146,7 @@
 #'                   trees = dials::trees())
 #' 
 #' 
-#' ## Practical Example 1 ##
+#' # Practical Example #1 --------------------------------------------------
 #' 
 #' # this is what iris data set looks like:
 #' head(iris)
@@ -188,7 +174,7 @@
 #' iris_model |> apply_model_to(to_predict)
 #' 
 #' 
-#' ## Practical Example 2 ##
+#' # Practical Example #2 -------------------------------------------------
 #' 
 #' # this example shows plotting methods for a model
 #' 
@@ -728,165 +714,135 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
 
 #' @rdname machine_learning
 #' @param object,data outcome of machine learning model
-#' @param new_data new input data that requires prediction, must have all columns present in the training data. Missing variables and `NA`s in variables will be replaced with the mean of the training data if the model does not support `NA`s.
-#' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame] with the predictions and their certainties per variable
-#' @param imputation imputation algorithm to use for missing values, see [impute()]. Can be `FALSE` to disable imputation, `"mice"` for the [Multivariate Imputations by Chained Equations (MICE) algorithm][mice::mice], or `"single-point"` for a trained mean.
-#' @details The [apply_model_to()] function can be used to fit a model on a new data set, using [`predict()`][parsnip::predict.model_fit()]. It detects missing variables and missing data within variables (and fills them with either `NA`s if the model allows it, or with the trained mean), and detects data type differences between the trained data and the input data. All detected problems will throw a warning, but [apply_model_to()] should always return a prediction.
-#' @importFrom dplyr select all_of any_of mutate across everything pull type_sum cur_column bind_cols summarise
-#' @importFrom recipes bake
+#' @inheritParams parsnip::predict.model_fit
+#' @details The [`predict()`][parsnip::predict.model_fit()] function can be used to fit a model on a new data set. Its wrapper [apply_model_to()] works in the same way, but can also detect missing variables and missing data points within variables (and can add or fill them), and detects data type differences between the trained data and the input data.
 #' @export
-apply_model_to <- function(object, new_data, only_prediction = FALSE, imputation = "mice", ...) {
+predict.certestats_ml <- function(object,
+                                  new_data,
+                                  type = NULL,
+                                  ...) {
+  apply_model_to(object = object,
+                 new_data = new_data,
+                 type = type,
+                 add_certainty = FALSE,
+                 only_prediction = FALSE,
+                 correct_mistakes = FALSE,
+                 ...)
+}
+
+#' @rdname machine_learning
+#' @param add_certainty a [logical] to indicate whether certainties should be added to the output [data.frame]
+#' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame]
+#' @param correct_mistakes a [logical] to indicate whether missing variables and missing values should be added to `new_data`
+#' @param impute_algorithm the algorithm to use in [impute()] if `correct_mistakes = TRUE`. Can be `"mice"` (default) for the [Multivariate Imputations by Chained Equations (MICE) algorithm][mice::mice], or `"single-point"` for a trained median.
+#' @importFrom recipes bake
+#' @importFrom dplyr bind_cols mutate filter pull as_tibble select any_of
+#' @export
+apply_model_to <- function(object,
+                           new_data,
+                           add_certainty = TRUE,
+                           only_prediction = FALSE,
+                           correct_mistakes = TRUE,
+                           impute_algorithm = "mice",
+                           ...) {
   if (!inherits(object, "certestats_ml")) {
     stop("Only output from certestats::ml_*() functions can be used.")
   }
-  
-  training_structure <- attributes(object)$data_structure
-  training_data <- attributes(object)$data_training
-  training_cols <- colnames(training_data)
-  training_cols <- training_cols[training_cols != "outcome"]
-  
-  # correct for missing variables
-  misses <- training_cols[!training_cols %in% colnames(new_data)]
-  if (length(misses) > 0) {
-    miss_df <- training_structure[, sort(misses), drop = FALSE]
-    warning(ifelse(length(misses) > 1, "These variables were", "This variable was"),
-            " used for training but ",
-            ifelse(length(misses) > 1, "are", "is"),
-            " missing from the input data: ",
-            paste0(colnames(miss_df), " <", miss_df |> vapply(FUN.VALUE = character(1), type_sum), ">", collapse = ", "),
-            call. = FALSE)
-  }
-  for (col in misses) {
-    # add as NA in the class of training_data:
-    new_data[, col] <- training_structure[0, col, drop = TRUE][1]
-  }
-   
-  # silently add columns to new_data that are not in the training data but
-  # are in the recipe, e.g. because of a correlation filter
-  model_vars <- get_model_variables(object)
-  recipe_cols <- colnames(model_vars)
-  recipe_cols <- recipe_cols[recipe_cols != "outcome"]
-  misses_from_recipe <- recipe_cols[!recipe_cols %in% training_cols]
-  for (col in misses_from_recipe) {
-    # add as NA in the class of training_data:
-    new_data[, col] <- model_vars[0, col, drop = TRUE][1]
-  }
-  
-  # sort according to recipe input
-  new_data <- new_data |> select(all_of(recipe_cols))
 
-  # detect data type differences between training model and input data
-  old_classes <- training_structure |> vapply(FUN.VALUE = character(1), type_sum)
-  new_classes <- new_data |> vapply(FUN.VALUE = character(1), type_sum)
-  new_classes <- new_classes[names(new_classes) %in% names(old_classes)]
-  class_diff <- which(old_classes != new_classes)
-  if (length(class_diff) > 0) {
-    warning(ifelse(length(misses) > 1, "These variables are", "This variable is"),
-            " of a different type than the training data of the model: ",
-            paste0(names(old_classes[class_diff]), " (<",
-                   old_classes[class_diff], "> in model, <",
-                   new_classes[class_diff], "> in input)",
-                   collapse = ", "),
-            call. = FALSE)
-  }
+  # remove class so there will not be an infinite loop
+  class(object) <- setdiff(class(object), "certestats_ml")
   
-  # transform the input data in the same way as the training data
-  new_data <- new_data |>
-    mutate(across(everything(),
-                  function(values) {
-                    if (is.character(values)) {
-                      values <- as.factor(values)
-                    }
-                    as.double(values)
-                  }))
-  if (!isFALSE(list(...)$train)) {
-    new_data <- bake(get_recipe(object), new_data = new_data)
-    means <- training_data |>
-      select(-outcome) |> 
-      summarise(across(everything(), mean, na.rm = TRUE))
-  } else {
-    # data is already trained, as is the case when coming from e.g. get_variable_weights()
-    means <- attributes(object)$data_means
-  }
+  required_cols <- get_recipe(object)$var_info |>
+    filter(role == "predictor") |>
+    pull(variable)
+  # remove redundant columns
+  new_data <- new_data |> 
+    select(any_of(required_cols))
   
-  # predict the outcome, while correcting for missing data
-  predicted <- tryCatch(stats::predict(object = object, new_data = new_data, type = NULL), error = function(e) NULL)
-  if (is.null(predicted) || all(is.na(predicted$.pred_class))) {
-    if (imputation %like% "single") {
-      # replace NAs with mean of the training data, since this type of model apparently does not support NAs
-      warn_filled <- character(0)
-      new_data <- new_data |> 
-        mutate(across(everything(),
-                      function(values) {
-                        col <- cur_column()
-                        if (any(is.na(values))) {
-                          if (!col %in% misses) {
-                            warn_filled <<- c(warn_filled, paste0(col, " <", type_sum(values), ">"))
-                          }
-                          # add trained mean, also for columns that were missing from new_data but were used for training
-                          values[is.na(values)] <- means |> pull(col)
-                        }
-                        values
-                      }))
-      if (length(warn_filled) > 0) {
-        warning("Missing values in ",
-                ifelse(length(warn_filled) > 1, "these variables", "this variable"),
-                " were replaced with the trained mean: ",
-                paste0(sort(warn_filled), collapse = ", "),
-                call. = FALSE)
-      }
-    } else if (imputation %like% "mice") {
-      # only impute the variables that contain missing value, not the entirely missing variables from new_data
-      new_data <- new_data |> 
-        impute(vars = !any_of(misses),
-               algorithm = "mice",
-               m = 5,
-               info = FALSE)
-      warn_filled <- vapply(FUN.VALUE = logical(1), suppressMessages(is_imputed(new_data)), any, na.rm = TRUE)
-      warn_filled <- names(warn_filled[warn_filled])
-      for (i in seq_len(length(warn_filled))) {
-        warn_filled[i] <- paste0(warn_filled[i], " <", type_sum(new_data[, warn_filled[i], drop = TRUE]), ">")
-      }
-      if (length(warn_filled) > 0) {
-        warning("Missing values in ",
-                ifelse(length(warn_filled) > 1, "these variables", "this variable"),
-                " were imputed using MICE: ",
-                paste0(sort(warn_filled), collapse = ", "),
-                call. = FALSE)
-      }
-      # add trained means to the variables that were entirely missing from new_data but were used for training
-      new_data <- new_data |> 
-        mutate(across(all_of(misses),
-                      function(values) {
-                        col <- cur_column()
-                        if (any(is.na(values))) {
-                          values[is.na(values)] <- means |> pull(col)
-                        }
-                        values
-                      }))
-    } else {
-      stop("Missing values are not allowed in the current model - use an imputation algorithm")
+  
+  # check (1): new_data does not have missing columns ----
+  
+  misses <- setdiff(required_cols, colnames(new_data))
+  if (length(misses) > 0) {
+    if (!isTRUE(correct_mistakes)) {
+      stop("Missing variables in `new_data`: ", toString(misses), ".")
     }
-    # rerun predictions with new mean-fills
-    predicted <- stats::predict(object = object, new_data = new_data, type = NULL)
+    for (col in misses) {
+      # add as NA in the class of the original data:
+      new_val <- attributes(object)$data_original[[col]]
+      if (is.numeric(new_val)) {
+        # take median
+        new_val <- median(new_val, na.rm = TRUE)
+        message("Adding missing variable as median (= ", new_val, "): ", col)
+        new_data[, col] <- new_val
+      } else {
+        # take mode, value that occurs most often
+        new_val <- new_val |> table()
+        new_val <- names(new_val[order(new_val, decreasing = TRUE)[1]])
+        message("Adding missing variable as mode value (= \"", new_val, "\"): ", col)
+        new_data[, col] <- new_val
+      }
+    }
   }
   
-  # return the predictions
-  if (isTRUE(only_prediction)) {
-    out <- predicted[[1]]
-    if (all(out %in% c("TRUE", "FALSE", NA))) {
-      out <- as.logical(out)
+  
+  # check (2): new_data does not have missing values ----
+  
+  if (anyNA(new_data)) {
+    missings <- new_data |> vapply(FUN.VALUE = logical(1), anyNA)
+    missings <- names(missings)[missings]
+    if (!isTRUE(correct_mistakes)) {
+      stop("Missing ", sum(is.na(new_data)), " data points in `new_data` variables: ", toString(missings), ".")
     }
-  } else {
+    new_data <- new_data |> 
+      impute(vars = all_of(missings),
+             algorithm = impute_algorithm,
+             m = 5,
+             info = TRUE)
+  }
+  
+  
+  # check (3): new_data does not have different structure ----
+  
+  data_types_old <- vapply(attributes(object)$data_original |> select(any_of(colnames(new_data))), FUN.VALUE = character(1), mode)
+  data_types_new <- vapply(new_data, FUN.VALUE = character(1), mode)
+  data_type_diff <- names(which(data_types_old != data_types_new))
+  if (length(data_type_diff) > 0) {
+    if (!isTRUE(correct_mistakes)) {
+      stop("Data structure difference between original data and `new_data`: ", toString(data_type_diff), ".")
+    }
+    for (col in data_type_diff) {
+      old_mode <- mode(attributes(object)$data_original[[col]])
+      FUN <- get(paste0("as.", old_mode))
+      message("Transforming variable ", col, " from '", mode(new_data[[col]]), "' to '", old_mode, "'")
+      new_data[, col] <- FUN(new_data[[col]])
+    }
+  }
+  
+  
+  # bake recipe and get predictions ----
+  
+  new_data <- bake(get_recipe(object), new_data = new_data)
+  out <- stats::predict(object, new_data, ...)
+  
+  
+  # return results ----
+  if (isTRUE(add_certainty)) {
     preds <- stats::predict(object, new_data, type = "prob")
-    out <- bind_cols(stats::setNames(predicted, "predicted"),
+    out <- bind_cols(stats::setNames(out, "predicted"),
                      preds) |> 
       mutate(certainty = row_function(max, data = preds), .after = 1)
     if (all(out$predicted %in% c("TRUE", "FALSE", NA))) {
       out$predicted <- as.logical(out$predicted)
     }
   }
-  out
+  
+  if (isTRUE(only_prediction)) {
+    out$predicted
+  } else {
+    as_tibble(out)
+  }
+  
 }
 
 #' @method metrics certestats_ml
@@ -1005,8 +961,8 @@ get_model_variables <- function(object) {
 }
 
 #' @rdname machine_learning
-#' @details Use the [get_variable_weights()] function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a named numeric vector, that sums up to 1.
-#' @importFrom dplyr select slice pull mutate across everything
+#' @details Use the [get_variable_weights()] function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a data set with 1 row, of which the values sum up to 1.
+#' @importFrom dplyr select slice pull mutate across everything as_tibble
 #' @export
 get_variable_weights <- function(object) {
   if (!inherits(object, "certestats_ml")) {
@@ -1020,15 +976,14 @@ get_variable_weights <- function(object) {
   training_data <- attributes(object)$data_training
   # run prediction on NAs to get 'clean' certainty
   suppressWarnings(
-    empty_prediction <- object |> 
-      apply_model_to(training_data |>
-                       select(-outcome) |>
-                       slice(1) |>
-                       mutate(across(everything(), function(x) NA_real_)),
-                     # impossible to use MICE for imputation, it would say:
-                     # `mice` detected constant and/or collinear variables. No predictors were left after their removal.
-                     imputation = "single-point") |> 
-      pull(certainty)
+    suppressMessages(
+      empty_prediction <- object |> 
+        apply_model_to(training_data,
+                       # impossible to use MICE for imputation, it would say:
+                       # `mice` detected constant and/or collinear variables. No predictors were left after their removal.
+                       impute_algorithm = "single-point") |> 
+        pull(certainty)
+    )
   )
   
   # get min and max from trained variables (since they might be scaled and centred)
@@ -1047,9 +1002,13 @@ get_variable_weights <- function(object) {
   }
   # run prediction using only each min and max for each variable
   suppressWarnings(
-    preds <- object |>
-      apply_model_to(ranges_new, train = FALSE) |>
-      pull(certainty)
+    suppressMessages(
+      preds <- object |>
+        # impossible to use MICE for imputation, it would say:
+        # `mice` detected constant and/or collinear variables. No predictors were left after their removal.
+        apply_model_to(ranges_new, impute_algorithm = "single-point") |>
+        pull(certainty)
+    )
   )
   
   # store differences with 'clean' prediction
@@ -1063,8 +1022,15 @@ get_variable_weights <- function(object) {
   differences <- differences / sum(differences, na.rm = TRUE)
   # give variable names
   names(differences) <- colnames(ranges)
+  out <- differences |> as.list() |> as_tibble()
   
-  differences
+  model_vars <- colnames(get_model_variables(object))
+  for (col in model_vars[!model_vars %in% colnames(out)]) {
+    message("Note: Variable '", col, "' was in the recipe, but was excluded for training")
+    out[, col] <- 0
+  }
+  out <- out[, model_vars, drop = FALSE]
+  out
 }
 
 #' @rdname machine_learning
@@ -1175,13 +1141,24 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
     collect_metrics() 
   message("[", Sys.time(), "] Done.")
   
-  # return the results, arranging according the best metrics on average
-  structure(out |> 
-              pivot_wider(id_cols = -.estimator, names_from = .metric, values_from = c(mean, std_err)) |>
-              arrange(desc(across(starts_with("mean_"))),
-                      across(everything())) |>
-              rename_with(function(x) gsub("^mean_", "", x)) |>
-              rename_with(function(x) gsub("^std_err_(.*)", "\\1_se", x)),
+  out <- out |> 
+    pivot_wider(id_cols = -.estimator, names_from = .metric, values_from = c(mean, std_err))
+  if (all(c("mean_accuracy", "mean_roc_auc") %in% colnames(out))) {
+    out <- out |> 
+      arrange(desc(mean_accuracy), desc(mean_roc_auc))
+  } else {
+    # arrange according the best metrics on average
+    out <- out |> 
+      arrange(desc(across(starts_with("mean_"))),
+              across(everything()))
+  }
+  
+  out <- out |> 
+    rename_with(function(x) gsub("^mean_", "", x)) |>
+    rename_with(function(x) gsub("^std_err_(.*)", "\\1_se", x))
+  
+  # return the results, 
+  structure(out,
             class = c("certestats_tuning", class(out)),
             result = tree_res)
 }

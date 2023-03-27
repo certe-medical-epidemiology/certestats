@@ -11,7 +11,7 @@ row_function(fn, ..., data = NULL)
 
 \item{...}{tidyverse selector helpers, passed on to \code{\link[dplyr:select]{select()}}}
 
-\item{data}{data set, will be determined with \code{\link[dplyr:deprec-context]{cur_data_all()}} if left blank}
+\item{data}{data set, will be determined with \code{\link[dplyr:pick]{pick()}} if left blank}
 }
 \description{
 This can be used to e.g. add a maximum of certain rows.

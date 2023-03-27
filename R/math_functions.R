@@ -164,7 +164,7 @@ IQR <- function(x, ..., na.rm = getOption("na.rm", FALSE), type = getOption("qua
 #' 
 #' remove_outliers(c(1,2,1,2,1,2))
 remove_outliers <- function(x, coef = 1.5) {
-  out <- boxplot.stats(x)$out
+  out <- grDevices::boxplot.stats(x)$out
   message(length(out), " outlier", ifelse(length(out) != 1, "s", ""), " removed")
   x[!x %in% out]
 }
@@ -196,8 +196,8 @@ mean_geometric <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
 #' This can be used to e.g. add a maximum of certain rows.
 #' @param fn function to apply, such as [max()]
 #' @param ... tidyverse selector helpers, passed on to [`select()`][dplyr::select()]
-#' @param data data set, will be determined with [`cur_data_all()`][dplyr::cur_data_all()] if left blank
-#' @importFrom dplyr select cur_data_all
+#' @param data data set, will be determined with [`pick()`][dplyr::pick()] if left blank
+#' @importFrom dplyr select pick everything
 #' @export
 #' @examples
 #' if (require("dplyr")) {
@@ -208,7 +208,7 @@ mean_geometric <- function(x, ..., na.rm = getOption("na.rm", FALSE)) {
 #' }
 row_function <- function(fn, ..., data = NULL) {
   if (is.null(data)) {
-    data <- cur_data_all()
+    data <- pick(everything())
   } else if (!is.data.frame(data)) {
     stop("'data' must be a data.frame", call. = FALSE)
   }

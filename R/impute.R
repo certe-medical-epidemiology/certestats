@@ -65,7 +65,7 @@ impute <- function(.data,
                    algorithm = "mice",
                    m = 10,
                    method = NULL,
-                   FUN = mean,
+                   FUN = median,
                    info = TRUE,
                    ...) {
   
@@ -117,7 +117,7 @@ impute <- function(.data,
                        function(col, fn = FUN, print_info = info) {
                          if (is.numeric(col) && !is.factor(col)) {
                            # take the mean of all multiple imputations
-                           FUN(col[!is.na(col)])
+                           mean(col[!is.na(col)])
                          } else {
                            # take the mode
                            names(sort(table(col), decreasing = TRUE)[1])
@@ -153,7 +153,7 @@ impute <- function(.data,
                         # calculate the single point arithmetic value
                         outcome <- fn(col[!is.na(col)])
                         if (isTRUE(print_info)) {
-                          message("Imputed variable '", cur_column(), "' using single ", fn_txt, 
+                          message("Imputed variable '", cur_column(), "' using its ", fn_txt, 
                                   " of ", round(outcome, 2), " in row ", paste(which(is.na(col)), collapse = ", "))
                         }
                         col[is.na(col)] <- outcome

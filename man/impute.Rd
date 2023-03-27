@@ -12,7 +12,7 @@ impute(
   algorithm = "mice",
   m = 10,
   method = NULL,
-  FUN = mean,
+  FUN = median,
   info = TRUE,
   ...
 )
