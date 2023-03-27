@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.14.1
+Version: 1.14.2
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -24,7 +24,7 @@ Imports:
   broom (>= 1.0.0),
   caret (>= 6.0),
   dials (>= 1.0.0),
-  dplyr (>= 1.0.3),
+  dplyr (>= 1.1.0),
   generics (>= 0.1.0),
   ggplot2 (>= 3.4.0),
   hardhat (>= 1.2.0),
