@@ -133,7 +133,7 @@ early_warning_outbreak <- function(df,
            cases > 0) 
   
   if (nrow(df_filter) == 0) {
-    outbreaks <- data.frame()
+    outbreaks <- data.frame(date = Sys.Date()[0], cases = integer(0), episode = integer(0), ongoing_days = integer(0))
   } else {
     outbreaks <- df_filter |> 
       mutate(episode = get_episode(date, case_free_days = case_free_days)) |> 
@@ -141,9 +141,9 @@ early_warning_outbreak <- function(df,
       filter(difftime(max(date), min(date), units = "days") >= minimum_ongoing_days)
     
     if (nrow(outbreaks) == 0) {
-      outbreaks <- data.frame()
+      outbreaks <- data.frame(date = Sys.Date()[0], cases = integer(0), episode = integer(0), ongoing_days = integer(0))
     } else {
-      outbreaks |> 
+      outbreaks <- outbreaks |> 
         # create episodes again, since some might have been filtered
         ungroup() |> 
         mutate(episode = get_episode(date, case_free_days = case_free_days)) |> 
@@ -172,12 +172,20 @@ early_warning_outbreak <- function(df,
 #' @importFrom dplyr group_by summarise
 #' @export
 format.early_warning_outbreak <- function(x, ...) {
-  x$outbreaks |> 
-    group_by(episode) |> 
-    summarise(first_day = min(date, na.rm = TRUE),
-              last_day = max(date, na.rm = TRUE),
-              ongoing_days = max(ongoing_days, na.rm = TRUE),
-              total_cases = sum(cases, na.rm = TRUE))
+  if (nrow(x$outbreaks) == 0) {
+    data.frame(episode = integer(0),
+               first_day = Sys.Date()[0],
+               last_day = Sys.Date()[0],
+               ongoing_days = integer(0),
+               total_cases = integer(0))
+  } else {
+    x$outbreaks |> 
+      group_by(episode) |> 
+      summarise(first_day = min(date, na.rm = TRUE),
+                last_day = max(date, na.rm = TRUE),
+                ongoing_days = max(ongoing_days, na.rm = TRUE),
+                total_cases = sum(cases, na.rm = TRUE))
+  }
 }
 
 #' @noRd
