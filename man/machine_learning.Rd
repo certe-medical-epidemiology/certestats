@@ -229,9 +229,9 @@ the ensemble.}
 \item{new_data}{A rectangular data object, such as a data frame.}
 
 \item{type}{A single character value or \code{NULL}. Possible values
-are "numeric", "class", "prob", "conf_int", "pred_int", "quantile", "time",
-"hazard", "survival", or "raw". When \code{NULL}, \code{predict()} will choose an
-appropriate value based on the model's mode.}
+are \code{"numeric"}, \code{"class"}, \code{"prob"}, \code{"conf_int"}, \code{"pred_int"},
+\code{"quantile"}, \code{"time"}, \code{"hazard"}, \code{"survival"}, or \code{"raw"}. When \code{NULL},
+\code{predict()} will choose an appropriate value based on the model's mode.}
 
 \item{add_certainty}{a \link{logical} to indicate whether certainties should be added to the output \link{data.frame}}
 
