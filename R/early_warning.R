@@ -68,6 +68,15 @@ early_warning_outbreak <- function(df,
                                    moving_average_side = "centre",
                                    case_free_days = 14) {
   year <- function(x) as.integer(format(x, "%Y"))
+  unify_years <- function(x) {
+    is_leap_year <- any(x |> format() |> substr(6, 10) == "02-29", na.rm = TRUE)
+    if (inherits(x, "Date")) {
+      as.Date(paste0(ifelse(is_leap_year, "1972", "1970"), x |> format() |> substr(5, 10)))
+    } else {
+      as.POSIXct(paste0(ifelse(is_leap_year, "1972", "1970"), x |> format() |> substr(5, 99)))
+    }
+  }
+  
   if (is.null(column_date)) {
     column_date <- df |> 
       vapply(FUN.VALUE = logical(1), inherits, c("Date", "POSIXt"))
@@ -109,7 +118,7 @@ early_warning_outbreak <- function(df,
     fill(in_scope, .direction = "down") |> 
     mutate(ma_5c = moving_average(cases, w = moving_average_days, side = moving_average_side, na.rm = TRUE),
            year = year(date),
-           month_day = as.Date(paste0("1970", format2(date, "-mm-dd")))) |> 
+           month_day = unify_years(date)) |> 
     group_by(in_scope) |> 
     mutate(is_outlier = ma_5c %in% grDevices::boxplot.stats(ma_5c[!is.na(ma_5c)], coef = remove_outliers_coefficient)$out) |> 
     ungroup() |> 
