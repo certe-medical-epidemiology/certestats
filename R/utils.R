@@ -33,6 +33,17 @@ yardstick::metrics
 #' @export
 ggplot2::autoplot
 
+#' @importFrom caret confusionMatrix
+#' @noRd
+#' @export
+print.confusionMatrix <- function(x,
+                                  mode = "everything",
+                                  ...) {
+  fn <- get("print.confusionMatrix", envir = asNamespace("caret"))
+  fn(x = x, mode = mode, ...)
+}
+
+
 check_is_installed <- function(pkgs) {
   to_install <- pkgs[which(!pkgs %in% rownames(utils::installed.packages(.libPaths())))]
   if (length(to_install) > 0) {
@@ -59,19 +70,29 @@ check_is_installed <- function(pkgs) {
 }
 
 globalVariables(c(".",
-                  ".id",
                   ".estimator",
+                  ".id",
                   ".level",
                   ".metric",
                   ".pred_class",
+                  "cases",
                   "certainty",
+                  "cluster",
+                  "in_scope",
+                  "is_outlier",
+                  "ma_5c",
+                  "ma_5c_pct_outscope",
+                  "max_ma_5c",
                   "mean_accuracy",
                   "mean_roc_auc",
                   "model",
+                  "month_day",
                   "name",
                   "neg_pred_value",
+                  "ongoing_days",
                   "other",
                   "outcome",
+                  "patient",
                   "pos_pred_value",
                   "predicted",
                   "role",

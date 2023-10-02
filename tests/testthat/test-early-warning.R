@@ -25,11 +25,11 @@ test_that("early warning works", {
                                     size = 300),
                       patient = sample(LETTERS, size = 300, replace = TRUE))
   
-  out1 <- cases |> early_warning_outbreak(date >= "2022-01-01")
-  out2 <- cases |> early_warning_outbreak(date >= "2022-01-01", minimum_ongoing_days = 99)
+  out1 <- cases |> early_warning_cluster(date >= "2022-01-01")
+  out2 <- cases |> early_warning_cluster(date >= "2022-01-01", minimum_ongoing_days = 99)
   
   expect_true(is.data.frame(format(out1)))
   expect_true(is.data.frame(format(out2)))
-  expect_output(print(out1))
-  expect_output(print(out2))
+  expect_output(suppressMessages(print(out1)))
+  expect_message(print(out2))
 })
