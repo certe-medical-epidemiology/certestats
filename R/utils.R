@@ -33,17 +33,6 @@ yardstick::metrics
 #' @export
 ggplot2::autoplot
 
-#' @importFrom caret confusionMatrix
-#' @noRd
-#' @export
-print.confusionMatrix <- function(x,
-                                  mode = "everything",
-                                  ...) {
-  fn <- get("print.confusionMatrix", envir = asNamespace("caret"))
-  fn(x = x, mode = mode, ...)
-}
-
-
 check_is_installed <- function(pkgs) {
   to_install <- pkgs[which(!pkgs %in% rownames(utils::installed.packages(.libPaths())))]
   if (length(to_install) > 0) {

@@ -116,7 +116,7 @@ early_warning_cluster <- function(df,
   
   # add the new columns
   df.bak <- df
-  df$date <- df[, column_date, drop = TRUE]
+  df$date <- as.Date(df[, column_date, drop = TRUE])
   df$patient <- df[, column_patientid, drop = TRUE]
   df$row <- seq_len(nrow(df))
   df$in_scope <- df$row %in% (df |> filter(...) |> pull(row))
@@ -132,7 +132,10 @@ early_warning_cluster <- function(df,
   df_early <- df |>
     group_by(date, in_scope) |>
     summarise(cases = n_distinct(patient), .groups = "drop") |> 
-    complete(date = as.Date(min(date):max(date)), fill = list(cases = 0)) |>
+    complete(date = seq(from = min(as.Date(date), na.rm = TRUE),
+                        to = min(as.Date(date), na.rm = TRUE),
+                        by = "1 day"),
+             fill = list(cases = 0)) |>
     fill(in_scope, .direction = "down") |> 
     mutate(ma_5c = moving_average(cases, w = moving_average_days, side = moving_average_side, na.rm = TRUE),
            year = year(date),
