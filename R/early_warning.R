@@ -131,7 +131,7 @@ early_warning_cluster <- function(df,
   if (all(df$in_scope, na.rm = TRUE)) {
     stop("All cases are 'in scope'. Use ... to filter on specific cases.")
   }
-  if (n_distinct(df$patient_id) == nrow(df)) {
+  if (n_distinct(df$patient) == nrow(df)) {
     warning("Only unique patients found - this is uncommon. Did you summarise accidentally on patient IDs?")
   }
   
