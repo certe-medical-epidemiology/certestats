@@ -2,7 +2,9 @@
 % Please edit documentation in R/early_warning.R
 \name{early_warning_cluster}
 \alias{early_warning_cluster}
+\alias{n_clusters}
 \alias{has_clusters}
+\alias{has_ongoing_cluster}
 \title{Early Warning for Disease Clusters}
 \usage{
 early_warning_cluster(
@@ -21,7 +23,11 @@ early_warning_cluster(
   case_free_days = 14
 )
 
-has_clusters(x, minimum = 1)
+n_clusters(x)
+
+has_clusters(x, n = 1)
+
+has_ongoing_cluster(x, reference = Sys.Date() - 1)
 }
 \arguments{
 \item{df}{data set, this must be a data set containing \strong{only positive results}. The most bare-bone data set to use must have at least a date column and patient column. Do not summarise on patient IDs, this will happen automatically.}
@@ -52,7 +58,9 @@ has_clusters(x, minimum = 1)
 
 \item{x}{output of \code{\link[=early_warning_cluster]{early_warning_cluster()}}}
 
-\item{minimum}{minimum number of clusters to check against, defaults to 1}
+\item{n}{number of clusters, defaults to 1}
+
+\item{reference}{date to test whether any of the clusters currently has this date in it}
 }
 \description{
 \code{\link[=early_warning_cluster]{early_warning_cluster()}} can detect so-called \href{https://en.wikipedia.org/wiki/Disease_cluster}{disease clusters}. Use \code{\link[=has_clusters]{has_clusters()}} to return \code{TRUE} or \code{FALSE} on its output, or use \code{\link[=format]{format()}} to format the output.
@@ -63,11 +71,14 @@ A (disease) cluster is defined as an unusually large aggregation of disease even
 Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologists or biostatistician (\href{https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf}{ATSDR, 2008}).
 }
 \examples{
-cases <- data.frame(date = sample(seq(as.Date("2018-01-01"),
+cases <- data.frame(date = sample(seq(as.Date("2015-01-01"),
                                       as.Date("2022-12-31"),
                                       "1 day"),
                                   size = 300),
                     patient = sample(LETTERS, size = 300, replace = TRUE))
+
+------------------------------------------------------------
+
 check <- early_warning_cluster(cases,
                                date >= "2022-01-01",
                                threshold_percentile = 0.99)
@@ -81,10 +92,13 @@ check2 <- early_warning_cluster(cases,
                                 threshold_percentile = 0.75)
 
 check2
-check |> format()
+check2 |> format()
 
+check2 |> n_clusters()
 check2 |> has_clusters()
 check2 |> has_clusters(15)
+
+check2 |> has_ongoing_cluster("2022-06-01")
 
 check |> unclass()
 }

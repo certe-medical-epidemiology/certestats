@@ -44,11 +44,14 @@
 #' @rdname early_warning_cluster
 #' @export
 #' @examples
-#' cases <- data.frame(date = sample(seq(as.Date("2018-01-01"),
+#' cases <- data.frame(date = sample(seq(as.Date("2015-01-01"),
 #'                                       as.Date("2022-12-31"),
 #'                                       "1 day"),
 #'                                   size = 300),
 #'                     patient = sample(LETTERS, size = 300, replace = TRUE))
+#'
+#' ------------------------------------------------------------
+#' 
 #' check <- early_warning_cluster(cases,
 #'                                date >= "2022-01-01",
 #'                                threshold_percentile = 0.99)
@@ -62,10 +65,13 @@
 #'                                 threshold_percentile = 0.75)
 #' 
 #' check2
-#' check |> format()
+#' check2 |> format()
 #' 
+#' check2 |> n_clusters()
 #' check2 |> has_clusters()
 #' check2 |> has_clusters(15)
+#' 
+#' check2 |> has_ongoing_cluster("2022-06-01")
 #' 
 #' check |> unclass()
 early_warning_cluster <- function(df,
@@ -133,7 +139,7 @@ early_warning_cluster <- function(df,
     group_by(date, in_scope) |>
     summarise(cases = n_distinct(patient), .groups = "drop") |> 
     complete(date = seq(from = min(as.Date(date), na.rm = TRUE),
-                        to = min(as.Date(date), na.rm = TRUE),
+                        to = max(as.Date(date), na.rm = TRUE),
                         by = "1 day"),
              fill = list(cases = 0)) |>
     fill(in_scope, .direction = "down") |> 
@@ -143,7 +149,10 @@ early_warning_cluster <- function(df,
     group_by(in_scope) |> 
     mutate(is_outlier = ma_5c %in% grDevices::boxplot.stats(ma_5c[!is.na(ma_5c)], coef = remove_outliers_coefficient)$out) |> 
     group_by(month_day) |>
-    mutate(max_ma_5c = max(ma_5c[!is.na(ma_5c) & !in_scope & !(remove_outliers & is_outlier)], na.rm = TRUE)) |> 
+    mutate(max_ma_5c = ifelse(length(ma_5c[!is.na(ma_5c) & !in_scope & !(remove_outliers & is_outlier)]) > 0,
+                              max(ma_5c[!is.na(ma_5c) & !in_scope & !(remove_outliers & is_outlier)], na.rm = TRUE),
+                              NA_real_)) |>
+    # mutate(max_ma_5c = max(ma_5c[!is.na(ma_5c) & !in_scope & !(remove_outliers & is_outlier)], na.rm = TRUE)) |> 
     ungroup() |> 
     mutate(ma_5c_pct_outscope = ifelse(
       isTRUE(based_on_historic_maximum),
@@ -174,8 +183,11 @@ early_warning_cluster <- function(df,
         ungroup() |> 
         mutate(cluster = get_episode(date, case_free_days = case_free_days)) |> 
         group_by(cluster) |> 
-        mutate(ongoing_days = row_number()) |> 
-        complete(date = as.Date(min(date):max(date)), fill = list(cases = 0)) |>
+        mutate(ongoing_days = row_number()) %>%
+        complete(date = seq(from = min(as.Date(date), na.rm = TRUE),
+                            to = max(as.Date(date), na.rm = TRUE),
+                            by = "1 day"),
+                 fill = list(cases = 0)) |>
         fill(ongoing_days, .direction = "down") |> 
         ungroup() |> 
         select(date, cases, cluster, ongoing_days)
@@ -199,10 +211,28 @@ early_warning_cluster <- function(df,
 #' @importFrom dplyr n_distinct
 #' @rdname early_warning_cluster
 #' @param x output of [early_warning_cluster()]
-#' @param minimum minimum number of clusters to check against, defaults to 1
 #' @export
-has_clusters <- function(x, minimum = 1) {
-  n_distinct(x$clusters$cluster) >= minimum
+n_clusters <- function(x) {
+  n_distinct(x$clusters$cluster)
+}
+
+#' @rdname early_warning_cluster
+#' @param n number of clusters, defaults to 1
+#' @export
+has_clusters <- function(x, n = 1) {
+  n_clusters(x) >= n
+}
+
+#' @importFrom dplyr filter
+#' @rdname early_warning_cluster
+#' @param reference date to test whether any of the clusters currently has this date in it
+#' @export
+has_ongoing_cluster <- function(x, reference = Sys.Date() - 1) {
+  reference <- as.Date(reference)
+  out <- x |>
+    format() |> 
+    filter(first_day <= reference & last_day >= reference)
+  nrow(out) > 0
 }
 
 #' @noRd

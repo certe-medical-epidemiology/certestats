@@ -31,6 +31,7 @@ test_that("early warning works", {
   expect_true(is.data.frame(format(out1)))
   expect_true(is.data.frame(format(out2)))
   expect_true(has_clusters(out2, -1))
+  expect_identical(n_clusters(out2, n_distinct(out2$clusters$cluster)))
   expect_message(print(out1))
   expect_message(print(out2))
 })
