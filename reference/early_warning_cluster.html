@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.15.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.15.5</span>
       </span>
     </div>
 
@@ -175,13 +175,18 @@
 <span class="r-in"><span>                               threshold_percentile <span class="op">=</span> <span class="fl">0.99</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'date' for dates</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'patient' for patient IDs</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>There were 30 warnings in `mutate()`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> The first warning was:</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> In argument: `max_ma_5c = max(...)`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> In group 6: `month_day = 1972-01-10`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> Caused by warning in `base::max()`:</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> no non-missing arguments to max; returning -Inf</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 29 remaining warnings.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">has_clusters</span><span class="op">(</span><span class="va">check</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span><span class="va">check</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected 1 disease cluster with a total of 3 cases based on an outlier-free history (coeff = 1.5) and the 99th pct lasting for &gt;=2 days.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    - The 1st cluster has 3 cases between 10 and 12 februari 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Use plot2() to plot the results.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected no disease clusters based on an outlier-free history (coeff = 1.5) and the 99th pct lasting for &gt;=2 days.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">&lt;-</span> <span class="fu">early_warning_cluster</span><span class="op">(</span><span class="va">cases</span>,</span></span>
@@ -189,49 +194,45 @@
 <span class="r-in"><span>                                threshold_percentile <span class="op">=</span> <span class="fl">0.75</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'date' for dates</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'patient' for patient IDs</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>There were 30 warnings in `mutate()`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> The first warning was:</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> In argument: `max_ma_5c = max(...)`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> In group 6: `month_day = 1972-01-10`.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> Caused by warning in `base::max()`:</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> no non-missing arguments to max; returning -Inf</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Run `dplyr::last_dplyr_warnings()` to see the 29 remaining warnings.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected 4 disease clusters with a total of 20 cases based on an outlier-free history (coeff = 1.5) and the 75th pct lasting for &gt;=2 days.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    - The 1st cluster has 5 cases between 8 and 14 februari 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    - The 2nd cluster has 2 cases between 28 and 30 april 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    - The 3rd cluster has 8 cases between 18 mei and 17 juni 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    - The 4th cluster has 5 cases between 25 augustus and 2 september 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Use plot2() to plot the results.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected no disease clusters based on an outlier-free history (coeff = 1.5) and the 75th pct lasting for &gt;=2 days.</span>
 <span class="r-in"><span><span class="va">check</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   cluster first_day  last_day   ongoing_days total_cases</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       1 2022-02-10 2022-02-12            3           3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] cluster      first_day    last_day     ongoing_days total_cases </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;0 rows&gt; (or 0-length row.names)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu">has_clusters</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu">has_clusters</span><span class="op">(</span><span class="fl">15</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $clusters</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 4</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   date       cases cluster ongoing_days</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 2022-02-10     1       1            1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 2022-02-11     1       1            2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 2022-02-12     1       1            3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] date         cases        cluster      ongoing_days</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;0 rows&gt; (or 0-length row.names)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $details</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1,810 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 300 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     year month_day  in_scope cases ma_5c max_ma_5c ma_5c_pct_outscope</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>  <span style="text-decoration: underline;">2</span>018 1972-01-05 FALSE        1 0.333     0.333                0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>  <span style="text-decoration: underline;">2</span>018 1972-01-06 FALSE        0 0.25      0.25                 0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>  <span style="text-decoration: underline;">2</span>018 1972-01-07 FALSE        0 0.2       0.4                  0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>  <span style="text-decoration: underline;">2</span>018 1972-01-08 FALSE        0 0         0.4                  0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>  <span style="text-decoration: underline;">2</span>018 1972-01-09 FALSE        0 0.2       0.2                  0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>  <span style="text-decoration: underline;">2</span>018 1972-01-10 FALSE        0 0.2       0.2                  0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>  <span style="text-decoration: underline;">2</span>018 1972-01-11 FALSE        1 0.2       0.4                  0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>  <span style="text-decoration: underline;">2</span>018 1972-01-12 FALSE        0 0.2       0.4                  0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>  <span style="text-decoration: underline;">2</span>018 1972-01-13 FALSE        0 0.2       0.4                  0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>  <span style="text-decoration: underline;">2</span>018 1972-01-14 FALSE        0 0         0.2                  0.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 1,800 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>  <span style="text-decoration: underline;">2</span>018 1972-01-02 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>  <span style="text-decoration: underline;">2</span>018 1972-01-15 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>  <span style="text-decoration: underline;">2</span>018 1972-01-17 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>  <span style="text-decoration: underline;">2</span>018 1972-01-19 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>  <span style="text-decoration: underline;">2</span>018 1972-02-03 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>  <span style="text-decoration: underline;">2</span>018 1972-02-06 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>  <span style="text-decoration: underline;">2</span>018 1972-02-07 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>  <span style="text-decoration: underline;">2</span>018 1972-02-08 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>  <span style="text-decoration: underline;">2</span>018 1972-02-09 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>  <span style="text-decoration: underline;">2</span>018 1972-02-12 FALSE        1     1         1                  1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 290 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"threshold_percentile")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 99</span>
