@@ -2,6 +2,7 @@
 % Please edit documentation in R/early_warning.R
 \name{early_warning_cluster}
 \alias{early_warning_cluster}
+\alias{has_clusters}
 \title{Early Warning for Disease Clusters}
 \usage{
 early_warning_cluster(
@@ -19,9 +20,11 @@ early_warning_cluster(
   moving_average_side = "centre",
   case_free_days = 14
 )
+
+has_clusters(x, minimum = 1)
 }
 \arguments{
-\item{df}{data set, this must be a data set containing \verb{only positive results}. The most bare-bone data set to use must have at least a date column and patient column. Do not summarise on patient IDs, this will happen automatically.}
+\item{df}{data set, this must be a data set containing \strong{only positive results}. The most bare-bone data set to use must have at least a date column and patient column. Do not summarise on patient IDs, this will happen automatically.}
 
 \item{...}{filter arguments to define the data to study, e.g., \code{jaar == 2023}. All other observations will be used as a control.}
 
@@ -46,9 +49,13 @@ early_warning_cluster(
 \item{moving_average_side}{side of days to set in \code{\link[=moving_average]{moving_average()}}}
 
 \item{case_free_days}{number of days to set in \code{\link[AMR:get_episode]{get_episode()}}}
+
+\item{x}{output of \code{\link[=early_warning_cluster]{early_warning_cluster()}}}
+
+\item{minimum}{minimum number of clusters to check against, defaults to 1}
 }
 \description{
-This function can detect so-called \href{https://en.wikipedia.org/wiki/Disease_cluster}{disease clusters}. Use \code{\link[=format]{format()}} to format the output.
+\code{\link[=early_warning_cluster]{early_warning_cluster()}} can detect so-called \href{https://en.wikipedia.org/wiki/Disease_cluster}{disease clusters}. Use \code{\link[=has_clusters]{has_clusters()}} to return \code{TRUE} or \code{FALSE} on its output, or use \code{\link[=format]{format()}} to format the output.
 }
 \details{
 A (disease) cluster is defined as an unusually large aggregation of disease events in time or space (\href{https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf}{ATSDR, 2008}). They are common, particularly in large populations. From a statistical standpoint, it is nearly inevitable that some clusters of chronic diseases will emerge within various communities, be it schools, church groups, social circles, or neighborhoods. Initially, these clusters are often perceived as products of specific, predictable processes rather than random occurrences in a particular location, akin to a coin toss.
@@ -62,16 +69,22 @@ cases <- data.frame(date = sample(seq(as.Date("2018-01-01"),
                                   size = 300),
                     patient = sample(LETTERS, size = 300, replace = TRUE))
 check <- early_warning_cluster(cases,
-                               date >= "2022-01-01")
+                               date >= "2022-01-01",
+                               threshold_percentile = 0.99)
 
-format(check)
+has_clusters(check)
+check
+
 
 check2 <- early_warning_cluster(cases,
                                 date >= "2022-01-01",
                                 threshold_percentile = 0.75)
 
-print(check2)
+check2
+check |> format()
 
+check2 |> has_clusters()
+check2 |> has_clusters(15)
 
-unclass(check2)
+check |> unclass()
 }

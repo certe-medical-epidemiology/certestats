@@ -30,6 +30,7 @@ test_that("early warning works", {
   
   expect_true(is.data.frame(format(out1)))
   expect_true(is.data.frame(format(out2)))
-  expect_output(suppressMessages(print(out1)))
+  expect_true(has_clusters(out2, -1))
+  expect_message(print(out1))
   expect_message(print(out2))
 })

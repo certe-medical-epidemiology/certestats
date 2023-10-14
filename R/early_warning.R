@@ -19,8 +19,8 @@
 
 #' Early Warning for Disease Clusters
 #' 
-#' This function can detect so-called [disease clusters](https://en.wikipedia.org/wiki/Disease_cluster). Use [format()] to format the output.
-#' @param df data set, this must be a data set containing `only positive results`. The most bare-bone data set to use must have at least a date column and patient column. Do not summarise on patient IDs, this will happen automatically.
+#' [early_warning_cluster()] can detect so-called [disease clusters](https://en.wikipedia.org/wiki/Disease_cluster). Use [has_clusters()] to return `TRUE` or `FALSE` on its output, or use [format()] to format the output.
+#' @param df data set, this must be a data set containing **only positive results**. The most bare-bone data set to use must have at least a date column and patient column. Do not summarise on patient IDs, this will happen automatically.
 #' @param ... filter arguments to define the data to study, e.g., `jaar == 2023`. All other observations will be used as a control.
 #' @param group_by column to use in [group_by()], e.g., a microorganism name
 #' @param column_date name of the column to use for dates, will take the first date column if left blank
@@ -41,6 +41,7 @@
 #' @importFrom tidyr fill complete
 #' @importFrom certestyle format2
 #' @importFrom AMR get_episode
+#' @rdname early_warning_cluster
 #' @export
 #' @examples
 #' cases <- data.frame(date = sample(seq(as.Date("2018-01-01"),
@@ -49,18 +50,24 @@
 #'                                   size = 300),
 #'                     patient = sample(LETTERS, size = 300, replace = TRUE))
 #' check <- early_warning_cluster(cases,
-#'                                date >= "2022-01-01")
+#'                                date >= "2022-01-01",
+#'                                threshold_percentile = 0.99)
 #' 
-#' format(check)
+#' has_clusters(check)
+#' check
+#' 
 #' 
 #' check2 <- early_warning_cluster(cases,
 #'                                 date >= "2022-01-01",
 #'                                 threshold_percentile = 0.75)
 #' 
-#' print(check2)
+#' check2
+#' check |> format()
 #' 
+#' check2 |> has_clusters()
+#' check2 |> has_clusters(15)
 #' 
-#' unclass(check2)
+#' check |> unclass()
 early_warning_cluster <- function(df,
                                   ...,
                                   group_by = NULL,
@@ -186,6 +193,15 @@ early_warning_cluster <- function(df,
   x
 }
 
+#' @importFrom dplyr n_distinct
+#' @rdname early_warning_cluster
+#' @param x output of [early_warning_cluster()]
+#' @param minimum minimum number of clusters to check against, defaults to 1
+#' @export
+has_clusters <- function(x, minimum = 1) {
+  n_distinct(x$clusters$cluster) >= minimum
+}
+
 #' @noRd
 #' @importFrom dplyr group_by summarise
 #' @export
@@ -207,6 +223,7 @@ format.early_warning_cluster <- function(x, ...) {
 }
 
 #' @importFrom dplyr case_when
+#' @importFrom certestyle format2
 #' @noRd
 #' @export
 print.early_warning_cluster <- function(x, ...) {
@@ -240,7 +257,18 @@ print.early_warning_cluster <- function(x, ...) {
                      " lasting for >=", attributes(x)$minimum_ongoing_days, " days.")
   if (nrow(out)) {
     message(intro, " with a total of ", sum(out$total_cases), " cases ", based_on)
-    print(out)
+    dates <- function(x, y) {
+      if (format2(x, "yyyy-mm") == format2(y, "yyyy-mm")) {
+        return(paste0(format2(x, "d"), " and ", format2(y, "d mmmm yyyy")))
+      } else if (format2(x, "yyyy") == format2(y, "yyyy")) {
+        return(paste0(format2(x, "d mmmm"), " and ", format2(y, "d mmmm yyyy")))
+      } else {
+        return(paste0(format2(x, "d mmmm yyyy"), " and ", format2(y, "d mmmm yyyy")))
+      }
+    }
+    for (i in seq_len(nrow(out))) {
+      message("   - The ", signed_nr(i), " cluster has ", out$total_cases[i], " cases between ", dates(out$first_day[i], out$last_day[i]))
+    }
     message("Use plot2() to plot the results.")
   } else {
     message(intro, based_on)
