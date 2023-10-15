@@ -37,7 +37,7 @@
 #' A (disease) cluster is defined as an unusually large aggregation of disease events in time or space ([ATSDR, 2008](https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf)). They are common, particularly in large populations. From a statistical standpoint, it is nearly inevitable that some clusters of chronic diseases will emerge within various communities, be it schools, church groups, social circles, or neighborhoods. Initially, these clusters are often perceived as products of specific, predictable processes rather than random occurrences in a particular location, akin to a coin toss.
 #' 
 #' Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologists or biostatistician ([ATSDR, 2008](https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf)).
-#' @importFrom dplyr n_distinct group_by summarise filter mutate ungroup select row_number
+#' @importFrom dplyr n_distinct group_by summarise filter mutate ungroup select row_number tibble
 #' @importFrom tidyr fill complete
 #' @importFrom certestyle format2
 #' @importFrom AMR get_episode
@@ -50,7 +50,7 @@
 #'                                   size = 300),
 #'                     patient = sample(LETTERS, size = 300, replace = TRUE))
 #'
-#' ------------------------------------------------------------
+#' # -----------------------------------------------------------
 #' 
 #' check <- early_warning_cluster(cases,
 #'                                date >= "2022-01-01",
@@ -69,9 +69,10 @@
 #' 
 #' check2 |> n_clusters()
 #' check2 |> has_clusters()
-#' check2 |> has_clusters(15)
+#' check2 |> has_clusters(n = 15)
 #' 
 #' check2 |> has_ongoing_cluster("2022-06-01")
+#' check2 |> has_ongoing_cluster(c("2022-06-01", "2022-06-20"))
 #' 
 #' check |> unclass()
 early_warning_cluster <- function(df,
@@ -87,6 +88,10 @@ early_warning_cluster <- function(df,
                                   moving_average_days = 5,
                                   moving_average_side = "centre",
                                   case_free_days = 14) {
+  if (!is.null(group_by)) {
+    stop("'group_by' is not yet implemented")
+  }
+  
   year <- function(x) as.integer(format(x, "%Y"))
   unify_years <- function(x) {
     is_leap_year <- any(x |> format() |> substr(6, 10) == "02-29", na.rm = TRUE)
@@ -120,6 +125,10 @@ early_warning_cluster <- function(df,
     threshold_percentile <- threshold_percentile * 100
   }
   
+  empty_output <- list(clusters = tibble(date = Sys.Date()[0], cases = integer(0), cluster = integer(0), ongoing_days = integer(0)),
+                       details = tibble(year = integer(0), month_day = Sys.Date()[0], in_scope = logical(0), cases = integer(0),
+                                        ma_5c = double(0), max_ma_5c = double(0), ma_5c_pct_outscope = double(0)))
+  
   # add the new columns
   df.bak <- df
   df$date <- as.Date(df[, column_date, drop = TRUE])
@@ -129,7 +138,15 @@ early_warning_cluster <- function(df,
   
   # some checks
   if (all(df$in_scope, na.rm = TRUE)) {
-    stop("All cases are 'in scope'. Use ... to filter on specific cases.")
+    warning("All cases are 'in scope' - no clusters found. Use ... to filter on specific cases.")
+    return(structure(empty_output,
+                     threshold_percentile = threshold_percentile,
+                     based_on_historic_maximum = based_on_historic_maximum,
+                     remove_outliers = remove_outliers,
+                     remove_outliers_coefficient = remove_outliers_coefficient,
+                     moving_average_days = moving_average_days,
+                     minimum_ongoing_days = minimum_ongoing_days,
+                     class = c("early_warning_cluster", "list")))
   }
   if (n_distinct(df$patient) == nrow(df)) {
     warning("Only unique patients found - this is uncommon. Did you summarise accidentally on patient IDs?")
@@ -152,7 +169,6 @@ early_warning_cluster <- function(df,
     mutate(max_ma_5c = ifelse(length(ma_5c[!is.na(ma_5c) & !in_scope & !(remove_outliers & is_outlier)]) > 0,
                               max(ma_5c[!is.na(ma_5c) & !in_scope & !(remove_outliers & is_outlier)], na.rm = TRUE),
                               NA_real_)) |>
-    # mutate(max_ma_5c = max(ma_5c[!is.na(ma_5c) & !in_scope & !(remove_outliers & is_outlier)], na.rm = TRUE)) |> 
     ungroup() |> 
     mutate(ma_5c_pct_outscope = ifelse(
       isTRUE(based_on_historic_maximum),
@@ -168,7 +184,7 @@ early_warning_cluster <- function(df,
            cases > 0) 
   
   if (nrow(df_filter) == 0) {
-    clusters <- data.frame(date = Sys.Date()[0], cases = integer(0), cluster = integer(0), ongoing_days = integer(0))
+    clusters <- empty_output$clusters
   } else {
     clusters <- df_filter |> 
       mutate(cluster = get_episode(date, case_free_days = case_free_days)) |> 
@@ -176,7 +192,7 @@ early_warning_cluster <- function(df,
       filter(difftime(max(date), min(date), units = "days") >= minimum_ongoing_days)
     
     if (nrow(clusters) == 0) {
-      clusters <- data.frame(date = Sys.Date()[0], cases = integer(0), cluster = integer(0), ongoing_days = integer(0))
+      clusters <- empty_output$clusters
     } else {
       clusters <- clusters |> 
         # determine episodes again, since some might have been filtered
@@ -225,14 +241,14 @@ has_clusters <- function(x, n = 1) {
 
 #' @importFrom dplyr filter
 #' @rdname early_warning_cluster
-#' @param reference date to test whether any of the clusters currently has this date in it
+#' @param dates date(s) to test whether any of the clusters currently has this date in it, defaults to yesterday. [has_ongoing_cluster()] will return a [logical] vector with the same length as `dates`, so `dates` can have any length.
 #' @export
-has_ongoing_cluster <- function(x, reference = Sys.Date() - 1) {
-  reference <- as.Date(reference)
-  out <- x |>
-    format() |> 
-    filter(first_day <= reference & last_day >= reference)
-  nrow(out) > 0
+has_ongoing_cluster <- function(x, dates = Sys.Date() - 1) {
+  dates <- as.Date(dates)
+  out <- format(x)
+  vapply(FUN.VALUE = logical(1),
+         dates,
+         function(dt) any(out$first_day <= dt & out$last_day >= dt, na.rm = TRUE))
 }
 
 #' @noRd

@@ -27,7 +27,7 @@ n_clusters(x)
 
 has_clusters(x, n = 1)
 
-has_ongoing_cluster(x, reference = Sys.Date() - 1)
+has_ongoing_cluster(x, dates = Sys.Date() - 1)
 }
 \arguments{
 \item{df}{data set, this must be a data set containing \strong{only positive results}. The most bare-bone data set to use must have at least a date column and patient column. Do not summarise on patient IDs, this will happen automatically.}
@@ -60,7 +60,7 @@ has_ongoing_cluster(x, reference = Sys.Date() - 1)
 
 \item{n}{number of clusters, defaults to 1}
 
-\item{reference}{date to test whether any of the clusters currently has this date in it}
+\item{dates}{date(s) to test whether any of the clusters currently has this date in it, defaults to yesterday. \code{\link[=has_ongoing_cluster]{has_ongoing_cluster()}} will return a \link{logical} vector with the same length as \code{dates}, so \code{dates} can have any length.}
 }
 \description{
 \code{\link[=early_warning_cluster]{early_warning_cluster()}} can detect so-called \href{https://en.wikipedia.org/wiki/Disease_cluster}{disease clusters}. Use \code{\link[=has_clusters]{has_clusters()}} to return \code{TRUE} or \code{FALSE} on its output, or use \code{\link[=format]{format()}} to format the output.
@@ -77,7 +77,7 @@ cases <- data.frame(date = sample(seq(as.Date("2015-01-01"),
                                   size = 300),
                     patient = sample(LETTERS, size = 300, replace = TRUE))
 
-------------------------------------------------------------
+# -----------------------------------------------------------
 
 check <- early_warning_cluster(cases,
                                date >= "2022-01-01",
@@ -96,9 +96,10 @@ check2 |> format()
 
 check2 |> n_clusters()
 check2 |> has_clusters()
-check2 |> has_clusters(15)
+check2 |> has_clusters(n = 15)
 
 check2 |> has_ongoing_cluster("2022-06-01")
+check2 |> has_ongoing_cluster(c("2022-06-01", "2022-06-20"))
 
 check |> unclass()
 }
