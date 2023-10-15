@@ -27,6 +27,7 @@
 #' @param column_patientid name of the column to use for patient IDs, will take the first column names resembling `"patient|patid"` if left blank
 #' @param based_on_historic_maximum [logical] to indicate whether the percentile must be based on the maximum of previous years. With `FALSE` (default), the percentile will be based on all historic data points.
 #' @param minimum_ongoing_days number of days that must have passed above the set percentile before detecting the elevation as cluster
+#' @param minimum_number_cases number of cases that a cluster must have to be considered a cluster
 #' @param threshold_percentile threshold to set
 #' @param remove_outliers [logical] to indicate whether outliers must be removed before threshold determination
 #' @param remove_outliers_coefficient coefficient to use for outlier determination
@@ -62,6 +63,7 @@
 #' 
 #' check2 <- early_warning_cluster(cases,
 #'                                 date >= "2022-01-01",
+#'                                 minimum_number_cases = 1,
 #'                                 threshold_percentile = 0.75)
 #' 
 #' check2
@@ -82,6 +84,7 @@ early_warning_cluster <- function(df,
                                   column_patientid = NULL,
                                   based_on_historic_maximum = FALSE,
                                   minimum_ongoing_days = 2,
+                                  minimum_number_cases = 5,
                                   threshold_percentile = 97.5,
                                   remove_outliers = TRUE,
                                   remove_outliers_coefficient = 1.5,
@@ -146,6 +149,7 @@ early_warning_cluster <- function(df,
                      remove_outliers_coefficient = remove_outliers_coefficient,
                      moving_average_days = moving_average_days,
                      minimum_ongoing_days = minimum_ongoing_days,
+                     minimum_number_cases = minimum_number_cases,
                      class = c("early_warning_cluster", "list")))
   }
   if (n_distinct(df$patient) == nrow(df)) {
@@ -181,7 +185,7 @@ early_warning_cluster <- function(df,
   df_filter <- df_early |> 
     filter(in_scope,
            ma_5c > ma_5c_pct_outscope,
-           cases > 0) 
+           cases > 0)
   
   if (nrow(df_filter) == 0) {
     clusters <- empty_output$clusters
@@ -189,7 +193,8 @@ early_warning_cluster <- function(df,
     clusters <- df_filter |> 
       mutate(cluster = get_episode(date, case_free_days = case_free_days)) |> 
       group_by(cluster) |> 
-      filter(difftime(max(date), min(date), units = "days") >= minimum_ongoing_days)
+      filter(difftime(max(date), min(date), units = "days") >= minimum_ongoing_days,
+             sum(cases, na.rm = TRUE) >= minimum_number_cases)
     
     if (nrow(clusters) == 0) {
       clusters <- empty_output$clusters
@@ -220,6 +225,7 @@ early_warning_cluster <- function(df,
                  remove_outliers_coefficient = remove_outliers_coefficient,
                  moving_average_days = moving_average_days,
                  minimum_ongoing_days = minimum_ongoing_days,
+                 minimum_number_cases = minimum_number_cases,
                  class = c("early_warning_cluster", "list"))
   x
 }
@@ -295,6 +301,9 @@ print.early_warning_cluster <- function(x, ...) {
                                 paste0(nrow(out), " disease clusters"))))
 
   based_on <- paste0("based on ",
+                     ifelse(attributes(x)$minimum_number_cases > 0,
+                            paste0(">=", attributes(x)$minimum_number_cases, " case", ifelse(attributes(x)$minimum_number_cases == 1, "", "s"), ", "),
+                            ""),
                      ifelse(isTRUE(attributes(x)$based_on_historic_maximum),
                             "the historic maximum and ",
                             ""),
