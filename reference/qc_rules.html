@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.16.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.16.3</span>
       </span>
     </div>
 
@@ -145,24 +145,24 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Quality Control Rules according to Nelson</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -----------------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  n    =  250 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  mean =  0.08555909 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  sd   =  0.9348573 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  mean =  0.02080275 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  sd   =  0.8902522 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -----------------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 1: One point is more than 3 standard deviations from the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  30 189</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -2.850469  2.928867</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 2: 9 (or more) points in a row are on the same side of the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 217 235</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.06868186 0.31248785</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 3: 6 (or more) points in a row are continually increasing or decreasing</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 216 221</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  0.3564037 -1.7753874</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 232</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.3263232</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 4: 14 (or more) points in a row alternate in direction, increasing then decreasing</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
@@ -171,26 +171,26 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 6: 4 out of 5 points in a row are &gt;1 sd from the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 12 13 20</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  0.9182057 -1.3358115 -1.8748488</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 7: &gt;=15 points in a row are within 1 sd of the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 82</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.5585046</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 8: &gt;=8 points in a row outside 1 sd of the mean, in both directions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># turn into data.frame, e.g. for export</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   index        value rule_1 rule_2 rule_3 rule_4 rule_5 rule_6 rule_7 rule_8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  1.211912615     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2  0.891926601     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3  0.064316701     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4  1.010649531     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5  1.253060968     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6 -0.005551816     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   index      value rule_1 rule_2 rule_3 rule_4 rule_5 rule_6 rule_7 rule_8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  0.4181731     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2  0.7430510     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3  1.0625832     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4  0.1341481     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5  1.2785699     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6 -1.1611581     NA     NA     NA     NA     NA     NA     NA     NA</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://certe-medical-epidemiology.github.io/certeplot2" class="external-link">"certeplot2"</a></span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://certe-medical-epidemiology.github.io/certeplot2/reference/plot2.html" class="external-link">plot2</a></span><span class="op">(</span><span class="va">x</span>,</span></span>
