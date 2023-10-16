@@ -14,7 +14,7 @@ early_warning_cluster(
   column_date = NULL,
   column_patientid = NULL,
   based_on_historic_maximum = FALSE,
-  minimum_ongoing_days = 2,
+  minimum_case_days = 2,
   minimum_number_cases = 5,
   threshold_percentile = 97.5,
   remove_outliers = TRUE,
@@ -43,7 +43,7 @@ has_ongoing_cluster(x, dates = Sys.Date() - 1)
 
 \item{based_on_historic_maximum}{\link{logical} to indicate whether the percentile must be based on the maximum of previous years. With \code{FALSE} (default), the percentile will be based on all historic data points.}
 
-\item{minimum_ongoing_days}{number of days that must have passed above the set percentile before detecting the elevation as cluster}
+\item{minimum_case_days}{number of days with cases that must have passed above the set percentile before detecting the elevation as cluster}
 
 \item{minimum_number_cases}{number of cases that a cluster must have to be considered a cluster}
 
