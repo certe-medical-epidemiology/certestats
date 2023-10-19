@@ -19,25 +19,25 @@
 
 #' Early Warning for Disease Clusters
 #' 
-#' [early_warning_cluster()] can detect so-called [disease clusters](https://en.wikipedia.org/wiki/Disease_cluster). Use [has_clusters()] to return `TRUE` or `FALSE` on its output, or use [format()] to format the output.
-#' @param df data set, this must be a data set containing **only positive results**. The most bare-bone data set to use must have at least a date column and patient column. Do not summarise on patient IDs, this will happen automatically.
-#' @param ... filter arguments to define the data to study, e.g., `jaar == 2023`. All other observations will be used as a control.
-#' @param group_by column to use in [group_by()], e.g., a microorganism name
-#' @param column_date name of the column to use for dates, will take the first date column if left blank
-#' @param column_patientid name of the column to use for patient IDs, will take the first column names resembling `"patient|patid"` if left blank
-#' @param based_on_historic_maximum [logical] to indicate whether the percentile must be based on the maximum of previous years. With `FALSE` (default), the percentile will be based on all historic data points.
-#' @param minimum_case_days number of days with cases that must have passed above the set percentile before detecting the elevation as cluster
-#' @param minimum_number_cases number of cases that a cluster must have to be considered a cluster
-#' @param threshold_percentile threshold to set
-#' @param remove_outliers [logical] to indicate whether outliers must be removed before threshold determination
-#' @param remove_outliers_coefficient coefficient to use for outlier determination
-#' @param moving_average_days number of days to set in [moving_average()]
-#' @param moving_average_side side of days to set in [moving_average()]
-#' @param case_free_days number of days to set in [`get_episode()`][AMR::get_episode()]
+#' Detect disease clusters with [early_warning_cluster()]. Use [has_clusters()] to return `TRUE` or `FALSE` based on its output, or employ [format()] to format the result.
+#' @param df Data set: This must consist of **only positive results**. The minimal data set should include a date column and a patient column. Do not summarize on patient IDs; this will be handled automatically.
+#' @param ... Filter arguments for defining the data to study, e.g., `year == 2023`. All other observations will serve as controls.
+#' @param group_by Column to use in [group_by()], e.g., the name of a microorganism.
+#' @param column_date Name of the column to use for dates. If left blank, the first date column will be used.
+#' @param column_patientid Name of the column to use for patient IDs. If left blank, the first column resembling `"patient|patid"` will be used.
+#' @param based_on_historic_maximum [Logical] to indicate whether the percentile should be based on the maximum of previous years. The default is `FALSE`, which uses all historic data points.
+#' @param minimum_case_days Number of days with cases that must pass above the set percentile before detecting the elevation as a cluster.
+#' @param minimum_number_cases Number of cases that a cluster must have to be considered a cluster.
+#' @param threshold_percentile Threshold to set.
+#' @param remove_outliers A [logical] to indicate whether outliers should be removed before determining the threshold.
+#' @param remove_outliers_coefficient Coefficient used for outlier determination.
+#' @param moving_average_days Number of days to set in [moving_average()]. Defaults to a whole week (`7`).
+#' @param moving_average_side Side of days to set in [moving_average()]. Defaults to `"left"` for retrospective analysis.
+#' @param case_free_days Number of days to set in [`get_episode()`][AMR::get_episode()].
 #' @details
 #' A (disease) cluster is defined as an unusually large aggregation of disease events in time or space ([ATSDR, 2008](https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf)). They are common, particularly in large populations. From a statistical standpoint, it is nearly inevitable that some clusters of chronic diseases will emerge within various communities, be it schools, church groups, social circles, or neighborhoods. Initially, these clusters are often perceived as products of specific, predictable processes rather than random occurrences in a particular location, akin to a coin toss.
 #' 
-#' Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologists or biostatistician ([ATSDR, 2008](https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf)).
+#' Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologist or biostatistician ([ATSDR, 2008](https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf)).
 #' @importFrom dplyr n_distinct group_by summarise filter mutate ungroup select row_number tibble
 #' @importFrom tidyr fill complete
 #' @importFrom certestyle format2
@@ -76,7 +76,7 @@
 #' check2 |> has_ongoing_cluster("2022-06-01")
 #' check2 |> has_ongoing_cluster(c("2022-06-01", "2022-06-20"))
 #' 
-#' check |> unclass()
+#' check2 |> unclass()
 early_warning_cluster <- function(df,
                                   ...,
                                   group_by = NULL,
@@ -88,8 +88,8 @@ early_warning_cluster <- function(df,
                                   threshold_percentile = 97.5,
                                   remove_outliers = TRUE,
                                   remove_outliers_coefficient = 1.5,
-                                  moving_average_days = 5,
-                                  moving_average_side = "centre",
+                                  moving_average_days = 7,
+                                  moving_average_side = "left",
                                   case_free_days = 14) {
   if (!is.null(group_by)) {
     stop("'group_by' is not yet implemented")
@@ -194,7 +194,7 @@ early_warning_cluster <- function(df,
     clusters <- df_filter |> 
       mutate(cluster = get_episode(date, case_free_days = case_free_days)) |> 
       group_by(cluster) |> 
-      filter(difftime(max(date), min(date), units = "days") >= minimum_case_days,
+      filter(n_distinct(date) >= minimum_case_days,
              sum(cases, na.rm = TRUE) >= minimum_number_cases)
     
     if (nrow(clusters) == 0) {

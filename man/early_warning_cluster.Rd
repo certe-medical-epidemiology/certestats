@@ -19,8 +19,8 @@ early_warning_cluster(
   threshold_percentile = 97.5,
   remove_outliers = TRUE,
   remove_outliers_coefficient = 1.5,
-  moving_average_days = 5,
-  moving_average_side = "centre",
+  moving_average_days = 7,
+  moving_average_side = "left",
   case_free_days = 14
 )
 
@@ -31,33 +31,33 @@ has_clusters(x, n = 1)
 has_ongoing_cluster(x, dates = Sys.Date() - 1)
 }
 \arguments{
-\item{df}{data set, this must be a data set containing \strong{only positive results}. The most bare-bone data set to use must have at least a date column and patient column. Do not summarise on patient IDs, this will happen automatically.}
+\item{df}{Data set: This must consist of \strong{only positive results}. The minimal data set should include a date column and a patient column. Do not summarize on patient IDs; this will be handled automatically.}
 
-\item{...}{filter arguments to define the data to study, e.g., \code{jaar == 2023}. All other observations will be used as a control.}
+\item{...}{Filter arguments for defining the data to study, e.g., \code{year == 2023}. All other observations will serve as controls.}
 
-\item{group_by}{column to use in \code{\link[=group_by]{group_by()}}, e.g., a microorganism name}
+\item{group_by}{Column to use in \code{\link[=group_by]{group_by()}}, e.g., the name of a microorganism.}
 
-\item{column_date}{name of the column to use for dates, will take the first date column if left blank}
+\item{column_date}{Name of the column to use for dates. If left blank, the first date column will be used.}
 
-\item{column_patientid}{name of the column to use for patient IDs, will take the first column names resembling \code{"patient|patid"} if left blank}
+\item{column_patientid}{Name of the column to use for patient IDs. If left blank, the first column resembling \code{"patient|patid"} will be used.}
 
-\item{based_on_historic_maximum}{\link{logical} to indicate whether the percentile must be based on the maximum of previous years. With \code{FALSE} (default), the percentile will be based on all historic data points.}
+\item{based_on_historic_maximum}{\link{Logical} to indicate whether the percentile should be based on the maximum of previous years. The default is \code{FALSE}, which uses all historic data points.}
 
-\item{minimum_case_days}{number of days with cases that must have passed above the set percentile before detecting the elevation as cluster}
+\item{minimum_case_days}{Number of days with cases that must pass above the set percentile before detecting the elevation as a cluster.}
 
-\item{minimum_number_cases}{number of cases that a cluster must have to be considered a cluster}
+\item{minimum_number_cases}{Number of cases that a cluster must have to be considered a cluster.}
 
-\item{threshold_percentile}{threshold to set}
+\item{threshold_percentile}{Threshold to set.}
 
-\item{remove_outliers}{\link{logical} to indicate whether outliers must be removed before threshold determination}
+\item{remove_outliers}{A \link{logical} to indicate whether outliers should be removed before determining the threshold.}
 
-\item{remove_outliers_coefficient}{coefficient to use for outlier determination}
+\item{remove_outliers_coefficient}{Coefficient used for outlier determination.}
 
-\item{moving_average_days}{number of days to set in \code{\link[=moving_average]{moving_average()}}}
+\item{moving_average_days}{Number of days to set in \code{\link[=moving_average]{moving_average()}}. Defaults to a whole week (\code{7}).}
 
-\item{moving_average_side}{side of days to set in \code{\link[=moving_average]{moving_average()}}}
+\item{moving_average_side}{Side of days to set in \code{\link[=moving_average]{moving_average()}}. Defaults to \code{"left"} for retrospective analysis.}
 
-\item{case_free_days}{number of days to set in \code{\link[AMR:get_episode]{get_episode()}}}
+\item{case_free_days}{Number of days to set in \code{\link[AMR:get_episode]{get_episode()}}.}
 
 \item{x}{output of \code{\link[=early_warning_cluster]{early_warning_cluster()}}}
 
@@ -66,12 +66,12 @@ has_ongoing_cluster(x, dates = Sys.Date() - 1)
 \item{dates}{date(s) to test whether any of the clusters currently has this date in it, defaults to yesterday. \code{\link[=has_ongoing_cluster]{has_ongoing_cluster()}} will return a \link{logical} vector with the same length as \code{dates}, so \code{dates} can have any length.}
 }
 \description{
-\code{\link[=early_warning_cluster]{early_warning_cluster()}} can detect so-called \href{https://en.wikipedia.org/wiki/Disease_cluster}{disease clusters}. Use \code{\link[=has_clusters]{has_clusters()}} to return \code{TRUE} or \code{FALSE} on its output, or use \code{\link[=format]{format()}} to format the output.
+Detect disease clusters with \code{\link[=early_warning_cluster]{early_warning_cluster()}}. Use \code{\link[=has_clusters]{has_clusters()}} to return \code{TRUE} or \code{FALSE} based on its output, or employ \code{\link[=format]{format()}} to format the result.
 }
 \details{
 A (disease) cluster is defined as an unusually large aggregation of disease events in time or space (\href{https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf}{ATSDR, 2008}). They are common, particularly in large populations. From a statistical standpoint, it is nearly inevitable that some clusters of chronic diseases will emerge within various communities, be it schools, church groups, social circles, or neighborhoods. Initially, these clusters are often perceived as products of specific, predictable processes rather than random occurrences in a particular location, akin to a coin toss.
 
-Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologists or biostatistician (\href{https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf}{ATSDR, 2008}).
+Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologist or biostatistician (\href{https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf}{ATSDR, 2008}).
 }
 \examples{
 cases <- data.frame(date = sample(seq(as.Date("2015-01-01"),
@@ -105,5 +105,5 @@ check2 |> has_clusters(n = 15)
 check2 |> has_ongoing_cluster("2022-06-01")
 check2 |> has_ongoing_cluster(c("2022-06-01", "2022-06-20"))
 
-check |> unclass()
+check2 |> unclass()
 }
