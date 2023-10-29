@@ -41,7 +41,7 @@ has_ongoing_cluster(x, dates = Sys.Date() - 1)
 
 \item{column_patientid}{Name of the column to use for patient IDs. If left blank, the first column resembling \code{"patient|patid"} will be used.}
 
-\item{based_on_historic_maximum}{\link{Logical} to indicate whether the percentile should be based on the maximum of previous years. The default is \code{FALSE}, which uses all historic data points.}
+\item{based_on_historic_maximum}{A \link{logical} to indicate whether the percentile should be based on the maximum of previous years. The default is \code{FALSE}, which uses all historic data points.}
 
 \item{minimum_case_days}{Number of days with cases that must pass above the set percentile before detecting the elevation as a cluster.}
 
@@ -106,4 +106,7 @@ check2 |> has_ongoing_cluster("2022-06-01")
 check2 |> has_ongoing_cluster(c("2022-06-01", "2022-06-20"))
 
 check2 |> unclass()
+}
+\seealso{
+\code{\link[=early_warning_biomarker]{early_warning_biomarker()}}
 }
