@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.16.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.17.0</span>
       </span>
     </div>
 
@@ -123,7 +123,7 @@
 
 
 <dt>based_on_historic_maximum</dt>
-<dd><p>Logical to indicate whether the percentile should be based on the maximum of previous years. The default is <code>FALSE</code>, which uses all historic data points.</p></dd>
+<dd><p>A <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether the percentile should be based on the maximum of previous years. The default is <code>FALSE</code>, which uses all historic data points.</p></dd>
 
 
 <dt>minimum_case_days</dt>
@@ -175,6 +175,10 @@
     <p>A (disease) cluster is defined as an unusually large aggregation of disease events in time or space (<a href="https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf" class="external-link">ATSDR, 2008</a>). They are common, particularly in large populations. From a statistical standpoint, it is nearly inevitable that some clusters of chronic diseases will emerge within various communities, be it schools, church groups, social circles, or neighborhoods. Initially, these clusters are often perceived as products of specific, predictable processes rather than random occurrences in a particular location, akin to a coin toss.</p>
 <p>Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologist or biostatistician (<a href="https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf" class="external-link">ATSDR, 2008</a>).</p>
     </div>
+    <div id="see-also">
+    <h2>See also</h2>
+    <div class="dont-index"><p><code><a href="early_warning_biomarker.html">early_warning_biomarker()</a></code></p></div>
+    </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
@@ -206,17 +210,21 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'patient' for patient IDs</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected 1 disease cluster with a total of 3 cases based on &gt;=1 case, an outlier-free history (coeff = 1.5) and the 75th pct lasting for &gt;=2 case days.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>    - The 1st cluster has 3 cases between 17 and 22 april 2022</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected 3 disease clusters with a total of 10 cases based on &gt;=1 case, an outlier-free history (coeff = 1.5) and the 75th pct lasting for &gt;=2 case days.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>    - The 1st cluster has 3 cases between 31 januari and 4 februari 2022</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>    - The 2nd cluster has 5 cases between 20 maart and 12 april 2022</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>    - The 3rd cluster has 2 cases between 6 and 19 mei 2022</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Use plot2() to plot the results.</span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 3 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster first_day  last_day    days case_days total_cases</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       1 2022-04-17 2022-04-22     6         3           3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       1 2022-01-31 2022-02-04     5         3           3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>       2 2022-03-20 2022-04-12    24         5           5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>       3 2022-05-06 2022-05-19    14         2           2</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu">n_clusters</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3</span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu">has_clusters</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu">has_clusters</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></span>
@@ -229,31 +237,36 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $clusters</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 6 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   date       cases cluster  days case_days</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> 2022-04-17     1       1     1         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span> 2022-04-18     0       1     2         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span> 2022-04-19     0       1     3         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span> 2022-04-20     1       1     4         2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span> 2022-04-21     0       1     5         2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span> 2022-04-22     1       1     6         3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 43 × 5</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    date       cases cluster  days case_days</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2022-01-31     1       1     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2022-02-01     1       1     2         2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2022-02-02     0       1     3         2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2022-02-03     0       1     4         2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2022-02-04     1       1     5         3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2022-03-20     1       2     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2022-03-21     0       2     2         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2022-03-22     0       2     3         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2022-03-23     0       2     4         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2022-03-24     0       2     5         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 33 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $details</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2,893 × 7</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2,915 × 7</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     year month_day  in_scope cases ma_5c max_ma_5c ma_5c_pct_outscope</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>  <span style="text-decoration: underline;">2</span>015 1972-01-21 FALSE        1 1         0.286              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>  <span style="text-decoration: underline;">2</span>015 1972-01-22 FALSE        0 0.5       0.286              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>  <span style="text-decoration: underline;">2</span>015 1972-01-23 FALSE        0 0.333     0.333              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>  <span style="text-decoration: underline;">2</span>015 1972-01-24 FALSE        1 0.5       0.286              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>  <span style="text-decoration: underline;">2</span>015 1972-01-25 FALSE        0 0.4       0.143              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>  <span style="text-decoration: underline;">2</span>015 1972-01-26 FALSE        0 0.333     0.333              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>  <span style="text-decoration: underline;">2</span>015 1972-01-27 FALSE        1 0.429     0.286              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>  <span style="text-decoration: underline;">2</span>015 1972-01-28 FALSE        0 0.286     0.286              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>  <span style="text-decoration: underline;">2</span>015 1972-01-29 FALSE        0 0.286     0.286              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>  <span style="text-decoration: underline;">2</span>015 1972-01-30 FALSE        1 0.429     0.143              0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2,883 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>  <span style="text-decoration: underline;">2</span>015 1972-01-05 FALSE        1 1         0.143              0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>  <span style="text-decoration: underline;">2</span>015 1972-01-06 FALSE        0 0.5       0.143              0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>  <span style="text-decoration: underline;">2</span>015 1972-01-07 FALSE        0 0.333     0.333              0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>  <span style="text-decoration: underline;">2</span>015 1972-01-08 FALSE        0 0.25      0.25               0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>  <span style="text-decoration: underline;">2</span>015 1972-01-09 FALSE        1 0.4       0.143              0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>  <span style="text-decoration: underline;">2</span>015 1972-01-10 FALSE        0 0.333     0.333              0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>  <span style="text-decoration: underline;">2</span>015 1972-01-11 FALSE        0 0.286     0.286              0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>  <span style="text-decoration: underline;">2</span>015 1972-01-12 FALSE        0 0.143     0.143              0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>  <span style="text-decoration: underline;">2</span>015 1972-01-13 FALSE        0 0.143     0.143              0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>  <span style="text-decoration: underline;">2</span>015 1972-01-14 FALSE        0 0.143     0.286              0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2,905 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"threshold_percentile")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 75</span>
