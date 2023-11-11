@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.17.0
+Version: 1.17.1
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -12,9 +12,9 @@ Authors@R: c(
          email = "e.dijkstra@certe.nl"),
   person(given = "Certe Medical Diagnostics & Advice Foundation",
          role = c("cph", "fnd")))
-Description: A Certe R Package for applying statistical modelling
-  (such as creating machine learning models), QC rules and distribution
-  analysis.
+Description: A Certe R Package for early-warning, applying statistical
+  modelling (such as creating machine learning models), QC rules and
+  distribution analysis.
   This package is part of the 'certedata' universe.
 URL: https://certe-medical-epidemiology.github.io/certestats, https://github.com/certe-medical-epidemiology/certestats
 Depends: 

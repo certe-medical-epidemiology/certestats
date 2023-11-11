@@ -1,6 +1,6 @@
 # The `certestats` package for R
 
-This is a Certe R Package for applying statistical modelling (such as creating machine learning models), QC rules and distribution analysis. This package is part of the 'certedata' universe.
+This is a Certe R Package for early-warning, applying statistical modelling (such as creating machine learning models), QC rules and distribution analysis. This package is part of the 'certedata' universe.
 
 You can read the [manual with explanation about its functions here](https://certe-medical-epidemiology.github.io/certestats/reference).
 

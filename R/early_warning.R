@@ -26,8 +26,9 @@
 #' @param column_date Name of the column to use for dates. If left blank, the first date column will be used.
 #' @param column_patientid Name of the column to use for patient IDs. If left blank, the first column resembling `"patient|patid"` will be used.
 #' @param based_on_historic_maximum A [logical] to indicate whether the percentile should be based on the maximum of previous years. The default is `FALSE`, which uses all historic data points.
-#' @param minimum_case_days Number of days with cases that must pass above the set percentile before detecting the elevation as a cluster.
-#' @param minimum_number_cases Number of cases that a cluster must have to be considered a cluster.
+#' @param minimum_cases Minimum number of *cases* that a cluster requires to be considered a cluster.
+#' @param minimum_days Minimum number of *days* that a cluster requires to be considered a cluster.
+#' @param minimum_case_days Minimum number of *days with cases* that a cluster requires to be considered a cluster.
 #' @param threshold_percentile Threshold to set.
 #' @param remove_outliers A [logical] to indicate whether outliers should be removed before determining the threshold.
 #' @param remove_outliers_coefficient Coefficient used for outlier determination.
@@ -64,7 +65,7 @@
 #' 
 #' check2 <- early_warning_cluster(cases,
 #'                                 date >= "2022-01-01",
-#'                                 minimum_number_cases = 1,
+#'                                 minimum_cases = 1,
 #'                                 threshold_percentile = 0.75)
 #' 
 #' check2
@@ -84,8 +85,9 @@ early_warning_cluster <- function(df,
                                   column_date = NULL,
                                   column_patientid = NULL,
                                   based_on_historic_maximum = FALSE,
+                                  minimum_cases = 5,
+                                  minimum_days = 0,
                                   minimum_case_days = 2,
-                                  minimum_number_cases = 5,
                                   threshold_percentile = 97.5,
                                   remove_outliers = TRUE,
                                   remove_outliers_coefficient = 1.5,
@@ -150,8 +152,9 @@ early_warning_cluster <- function(df,
                      remove_outliers = remove_outliers,
                      remove_outliers_coefficient = remove_outliers_coefficient,
                      moving_average_days = moving_average_days,
+                     minimum_cases = minimum_cases,
+                     minimum_days = minimum_days,
                      minimum_case_days = minimum_case_days,
-                     minimum_number_cases = minimum_number_cases,
                      class = c("early_warning_cluster", "list")))
   }
   if (n_distinct(df$patient) == nrow(df)) {
@@ -196,7 +199,7 @@ early_warning_cluster <- function(df,
       mutate(cluster = get_episode(date, case_free_days = case_free_days)) |> 
       group_by(cluster) |> 
       filter(n_distinct(date) >= minimum_case_days,
-             sum(cases, na.rm = TRUE) >= minimum_number_cases)
+             sum(cases, na.rm = TRUE) >= minimum_cases)
     
     if (nrow(clusters) == 0) {
       clusters <- empty_output$clusters
@@ -214,6 +217,7 @@ early_warning_cluster <- function(df,
         fill(case_days, .direction = "down") |> 
         mutate(days = row_number()) |> 
         ungroup() |> 
+        filter(days >= minimum_days) |> 
         select(date, cases, cluster, days, case_days)
     }
   }
@@ -227,8 +231,9 @@ early_warning_cluster <- function(df,
                  remove_outliers = remove_outliers,
                  remove_outliers_coefficient = remove_outliers_coefficient,
                  moving_average_days = moving_average_days,
+                 minimum_cases = minimum_cases,
+                 minimum_days = minimum_days,
                  minimum_case_days = minimum_case_days,
-                 minimum_number_cases = minimum_number_cases,
                  class = c("early_warning_cluster", "list"))
   x
 }
@@ -268,17 +273,17 @@ format.early_warning_cluster <- function(x, ...) {
     data.frame(cluster = integer(0),
                first_day = Sys.Date()[0],
                last_day = Sys.Date()[0],
+               cases = integer(0),
                days = integer(0),
-               case_days = integer(0),
-               total_cases = integer(0))
+               case_days = integer(0))
   } else {
     x$clusters |> 
       group_by(cluster) |> 
       summarise(first_day = min(date, na.rm = TRUE),
                 last_day = max(date, na.rm = TRUE),
+                cases = sum(cases, na.rm = TRUE),
                 days = max(days, na.rm = TRUE),
-                case_days = max(case_days, na.rm = TRUE),
-                total_cases = sum(cases, na.rm = TRUE))
+                case_days = max(case_days, na.rm = TRUE))
   }
 }
 
@@ -292,11 +297,13 @@ print.early_warning_cluster <- function(x, ...) {
     n <- format(n)
     last_char <- substr(n, nchar(n), nchar(n))
     paste0(n,
-           case_when(grepl(".", n, fixed = TRUE) ~ "th",
-                     last_char == "1" ~ "st",
+           case_when(last_char == "1" ~ "st",
                      last_char == "2" ~ "nd",
                      last_char == "3" ~ "rd",
                      TRUE ~ "th"))
+  }
+  format_Inf <- function(x) {
+    ifelse(is.infinite(x) || x == 0, "any number of", paste0(">=", format(x)))
   }
   intro <- paste0("=> Detected ",
                   ifelse(nrow(out) == 0,
@@ -306,8 +313,8 @@ print.early_warning_cluster <- function(x, ...) {
                                 paste0(nrow(out), " disease clusters"))))
   
   based_on <- paste0("based on ",
-                     ifelse(attributes(x)$minimum_number_cases > 0,
-                            paste0(">=", attributes(x)$minimum_number_cases, " case", ifelse(attributes(x)$minimum_number_cases == 1, "", "s"), ", "),
+                     ifelse(attributes(x)$minimum_cases > 0,
+                            paste0(format_Inf(attributes(x)$minimum_cases), " case", ifelse(attributes(x)$minimum_cases == 1, "", "s"), ", "),
                             ""),
                      ifelse(isTRUE(attributes(x)$based_on_historic_maximum),
                             "the historic maximum and ",
@@ -316,10 +323,11 @@ print.early_warning_cluster <- function(x, ...) {
                             paste0("an outlier-free history (coeff = ", format(attributes(x)$remove_outliers_coefficient),
                                    ") and "),
                             ""),
-                     "the ", signed_nr(attributes(x)$threshold_percentile), " pct",
-                     " lasting for >=", attributes(x)$minimum_case_days, " case days.")
-  if (nrow(out)) {
-    message(intro, " with a total of ", sum(out$total_cases), " cases ", based_on)
+                     "the ", signed_nr(attributes(x)$threshold_percentile), " pct ",
+                     "having ", format_Inf(attributes(x)$minimum_case_days), " case days ",
+                     "in ", format_Inf(attributes(x)$minimum_days), " days.")
+  if (nrow(out) > 0) {
+    message(intro, " with a total of ", sum(out$cases), " cases ", based_on)
     dates <- function(x, y) {
       if (format2(x, "yyyy-mm") == format2(y, "yyyy-mm")) {
         return(paste0(format2(x, "d"), " and ", format2(y, "d mmmm yyyy")))
@@ -330,7 +338,7 @@ print.early_warning_cluster <- function(x, ...) {
       }
     }
     for (i in seq_len(nrow(out))) {
-      message("   - The ", signed_nr(i), " cluster has ", out$total_cases[i], " cases between ", dates(out$first_day[i], out$last_day[i]))
+      message("   - The ", signed_nr(i), " cluster has ", out$cases[i], " cases between ", dates(out$first_day[i], out$last_day[i]))
     }
     message("Use plot2() to plot the results.")
   } else {
