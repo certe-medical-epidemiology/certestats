@@ -8,7 +8,7 @@
 \alias{ml_neural_network}
 \alias{ml_nearest_neighbour}
 \alias{ml_random_forest}
-\alias{confusionMatrix.certestats_ml}
+\alias{confusion_matrix.certestats_ml}
 \alias{autoplot.certestats_ml}
 \alias{predict.certestats_ml}
 \alias{apply_model_to}
@@ -126,7 +126,7 @@ ml_random_forest(
   ...
 )
 
-\method{confusionMatrix}{certestats_ml}(data, ...)
+\method{confusion_matrix}{certestats_ml}(data, ...)
 
 \method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
@@ -345,7 +345,7 @@ model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
 model1 |> get_metrics()
 model2 |> get_metrics()
 
-model1 |> confusionMatrix()
+model1 |> confusion_matrix()
 
 
 # Applying A Model -----------------------------------------------------

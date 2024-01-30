@@ -87,7 +87,7 @@ The \code{\link[=format]{format()}} function allows you to format the results of
 \examples{
 data <- data.frame(date = Sys.Date() + 1:10,
                    patient = "test",
-                   value = c(10,12,14,15,13,21,22,19,14, 12))
+                   value = c(10,12,14,15,13,21,22,19,14,12))
 
 check <- data |> early_warning_biomarker(window_days = 6, max_delta_absolute = 10)
 

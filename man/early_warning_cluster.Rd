@@ -9,11 +9,10 @@
 \usage{
 early_warning_cluster(
   df,
-  ...,
-  group_by = NULL,
   column_date = NULL,
   column_patientid = NULL,
   based_on_historic_maximum = FALSE,
+  period_length_months = 12,
   minimum_cases = 5,
   minimum_days = 0,
   minimum_case_days = 2,
@@ -22,7 +21,8 @@ early_warning_cluster(
   remove_outliers_coefficient = 1.5,
   moving_average_days = 7,
   moving_average_side = "left",
-  case_free_days = 14
+  case_free_days = 14,
+  ...
 )
 
 n_clusters(x)
@@ -34,15 +34,13 @@ has_ongoing_cluster(x, dates = Sys.Date() - 1)
 \arguments{
 \item{df}{Data set: This must consist of \strong{only positive results}. The minimal data set should include a date column and a patient column. Do not summarize on patient IDs; this will be handled automatically.}
 
-\item{...}{Filter arguments for defining the data to study, e.g., \code{year == 2023}. All other observations will serve as controls.}
-
-\item{group_by}{Column to use in \code{\link[=group_by]{group_by()}}, e.g., the name of a microorganism.}
-
 \item{column_date}{Name of the column to use for dates. If left blank, the first date column will be used.}
 
 \item{column_patientid}{Name of the column to use for patient IDs. If left blank, the first column resembling \code{"patient|patid"} will be used.}
 
 \item{based_on_historic_maximum}{A \link{logical} to indicate whether the percentile should be based on the maximum of previous years. The default is \code{FALSE}, which uses all historic data points.}
+
+\item{period_length_months}{Number of months per period.}
 
 \item{minimum_cases}{Minimum number of \emph{cases} that a cluster requires to be considered a cluster.}
 
@@ -61,6 +59,8 @@ has_ongoing_cluster(x, dates = Sys.Date() - 1)
 \item{moving_average_side}{Side of days to set in \code{\link[=moving_average]{moving_average()}}. Defaults to \code{"left"} for retrospective analysis.}
 
 \item{case_free_days}{Number of days to set in \code{\link[AMR:get_episode]{get_episode()}}.}
+
+\item{...}{not used at the moment}
 
 \item{x}{output of \code{\link[=early_warning_cluster]{early_warning_cluster()}}}
 
@@ -85,16 +85,13 @@ cases <- data.frame(date = sample(seq(as.Date("2015-01-01"),
 
 # -----------------------------------------------------------
 
-check <- early_warning_cluster(cases,
-                               date >= "2022-01-01",
-                               threshold_percentile = 0.99)
+check <- early_warning_cluster(cases, threshold_percentile = 0.99)
 
 has_clusters(check)
 check
 
 
 check2 <- early_warning_cluster(cases,
-                                date >= "2022-01-01",
                                 minimum_cases = 1,
                                 threshold_percentile = 0.75)
 

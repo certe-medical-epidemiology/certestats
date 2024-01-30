@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.17.1
+Version: 1.18.0
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -23,15 +23,16 @@ Imports:
   certestyle,
   AMR (>= 2.1.0),
   broom (>= 1.0.0),
-  caret (>= 6.0),
   dials (>= 1.0.0),
   dplyr (>= 1.1.0),
   generics (>= 0.1.0),
   ggplot2 (>= 3.4.0),
   hardhat (>= 1.2.0),
+  lubridate (>= 1.9.0),
   parsnip (>= 1.0.0),
   recipes (>= 1.0.0),
   rsample (>= 1.0.0),
+  tibble (>= 1.0.0),
   tidyr (>= 1.0.0),
   tune (>= 1.0.0),
   workflows (>= 1.0.0),
@@ -44,6 +45,7 @@ Suggests:
   mice (>= 3.7.5),
   nnet,
   ranger,
+  rlang,
   rpart,
   survival,
   testthat (>= 2.0.0)

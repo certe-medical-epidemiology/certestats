@@ -19,7 +19,7 @@
 
 #' Weighted Mean
 #'
-#' Functions to calculate a weighted mean.
+#' Functions to calculate a weighted mean or any other metric.
 #' @param x vector of values
 #' @param w weights, length 1 or length of `x`
 #' @param fun function to apply

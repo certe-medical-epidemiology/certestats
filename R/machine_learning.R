@@ -115,7 +115,7 @@
 #' model1 |> get_metrics()
 #' model2 |> get_metrics()
 #' 
-#' model1 |> confusionMatrix()
+#' model1 |> confusion_matrix()
 #' 
 #' 
 #' # Applying A Model -----------------------------------------------------
@@ -602,16 +602,12 @@ print.certestats_ml <- function(x, ...) {
   print(x)
 }
 
-#' @importFrom caret confusionMatrix
-#' @method confusionMatrix certestats_ml
+#' @method confusion_matrix certestats_ml
 #' @rdname machine_learning
 #' @export
-confusionMatrix.certestats_ml <- function(data, ...) {
-  conf_mtrx <- as.matrix(table(attributes(data)$predictions$predicted,
-                               attributes(data)$predictions$truth))
-  # not more columns than rows
-  conf_mtrx <- conf_mtrx[, seq_len(NROW(conf_mtrx))]
-  confusionMatrix(conf_mtrx)
+confusion_matrix.certestats_ml <- function(data, ...) {
+  confusion_matrix(truth = attributes(data)$predictions$truth,
+                   estimate = attributes(data)$predictions$predicted)
 }
 
 #' @method autoplot certestats_ml

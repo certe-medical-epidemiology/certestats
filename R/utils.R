@@ -21,10 +21,6 @@
 #' @export
 dplyr::everything
 
-#' @importFrom caret confusionMatrix
-#' @export
-caret::confusionMatrix
-
 #' @importFrom yardstick metrics
 #' @export
 yardstick::metrics
@@ -70,6 +66,7 @@ globalVariables(c(".",
                   "certainty",
                   "cluster",
                   "cumulative_days",
+                  "day_in_period",
                   "days",
                   "delta_absolute",
                   "delta_absolute_flag",
@@ -84,11 +81,17 @@ globalVariables(c(".",
                   "mean_roc_auc",
                   "model",
                   "month_day",
+                  "n",
                   "name",
                   "neg_pred_value",
                   "other",
                   "outcome",
                   "patient",
+                  "period",
+                  "period_date",
+                  "period_end",
+                  "period_start",
+                  "period_txt",
                   "pos_pred_value",
                   "predicted",
                   "role",
