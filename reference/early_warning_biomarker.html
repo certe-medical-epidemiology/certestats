@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.17.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.18.1</span>
       </span>
     </div>
 
@@ -183,7 +183,7 @@
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.time.html" class="external-link">Sys.Date</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">:</span><span class="fl">10</span>,</span></span>
 <span class="r-in"><span>                   patient <span class="op">=</span> <span class="st">"test"</span>,</span></span>
-<span class="r-in"><span>                   value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>,<span class="fl">12</span>,<span class="fl">14</span>,<span class="fl">15</span>,<span class="fl">13</span>,<span class="fl">21</span>,<span class="fl">22</span>,<span class="fl">19</span>,<span class="fl">14</span>, <span class="fl">12</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                   value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>,<span class="fl">12</span>,<span class="fl">14</span>,<span class="fl">15</span>,<span class="fl">13</span>,<span class="fl">21</span>,<span class="fl">22</span>,<span class="fl">19</span>,<span class="fl">14</span>,<span class="fl">12</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check</span> <span class="op">&lt;-</span> <span class="va">data</span> <span class="op">|&gt;</span> <span class="fu">early_warning_biomarker</span><span class="op">(</span>window_days <span class="op">=</span> <span class="fl">6</span>, max_delta_absolute <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'date' for dates</span>
@@ -203,7 +203,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>             flags.test.patient1             flags.test.patient2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                          "test"                          "test" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                flags.test.date1                flags.test.date2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19678"                         "19679" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19762"                         "19763" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            flags.test.testcode1            flags.test.testcode2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              NA                              NA </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          flags.test.testresult1          flags.test.testresult2 </span>
@@ -235,15 +235,15 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>                details.patient9               details.patient10 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                          "test"                          "test" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date1                   details.date2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19673"                         "19674" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19757"                         "19758" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date3                   details.date4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19675"                         "19676" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19759"                         "19760" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date5                   details.date6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19677"                         "19678" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19761"                         "19762" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date7                   details.date8 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19679"                         "19680" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19763"                         "19764" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date9                  details.date10 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19681"                         "19682" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19765"                         "19766" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               details.testcode1               details.testcode2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              NA                              NA </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               details.testcode3               details.testcode4 </span>
