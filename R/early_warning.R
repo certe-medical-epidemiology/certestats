@@ -40,7 +40,7 @@
 #' 
 #' Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologist or biostatistician ([ATSDR, 2008](https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf)).
 #' @importFrom dplyr n_distinct group_by summarise filter mutate ungroup select row_number tibble
-#' @importFrom lubridate interval days
+#' @importFrom lubridate interval days years year<-
 #' @importFrom tidyr fill complete
 #' @importFrom certestyle format2
 #' @importFrom AMR get_episode
@@ -95,12 +95,11 @@ early_warning_cluster <- function(df,
   
   year <- function(x) as.integer(format(x, "%Y"))
   unify_years <- function(x) {
-    is_leap_year <- any(x |> format() |> substr(6, 10) == "02-29", na.rm = TRUE)
-    if (inherits(x, "Date")) {
-      as.Date(paste0(ifelse(is_leap_year, "1972", "1970"), x |> format() |> substr(5, 10)))
-    } else {
-      as.POSIXct(paste0(ifelse(is_leap_year, "1972", "1970"), x |> format() |> substr(5, 99)))
-    }
+    max_date <- max(x, na.rm = TRUE)
+    year(x) <- 2000
+    year(max_date) <- 2000
+    x[x > max_date] <- x[x > max_date] - years(1)
+    x
   }
   
   if (is.null(column_date)) {
@@ -127,7 +126,7 @@ early_warning_cluster <- function(df,
   }
   
   empty_output <- list(clusters = tibble(date = Sys.Date()[0], cases = integer(0), cluster = integer(0),
-                                         days = integer(0), case_days = integer(0)),
+                                         day_in_period = integer(0), days = integer(0), case_days = integer(0)),
                        details = tibble(year = integer(0), date = Sys.Date()[0], period_date = Sys.Date()[0], day_in_period = integer(0), period = integer(0),
                                         cases = integer(0), ma_5c = double(0), max_ma_5c = double(0), ma_5c_pct_outscope = double(0)))
   
@@ -225,7 +224,7 @@ early_warning_cluster <- function(df,
         mutate(days = row_number()) |> 
         ungroup() |> 
         filter(days >= minimum_days) |> 
-        select(date, cases, cluster, days, case_days)
+        select(date, cases, cluster, day_in_period, days, case_days)
     }
   }
   
@@ -281,6 +280,8 @@ format.early_warning_cluster <- function(x, ...) {
     data.frame(cluster = integer(0),
                first_day = Sys.Date()[0],
                last_day = Sys.Date()[0],
+               first_day_in_period = integer(0),
+               last_day_in_period = integer(0),
                cases = integer(0),
                days = integer(0),
                case_days = integer(0))
@@ -289,6 +290,8 @@ format.early_warning_cluster <- function(x, ...) {
       group_by(cluster) |> 
       summarise(first_day = min(date, na.rm = TRUE),
                 last_day = max(date, na.rm = TRUE),
+                first_day_in_period = min(day_in_period, na.rm = TRUE),
+                last_day_in_period = max(day_in_period, na.rm = TRUE),
                 cases = sum(cases, na.rm = TRUE),
                 days = max(days, na.rm = TRUE),
                 case_days = max(case_days, na.rm = TRUE))
@@ -297,6 +300,7 @@ format.early_warning_cluster <- function(x, ...) {
 
 #' @importFrom dplyr case_when
 #' @importFrom certestyle format2
+#' @importFrom cli cli_ol cli_li cli_text cli_end cli_h2
 #' @noRd
 #' @export
 print.early_warning_cluster <- function(x, ...) {
@@ -318,7 +322,8 @@ print.early_warning_cluster <- function(x, ...) {
                          "no disease clusters ",
                          ifelse(nrow(out) == 1,
                                 "1 disease cluster",
-                                paste0(nrow(out), " disease clusters"))))
+                                paste0(nrow(out), " disease clusters"))),
+                  " over the last ", attributes(x)$period_length_months, "-month period")
   
   based_on <- paste0("based on ",
                      ifelse(attributes(x)$minimum_cases > 0,
@@ -335,7 +340,7 @@ print.early_warning_cluster <- function(x, ...) {
                      "having ", format_Inf(attributes(x)$minimum_case_days), " case days ",
                      "in ", format_Inf(attributes(x)$minimum_days), " days.")
   if (nrow(out) > 0) {
-    message(intro, " with a total of ", sum(out$cases), " cases ", based_on)
+    cli_text(intro, " with a total of ", sum(out$cases), " cases ", based_on)
     dates <- function(x, y) {
       if (format2(x, "yyyy-mm") == format2(y, "yyyy-mm")) {
         return(paste0(format2(x, "d"), " and ", format2(y, "d mmmm yyyy")))
@@ -345,12 +350,17 @@ print.early_warning_cluster <- function(x, ...) {
         return(paste0(format2(x, "d mmmm yyyy"), " and ", format2(y, "d mmmm yyyy")))
       }
     }
+    cli_h2("Disease Clusters")
+    cli_text("These disease clusters were found:")
+    ul <- cli_ol()
     for (i in seq_len(nrow(out))) {
-      message("   - The ", signed_nr(i), " cluster has ", out$cases[i], " cases between ", dates(out$first_day[i], out$last_day[i]))
+      cli_li("{.strong {out$cases[i]} cases} between {dates(out$first_day[i], out$last_day[i])}")
     }
-    message("Use plot2() to plot the results.")
+    cli_end(ul)
+    cli_text()
+    cli_text("In total {.strong {sum(out$cases)} cases}. Use {.fn certeplot2::plot2} to plot the results.")
   } else {
-    message(intro, based_on)
+    cli_text(intro, based_on)
     invisible(NULL)
   }
 }
