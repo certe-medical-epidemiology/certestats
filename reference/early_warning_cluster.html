@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.18.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.18.2</span>
       </span>
     </div>
 
@@ -214,39 +214,19 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'patient' for patient IDs</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected 7 disease clusters over the last 12-month period with a total of 29</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> cases based on &gt;=1 case, an outlier-free history (coeff = 1.5) and the 75th pct</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> having &gt;=2 case days in any number of days.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Disease Clusters</span> ──</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> These disease clusters were found:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 1. <span style="font-weight: bold;">6 cases</span> between 24 januari and 6 februari 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 2. <span style="font-weight: bold;">3 cases</span> between 9 and 29 maart 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 3. <span style="font-weight: bold;">3 cases</span> between 18 and 28 mei 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 4. <span style="font-weight: bold;">5 cases</span> between 1 and 19 juli 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 5. <span style="font-weight: bold;">6 cases</span> between 2 and 29 augustus 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 6. <span style="font-weight: bold;">2 cases</span> between 9 and 12 oktober 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 7. <span style="font-weight: bold;">4 cases</span> between 7 and 17 november 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> In total <span style="font-weight: bold;">29 cases</span>. Use `certeplot2::plot2()` to plot the results.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected no disease clusters over the last 12-month periodbased on &gt;=1 case,</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> an outlier-free history (coeff = 1.5) and the 75th pct having &gt;=2 case days in</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> any number of days.</span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 7 × 8</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   cluster first_day  last_day   first_day_in_period last_day_in_period cases</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>                   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>       1 2022-01-24 2022-02-06                  33                 46     6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>       2 2022-03-09 2022-03-29                  77                 97     3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>       3 2022-05-18 2022-05-28                 147                157     3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>       4 2022-07-01 2022-07-19                 191                209     5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">5</span>       5 2022-08-02 2022-08-29                 223                250     6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">6</span>       6 2022-10-09 2022-10-12                 291                294     2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">7</span>       7 2022-11-07 2022-11-17                 320                330     4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: days &lt;int&gt;, case_days &lt;int&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] cluster             first_day           last_day           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] first_day_in_period last_day_in_period  cases              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7] days                case_days          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;0 rows&gt; (or 0-length row.names)</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu">n_clusters</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu">has_clusters</span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu">has_clusters</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">15</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span></span></span>
@@ -257,35 +237,24 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">unclass</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $clusters</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 108 × 6</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    date       cases cluster day_in_period  days case_days</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> 2022-01-24     1       1            33     1         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> 2022-01-25     0       1            <span style="color: #BB0000;">NA</span>     2         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> 2022-01-26     0       1            <span style="color: #BB0000;">NA</span>     3         1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> 2022-01-27     1       1            36     4         2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> 2022-01-28     0       1            <span style="color: #BB0000;">NA</span>     5         2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> 2022-01-29     1       1            38     6         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> 2022-01-30     0       1            <span style="color: #BB0000;">NA</span>     7         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span> 2022-01-31     0       1            <span style="color: #BB0000;">NA</span>     8         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> 2022-02-01     1       1            41     9         4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> 2022-02-02     0       1            <span style="color: #BB0000;">NA</span>    10         4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 98 more rows</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 0 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 6 variables: date &lt;date&gt;, cases &lt;int&gt;, cluster &lt;int&gt;, day_in_period &lt;int&gt;,</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;">#   days &lt;int&gt;, case_days &lt;int&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $details</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 2,911 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     year date       period_date day_in_period period cases ma_5c max_ma_5c</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;date&gt;</span>              <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>     <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>  <span style="text-decoration: underline;">2</span>015 2015-01-07 2000-01-07              2     -<span style="color: #BB0000;">7</span>     1 1         0.286</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>  <span style="text-decoration: underline;">2</span>015 2015-01-08 2000-01-08              3     -<span style="color: #BB0000;">7</span>     0 0.5       0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>  <span style="text-decoration: underline;">2</span>015 2015-01-09 2000-01-09              4     -<span style="color: #BB0000;">7</span>     0 0.333     0.333</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>  <span style="text-decoration: underline;">2</span>015 2015-01-10 2000-01-10              5     -<span style="color: #BB0000;">7</span>     0 0.25      0.25 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>  <span style="text-decoration: underline;">2</span>015 2015-01-11 2000-01-11              6     -<span style="color: #BB0000;">7</span>     0 0.2       0.286</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>  <span style="text-decoration: underline;">2</span>015 2015-01-12 2000-01-12              7     -<span style="color: #BB0000;">7</span>     0 0.167     0.286</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>  <span style="text-decoration: underline;">2</span>015 2015-01-13 2000-01-13              8     -<span style="color: #BB0000;">7</span>     1 0.286     0.286</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>  <span style="text-decoration: underline;">2</span>015 2015-01-14 2000-01-14              9     -<span style="color: #BB0000;">7</span>     0 0.143     0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>  <span style="text-decoration: underline;">2</span>015 2015-01-15 2000-01-15             10     -<span style="color: #BB0000;">7</span>     0 0.143     0.143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>  <span style="text-decoration: underline;">2</span>015 2015-01-16 2000-01-16             11     -<span style="color: #BB0000;">7</span>     0 0.143     0.143</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span>  <span style="text-decoration: underline;">2</span>015 2015-01-07 2000-01-07              2     -<span style="color: #BB0000;">7</span>     1     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span>  <span style="text-decoration: underline;">2</span>015 2015-01-08 2000-01-08              3     -<span style="color: #BB0000;">7</span>     0     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span>  <span style="text-decoration: underline;">2</span>015 2015-01-09 2000-01-09              4     -<span style="color: #BB0000;">7</span>     0     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span>  <span style="text-decoration: underline;">2</span>015 2015-01-10 2000-01-10              5     -<span style="color: #BB0000;">7</span>     0     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span>  <span style="text-decoration: underline;">2</span>015 2015-01-11 2000-01-11              6     -<span style="color: #BB0000;">7</span>     0     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span>  <span style="text-decoration: underline;">2</span>015 2015-01-12 2000-01-12              7     -<span style="color: #BB0000;">7</span>     0     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span>  <span style="text-decoration: underline;">2</span>015 2015-01-13 2000-01-13              8     -<span style="color: #BB0000;">7</span>     1     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>  <span style="text-decoration: underline;">2</span>015 2015-01-14 2000-01-14              9     -<span style="color: #BB0000;">7</span>     0     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span>  <span style="text-decoration: underline;">2</span>015 2015-01-15 2000-01-15             10     -<span style="color: #BB0000;">7</span>     0     1         1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span>  <span style="text-decoration: underline;">2</span>015 2015-01-16 2000-01-16             11     -<span style="color: #BB0000;">7</span>     0     1         1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2,901 more rows</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># ℹ 2 more variables: ma_5c_pct_outscope &lt;dbl&gt;, period_txt &lt;chr&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
