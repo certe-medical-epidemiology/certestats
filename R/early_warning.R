@@ -165,7 +165,9 @@ early_warning_cluster <- function(df,
                         by = "1 day"),
              fill = list(cases = 0)) |>
     fill(period, .direction = "down") |> 
-    mutate(ma_5c = moving_average(cases, w = moving_average_days, side = moving_average_side, na.rm = TRUE),
+    mutate(ma_5c = ifelse(length(cases) < moving_average_days,
+                          cases,
+                          moving_average(cases, w = moving_average_days, side = moving_average_side, na.rm = TRUE)),
            year = year(date),
            period_date = unify_years(date)) |> 
     group_by(period)
