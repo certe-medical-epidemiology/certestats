@@ -59,7 +59,7 @@ moving_Q3 <- function(x, w, side = "centre", na.rm = getOption("na.rm", FALSE)) 
 moving_fn <- function(x, w, fun, side = "centre", ...) {
   stopifnot(is.numeric(x), is.numeric(w), is.function(fun))
   if (length(w) != 1 || ceiling(w != floor(w)) || w <= 1) {
-    stop("'w' must be a single integer greater 1.")
+    stop("'w' must be a single integer greater than 1.")
   }
   if (w >= length(x)) {
     stop("'x' must be greater in length than the value of 'w'.")

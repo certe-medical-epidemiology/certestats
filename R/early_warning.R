@@ -164,10 +164,25 @@ early_warning_cluster <- function(df,
                         to = max(as.Date(date), na.rm = TRUE),
                         by = "1 day"),
              fill = list(cases = 0)) |>
-    fill(period, .direction = "down") |> 
-    mutate(ma_5c = ifelse(length(cases) < moving_average_days,
-                          cases,
-                          moving_average(cases, w = moving_average_days, side = moving_average_side, na.rm = TRUE)),
+    fill(period, .direction = "down")
+  
+  if (nrow(df_early) < 2 || nrow(df_early) < minimum_case_days) {
+    # too few cases
+    return(structure(empty_output,
+                     threshold_percentile = threshold_percentile,
+                     based_on_historic_maximum = based_on_historic_maximum,
+                     remove_outliers = remove_outliers,
+                     remove_outliers_coefficient = remove_outliers_coefficient,
+                     moving_average_days = moving_average_days,
+                     minimum_cases = minimum_cases,
+                     minimum_days = minimum_days,
+                     minimum_case_days = minimum_case_days,
+                     period_length_months = period_length_months,
+                     class = c("early_warning_cluster", "list")))
+  }
+  
+  df_early <- df_early |>
+    mutate(ma_5c = moving_average(cases, w = min(length(cases) - 1, moving_average_days), side = moving_average_side, na.rm = TRUE),
            year = year(date),
            period_date = unify_years(date)) |> 
     group_by(period)
