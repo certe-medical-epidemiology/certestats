@@ -5,6 +5,8 @@
 \alias{n_clusters}
 \alias{has_clusters}
 \alias{has_ongoing_cluster}
+\alias{has_cluster_before}
+\alias{has_cluster_after}
 \title{Early Warning for Disease Clusters}
 \usage{
 early_warning_cluster(
@@ -30,6 +32,10 @@ n_clusters(x)
 has_clusters(x, n = 1)
 
 has_ongoing_cluster(x, dates = Sys.Date() - 1)
+
+has_cluster_before(x, date)
+
+has_cluster_after(x, date)
 }
 \arguments{
 \item{df}{Data set: This must consist of \strong{only positive results}. The minimal data set should include a date column and a patient column. Do not summarize on patient IDs; this will be handled automatically.}
@@ -38,7 +44,7 @@ has_ongoing_cluster(x, dates = Sys.Date() - 1)
 
 \item{column_patientid}{Name of the column to use for patient IDs. If left blank, the first column resembling \code{"patient|patid"} will be used.}
 
-\item{based_on_historic_maximum}{A \link{logical} to indicate whether the percentile should be based on the maximum of previous years. The default is \code{FALSE}, which uses all historic data points.}
+\item{based_on_historic_maximum}{A \link{logical} to indicate whether the cluster detection should be based on the maximum of previous years. The default is \code{FALSE}, which uses all historic data points.}
 
 \item{period_length_months}{Number of months per period.}
 
@@ -66,7 +72,9 @@ has_ongoing_cluster(x, dates = Sys.Date() - 1)
 
 \item{n}{number of clusters, defaults to 1}
 
-\item{dates}{date(s) to test whether any of the clusters currently has this date in it, defaults to yesterday. \code{\link[=has_ongoing_cluster]{has_ongoing_cluster()}} will return a \link{logical} vector with the same length as \code{dates}, so \code{dates} can have any length.}
+\item{dates}{date(s) to test whether any of the clusters currently has this date in it, defaults to yesterday.}
+
+\item{date}{date to test whether there are any clusters since or until this date.}
 }
 \description{
 Detect disease clusters with \code{\link[=early_warning_cluster]{early_warning_cluster()}}. Use \code{\link[=has_clusters]{has_clusters()}} to return \code{TRUE} or \code{FALSE} based on its output, or employ \code{\link[=format]{format()}} to format the result.
@@ -75,6 +83,8 @@ Detect disease clusters with \code{\link[=early_warning_cluster]{early_warning_c
 A (disease) cluster is defined as an unusually large aggregation of disease events in time or space (\href{https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf}{ATSDR, 2008}). They are common, particularly in large populations. From a statistical standpoint, it is nearly inevitable that some clusters of chronic diseases will emerge within various communities, be it schools, church groups, social circles, or neighborhoods. Initially, these clusters are often perceived as products of specific, predictable processes rather than random occurrences in a particular location, akin to a coin toss.
 
 Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologist or biostatistician (\href{https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf}{ATSDR, 2008}).
+
+The function \code{\link[=has_ongoing_cluster]{has_ongoing_cluster()}} returns a \link{logical} vector with the same length as \code{dates}, so \code{dates} can have any length.
 }
 \examples{
 cases <- data.frame(date = sample(seq(as.Date("2015-01-01"),
@@ -104,6 +114,8 @@ check2 |> has_clusters(n = 15)
 
 check2 |> has_ongoing_cluster("2022-06-01")
 check2 |> has_ongoing_cluster(c("2022-06-01", "2022-06-20"))
+check2 |> has_cluster_before("2022-06-01")
+check2 |> has_cluster_after("2022-06-01")
 
 check2 |> unclass()
 }

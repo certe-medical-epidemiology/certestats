@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.18.3
+Version: 1.19.0
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -45,6 +45,7 @@ Suggests:
   kknn,
   mice (>= 3.7.5),
   nnet,
+  progress,
   ranger,
   rlang,
   rpart,

@@ -24,7 +24,7 @@
 #' @param column_date Name of the column to use for dates. If left blank, the first date column will be used.
 #' @param column_patientid Name of the column to use for patient IDs. If left blank, the first column resembling `"patient|patid"` will be used.
 #' @param period_length_months Number of months per period.
-#' @param based_on_historic_maximum A [logical] to indicate whether the percentile should be based on the maximum of previous years. The default is `FALSE`, which uses all historic data points.
+#' @param based_on_historic_maximum A [logical] to indicate whether the cluster detection should be based on the maximum of previous years. The default is `FALSE`, which uses all historic data points.
 #' @param minimum_cases Minimum number of *cases* that a cluster requires to be considered a cluster.
 #' @param minimum_days Minimum number of *days* that a cluster requires to be considered a cluster.
 #' @param minimum_case_days Minimum number of *days with cases* that a cluster requires to be considered a cluster.
@@ -39,7 +39,7 @@
 #' A (disease) cluster is defined as an unusually large aggregation of disease events in time or space ([ATSDR, 2008](https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf)). They are common, particularly in large populations. From a statistical standpoint, it is nearly inevitable that some clusters of chronic diseases will emerge within various communities, be it schools, church groups, social circles, or neighborhoods. Initially, these clusters are often perceived as products of specific, predictable processes rather than random occurrences in a particular location, akin to a coin toss.
 #' 
 #' Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologist or biostatistician ([ATSDR, 2008](https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf)).
-#' @importFrom dplyr n_distinct group_by summarise filter mutate ungroup select row_number tibble
+#' @importFrom dplyr n_distinct group_by summarise filter mutate ungroup select row_number tibble all_of
 #' @importFrom lubridate interval days years year<-
 #' @importFrom tidyr fill complete
 #' @importFrom certestyle format2
@@ -75,6 +75,8 @@
 #' 
 #' check2 |> has_ongoing_cluster("2022-06-01")
 #' check2 |> has_ongoing_cluster(c("2022-06-01", "2022-06-20"))
+#' check2 |> has_cluster_before("2022-06-01")
+#' check2 |> has_cluster_after("2022-06-01")
 #' 
 #' check2 |> unclass()
 early_warning_cluster <- function(df,
@@ -125,10 +127,22 @@ early_warning_cluster <- function(df,
     threshold_percentile <- threshold_percentile * 100
   }
   
-  empty_output <- list(clusters = tibble(date = Sys.Date()[0], cases = integer(0), cluster = integer(0),
-                                         day_in_period = integer(0), days = integer(0), case_days = integer(0)),
-                       details = tibble(year = integer(0), date = Sys.Date()[0], period_date = Sys.Date()[0], day_in_period = integer(0), period = integer(0),
-                                        cases = integer(0), ma_5c = double(0), max_ma_5c = double(0), ma_5c_pct_outscope = double(0)))
+  empty_output <- list(clusters = tibble(date = Sys.Date()[0],
+                                         cases = integer(0),
+                                         cluster = integer(0),
+                                         day_in_period = integer(0),
+                                         days = integer(0),
+                                         case_days = integer(0)),
+                       details = tibble(year = integer(0),
+                                        date = Sys.Date()[0],
+                                        period_date = Sys.Date()[0],
+                                        day_in_period = integer(0),
+                                        period = integer(0),
+                                        cases = integer(0),
+                                        moving_avg = double(0),
+                                        moving_avg_max = double(0),
+                                        moving_avg_pctile = double(0),
+                                        moving_avg_limit = double(0)))
   
   # add the new columns
   df.bak <- df
@@ -140,7 +154,7 @@ early_warning_cluster <- function(df,
   
   # some checks
   if (n_distinct(df$period, na.rm = TRUE) == 0) {
-    warning("All cases are 'in scope' - no clusters found. Use ... to filter on specific cases.")
+    warning("All cases are within one period - no clusters found. Use ... to filter on specific cases.")
     return(structure(empty_output,
                      threshold_percentile = threshold_percentile,
                      based_on_historic_maximum = based_on_historic_maximum,
@@ -151,13 +165,13 @@ early_warning_cluster <- function(df,
                      minimum_days = minimum_days,
                      minimum_case_days = minimum_case_days,
                      period_length_months = period_length_months,
-                     class = c("early_warning_cluster", "list")))
+                     class = "early_warning_cluster"))
   }
   if (n_distinct(df$patient) == nrow(df)) {
     warning("Only unique patients found - this is uncommon. Did you summarise accidentally on patient IDs?")
   }
   
-  df_early <- df |>
+  df_details <- df |>
     group_by(date, period) |>
     summarise(cases = n_distinct(patient), .groups = "drop") |> 
     complete(date = seq(from = min(as.Date(date), na.rm = TRUE),
@@ -166,7 +180,7 @@ early_warning_cluster <- function(df,
              fill = list(cases = 0)) |>
     fill(period, .direction = "down")
   
-  if (nrow(df_early) < 2 || nrow(df_early) < minimum_case_days) {
+  if (nrow(df_details) < 2 || nrow(df_details) < minimum_case_days) {
     # too few cases
     return(structure(empty_output,
                      threshold_percentile = threshold_percentile,
@@ -178,56 +192,57 @@ early_warning_cluster <- function(df,
                      minimum_days = minimum_days,
                      minimum_case_days = minimum_case_days,
                      period_length_months = period_length_months,
-                     class = c("early_warning_cluster", "list")))
+                     class = "early_warning_cluster"))
   }
   
-  df_early <- df_early |>
-    mutate(ma_5c = moving_average(cases, w = min(length(cases) - 1, moving_average_days), side = moving_average_side, na.rm = TRUE),
+  df_details <- df_details |>
+    mutate(moving_avg = moving_average(cases, w = min(length(cases) - 1, moving_average_days), side = moving_average_side, na.rm = TRUE),
            year = year(date),
            period_date = unify_years(date)) |> 
     group_by(period)
-  max_period_length <- df_early |> dplyr::count() |> dplyr::pull(n) |> max()
+  max_period_length <- df_details |> dplyr::count() |> dplyr::pull(n) |> max()
   
-  df_early <- df_early |> 
+  df_details <- df_details |> 
     arrange(desc(date)) |> 
-    mutate(is_outlier = ma_5c %in% grDevices::boxplot.stats(ma_5c[!is.na(ma_5c)], coef = remove_outliers_coefficient)$out,
+    mutate(is_outlier = moving_avg %in% grDevices::boxplot.stats(moving_avg[!is.na(moving_avg)], coef = remove_outliers_coefficient)$out,
            day_in_period = seq(from = max_period_length, to = max_period_length - dplyr::n() + 1, by = -1)) |> 
     arrange(date) |> 
     group_by(period_date) |>
-    mutate(max_ma_5c = ifelse(length(ma_5c[!is.na(ma_5c) & period != 0 & !(remove_outliers & is_outlier)]) > 0,
-                              max(ma_5c[!is.na(ma_5c) & period != 0 & !(remove_outliers & is_outlier)], na.rm = TRUE),
+    mutate(moving_avg_max = ifelse(length(moving_avg[!is.na(moving_avg) & period != 0 & !(remove_outliers & is_outlier)]) > 0,
+                              max(moving_avg[!is.na(moving_avg) & period != 0 & !(remove_outliers & is_outlier)], na.rm = TRUE),
                               NA_real_)) |>
     ungroup() |> 
-    mutate(ma_5c_pct_outscope = ifelse(
+    mutate(moving_avg_limit = ifelse(
       isTRUE(based_on_historic_maximum),
-      quantile(max_ma_5c, threshold_percentile / 100, na.rm = TRUE),
-      quantile(ma_5c[!is.na(ma_5c) & period != 0 & !(remove_outliers & is_outlier)], threshold_percentile / 100, na.rm = TRUE))) |> 
+      quantile(moving_avg_max, threshold_percentile / 100, na.rm = TRUE),
+      quantile(moving_avg[!is.na(moving_avg) & period != 0 & !(remove_outliers & is_outlier)], threshold_percentile / 100, na.rm = TRUE))) |> 
     group_by(week = format2(date, "yyyy-ww")) |>
     mutate(cases_week = sum(cases, na.rm = TRUE)) |> 
     ungroup() |> 
-    mutate(period_end = max(df$date, na.rm = TRUE) - months(abs(period) * period_length_months),
+    mutate(moving_avg_pctile = ntiles(moving_avg, 0.001, na.rm = TRUE) / 10,
+           period_end = max(df$date, na.rm = TRUE) - months(abs(period) * period_length_months),
            period_start = period_end - months(period_length_months) + days(1),
            period_start = dplyr::if_else(period == min(period, na.rm = TRUE), min(date, na.rm = TRUE), period_start),
            period_txt = paste0("**Periode ", abs(period), ":** ", format2(period_start, "d mmm \u2019yy"), " - ", format2(period_end, "d mmm \u2019yy")))
   
-  df_filter <- df_early |> 
+  df_filter <- df_details |> 
     filter(period == 0,
-           ma_5c > ma_5c_pct_outscope,
+           moving_avg > moving_avg_limit,
            cases > 0)
   
   if (nrow(df_filter) == 0) {
-    clusters <- empty_output$clusters
+    df_clusters <- empty_output$clusters
   } else {
-    clusters <- df_filter |> 
+    df_clusters <- df_filter |> 
       mutate(cluster = get_episode(date, case_free_days = case_free_days)) |> 
       group_by(cluster) |> 
       filter(n_distinct(date) >= minimum_case_days,
              sum(cases, na.rm = TRUE) >= minimum_cases)
     
-    if (nrow(clusters) == 0) {
-      clusters <- empty_output$clusters
+    if (nrow(df_clusters) == 0) {
+      df_clusters <- empty_output$clusters
     } else {
-      clusters <- clusters |> 
+      df_clusters <- df_clusters |> 
         # determine episodes again, since some might have been filtered
         ungroup() |> 
         mutate(cluster = get_episode(date, case_free_days = case_free_days)) |> 
@@ -240,26 +255,24 @@ early_warning_cluster <- function(df,
         fill(case_days, .direction = "down") |> 
         mutate(days = row_number()) |> 
         ungroup() |> 
-        filter(days >= minimum_days) |> 
-        select(date, cases, cluster, day_in_period, days, case_days)
+        filter(days >= minimum_days)
     }
   }
   
-  details <- df_early |>
-    select(year, date, period_date, day_in_period, period, cases, ma_5c, max_ma_5c, ma_5c_pct_outscope, period_txt)
+  clusters <- df_clusters |> select(all_of(colnames(empty_output$clusters)))
+  details <- df_details |> select(all_of(colnames(empty_output$details)))
   
-  x <- structure(list(clusters = clusters, details = details),
-                 threshold_percentile = threshold_percentile,
-                 based_on_historic_maximum = based_on_historic_maximum,
-                 remove_outliers = remove_outliers,
-                 remove_outliers_coefficient = remove_outliers_coefficient,
-                 moving_average_days = moving_average_days,
-                 minimum_cases = minimum_cases,
-                 minimum_days = minimum_days,
-                 minimum_case_days = minimum_case_days,
-                 period_length_months = period_length_months,
-                 class = c("early_warning_cluster", "list"))
-  x
+  structure(list(clusters = clusters, details = details),
+            threshold_percentile = threshold_percentile,
+            based_on_historic_maximum = based_on_historic_maximum,
+            remove_outliers = remove_outliers,
+            remove_outliers_coefficient = remove_outliers_coefficient,
+            moving_average_days = moving_average_days,
+            minimum_cases = minimum_cases,
+            minimum_days = minimum_days,
+            minimum_case_days = minimum_case_days,
+            period_length_months = period_length_months,
+            class = "early_warning_cluster")
 }
 
 #' @importFrom dplyr n_distinct
@@ -277,9 +290,10 @@ has_clusters <- function(x, n = 1) {
   n_clusters(x) >= n
 }
 
-#' @importFrom dplyr filter
 #' @rdname early_warning_cluster
-#' @param dates date(s) to test whether any of the clusters currently has this date in it, defaults to yesterday. [has_ongoing_cluster()] will return a [logical] vector with the same length as `dates`, so `dates` can have any length.
+#' @param dates date(s) to test whether any of the clusters currently has this date in it, defaults to yesterday.
+#' @details
+#' The function [has_ongoing_cluster()] returns a [logical] vector with the same length as `dates`, so `dates` can have any length.
 #' @export
 has_ongoing_cluster <- function(x, dates = Sys.Date() - 1) {
   dates <- as.Date(dates)
@@ -287,6 +301,21 @@ has_ongoing_cluster <- function(x, dates = Sys.Date() - 1) {
   vapply(FUN.VALUE = logical(1),
          dates,
          function(dt) any(out$first_day <= dt & out$last_day >= dt, na.rm = TRUE))
+}
+
+#' @param date date to test whether there are any clusters since or until this date.
+#' @rdname early_warning_cluster
+#' @export
+has_cluster_before <- function(x, date) {
+  out <- format(x)
+  any(out$first_day < as.Date(date), na.rm = TRUE)
+}
+
+#' @rdname early_warning_cluster
+#' @export
+has_cluster_after <- function(x, date) {
+  out <- format(x)
+  any(out$last_day > as.Date(date), na.rm = TRUE)
 }
 
 #' @noRd

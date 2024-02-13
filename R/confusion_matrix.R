@@ -47,6 +47,7 @@ confusion_matrix.default <- function(data,
                                      estimate,
                                      na.rm = getOption("na.rm", FALSE),
                                      ...) {
+  check_is_installed("progress")
   if (missing(data)) {
     if (missing(truth) || missing(estimate)) {
       stop("If `data` is not provided, `truth` and `estimate` must be provided")
@@ -97,7 +98,10 @@ confusion_matrix.default <- function(data,
   
   out <- tibble()
   
+  p <- progress::progress_bar$new(total = length(fns))
+  
   for (i in seq_len(length(fns))) {
+    p$tick()
     fn <- get(fns[i], envir = asNamespace("yardstick"))
     fn.data.frame <- tryCatch(get(paste0(fns[i], ".data.frame"), envir = asNamespace("yardstick")), error = function(e) NULL)
     fn.formals <- names(formals(ifelse(is.null(fn.data.frame), fn, fn.data.frame)))
@@ -177,5 +181,7 @@ get_function_title <- function(fun, pkg) {
   title <- gsub("\\title{", "", title, fixed = TRUE)
   title <- gsub("}", "", title, fixed = TRUE)
   title <- gsub("[\n\t\r]+", " ", title)
+  # 'Detection prevalence' should just be 'prevalence'
+  title <- trimws(gsub("Detection", "", title, ignore.case = TRUE))
   tools::toTitleCase(title)
 }
