@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.19.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.19.1</span>
       </span>
     </div>
 
@@ -85,6 +85,7 @@
 <span>  minimum_cases <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  minimum_days <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  minimum_case_days <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  minimum_case_fraction_in_period <span class="op">=</span> <span class="fl">0.02</span>,</span>
 <span>  threshold_percentile <span class="op">=</span> <span class="fl">97.5</span>,</span>
 <span>  remove_outliers <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  remove_outliers_coefficient <span class="op">=</span> <span class="fl">1.5</span>,</span>
@@ -137,6 +138,10 @@
 
 <dt>minimum_case_days</dt>
 <dd><p>Minimum number of <em>days with cases</em> that a cluster requires to be considered a cluster.</p></dd>
+
+
+<dt>minimum_case_fraction_in_period</dt>
+<dd><p>Minimum fraction of <em>cluster cases in a period</em> that a cluster requires to be considered a cluster.</p></dd>
 
 
 <dt>threshold_percentile</dt>
@@ -211,9 +216,7 @@
 <span class="r-in"><span><span class="fu">has_clusters</span><span class="op">(</span><span class="va">check</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
 <span class="r-in"><span><span class="va">check</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected no disease clusters over the last 12-month periodbased on &gt;=5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> cases, an outlier-free history (coeff = 1.5) and the 99th pct having &gt;=2 case</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> days in any number of days.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected no disease clusters over the last 12-month period</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">&lt;-</span> <span class="fu">early_warning_cluster</span><span class="op">(</span><span class="va">cases</span>,</span></span>
@@ -224,21 +227,37 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">check2</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected 7 disease clusters over the last 12-month period with a total of 29</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> cases based on &gt;=1 case, an outlier-free history (coeff = 1.5) and the 75th pct</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> having &gt;=2 case days in any number of days.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> cases.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Disease Clusters</span> ──</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> These disease clusters were found:</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 1. <span style="font-weight: bold;">6 cases</span> between 24 januari and 6 februari 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 2. <span style="font-weight: bold;">3 cases</span> between 9 and 29 maart 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 3. <span style="font-weight: bold;">3 cases</span> between 18 and 28 mei 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 4. <span style="font-weight: bold;">5 cases</span> between 1 and 19 juli 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 5. <span style="font-weight: bold;">6 cases</span> between 2 and 29 augustus 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 6. <span style="font-weight: bold;">2 cases</span> between 9 and 12 oktober 2022</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> 7. <span style="font-weight: bold;">4 cases</span> between 7 and 17 november 2022</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 1. Between 24 januari and 6 februari 2022: <span style="font-weight: bold;">6 cases</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 2. Between 9 and 29 maart 2022: <span style="font-weight: bold;">3 cases</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 3. Between 18 and 28 mei 2022: <span style="font-weight: bold;">3 cases</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 4. Between 1 and 19 juli 2022: <span style="font-weight: bold;">5 cases</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 5. Between 2 and 29 augustus 2022: <span style="font-weight: bold;">6 cases</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 6. Between 9 and 12 oktober 2022: <span style="font-weight: bold;">2 cases</span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> 7. Between 7 and 17 november 2022: <span style="font-weight: bold;">4 cases</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> In total <span style="font-weight: bold;">29 cases</span>. Use `certeplot2::plot2()` to plot the results.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Parameters Used</span> ──</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • based_on_historic_maximum: FALSE</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • minimum_case_days: 2</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • minimum_case_fraction_in_period: 0.02</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • minimum_cases: 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • minimum_days: 0</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • moving_average_days: 7</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • period_length_months: 12</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • remove_outliers: TRUE</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • remove_outliers_coefficient: 1.5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • threshold_percentile: 75</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">Summary</span> ──</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> In total <span style="font-weight: bold;">29 cases</span> between 24 januari and 17 november 2022, spread over 7</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> cluster(s).</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Use `certeplot2::plot2()` to plot the results.</span>
 <span class="r-in"><span><span class="va">check2</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 7 × 8</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   cluster first_day  last_day   first_day_in_period last_day_in_period cases</span>
@@ -319,6 +338,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"minimum_case_days")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"minimum_case_fraction_in_period")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"period_length_months")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 12</span>
 </code></pre></div>
