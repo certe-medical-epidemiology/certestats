@@ -18,6 +18,7 @@ early_warning_cluster(
   minimum_cases = 5,
   minimum_days = 0,
   minimum_case_days = 2,
+  minimum_case_fraction_in_period = 0.02,
   threshold_percentile = 97.5,
   remove_outliers = TRUE,
   remove_outliers_coefficient = 1.5,
@@ -53,6 +54,8 @@ has_cluster_after(x, date)
 \item{minimum_days}{Minimum number of \emph{days} that a cluster requires to be considered a cluster.}
 
 \item{minimum_case_days}{Minimum number of \emph{days with cases} that a cluster requires to be considered a cluster.}
+
+\item{minimum_case_fraction_in_period}{Minimum fraction of \emph{cluster cases in a period} that a cluster requires to be considered a cluster.}
 
 \item{threshold_percentile}{Threshold to set.}
 
