@@ -83,7 +83,7 @@ test_that("ML works", {
   
   # tuning parameters
   expect_error(tune_parameters("test"))
-  tuned_decision_trees <- model_decision_trees |> tune_parameters(levels = 1, v = 2)
+  tuned_decision_trees <- model_decision_trees |> tune_parameters(levels = 3, v = 2)
   tuned_linear_regression <- model_linear_regression |> tune_parameters(levels = 1, v = 2)
   tuned_logistic_regression <- model_logistic_regression |> tune_parameters(levels = 1, v = 2)
   tuned_neural_network <- model_neural_network |> tune_parameters(levels = 1, v = 2)
