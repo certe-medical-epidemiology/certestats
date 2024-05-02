@@ -17,9 +17,9 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-#' Create a Traditional Machine Learning (ML) Model
+#' Create a Machine Learning (ML) Model
 #'
-#' These functions can be used to create a traditional machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around `tidymodels` packages (especially [`parsnip`](https://parsnip.tidymodels.org), [`recipes`](https://recipes.tidymodels.org), [`rsample`](https://rsample.tidymodels.org), [`tune`](https://tune.tidymodels.org), and [`yardstick`](https://yardstick.tidymodels.org)) created by RStudio.
+#' These functions can be used to create a machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around `tidymodels` packages (especially [`parsnip`](https://parsnip.tidymodels.org), [`recipes`](https://recipes.tidymodels.org), [`rsample`](https://rsample.tidymodels.org), [`tune`](https://tune.tidymodels.org), and [`yardstick`](https://yardstick.tidymodels.org)) created by RStudio.
 #' @param .data Data set to train
 #' @param outcome Outcome variable, also called the *response variable* or the *dependent variable*; the variable that must be predicted. The value will be evaluated in [`select()`][dplyr::select()] and thus supports the `tidyselect` language. In case of classification prediction, this variable will be coerced to a [factor].
 #' @param predictors Explanatory variables, also called the *predictors* or the *independent variables*; the variables that are used to predict `outcome`. These variables will be transformed using [as.double()] ([factor]s will be transformed to [character]s first). This value defaults to [`everything()`][tidyselect::everything()] and supports the `tidyselect` language.
@@ -41,6 +41,7 @@
 #' @inheritParams parsnip::mlp
 #' @inheritParams parsnip::nearest_neighbor
 #' @inheritParams parsnip::rand_forest
+#' @inheritParams parsnip::xgb_train
 #' @inheritParams rsample::initial_split
 #' @details
 #' To predict **regression** (numeric values), the function [ml_logistic_regression()] cannot be used.
@@ -101,6 +102,7 @@
 #'  * `ml_neural_network`: [parsnip::mlp()]
 #'  * `ml_nearest_neighbour`: [parsnip::nearest_neighbor()]
 #'  * `ml_random_forest`: [parsnip::rand_forest()]
+#'  * `ml_xg_boost`: [parsnip::xgb_train()]
 #' @name machine_learning
 #' @rdname machine_learning
 #' @export
@@ -110,7 +112,7 @@
 #' 
 #' # predict ESBL test outcome based on MICs
 #' model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
-#' model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
+#' model2 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
 #' 
 #' model1 |> get_metrics()
 #' model2 |> get_metrics()
@@ -370,6 +372,41 @@ ml_random_forest <- function(.data,
           ...)
 }
 
+#' @rdname machine_learning
+#' @export
+ml_xg_boost <- function(.data,
+                        outcome,
+                        predictors = everything(),
+                        training_fraction = 0.75,
+                        strata = NULL,
+                        max_na_fraction = 0.01,
+                        correlation_filter = TRUE,
+                        centre = TRUE,
+                        scale = TRUE,
+                        engine = "xgboost",
+                        mode = c("classification", "regression", "unknown"),
+                        max_depth = 6,
+                        nrounds = 15,
+                        eta = 0.3,
+                        ...) {
+  ml_exec(FUN = parsnip::xgb_train,
+          .data = .data,
+          outcome = {{ outcome }},
+          predictors = {{ predictors }},
+          training_fraction = training_fraction,
+          strata = {{ strata }},
+          max_na_fraction = max_na_fraction,
+          correlation_filter = correlation_filter,
+          centre = centre,
+          scale = scale,
+          engine = engine,
+          mode = mode[1L],
+          max_depth = max_depth,
+          nrounds = nrounds,
+          eta = eta,
+          ...)
+}
+
 #' @importFrom dplyr mutate select across filter_all filter bind_cols all_of cur_column slice summarise type_sum
 #' @importFrom yardstick metrics
 #' @importFrom parsnip set_engine
@@ -464,7 +501,7 @@ ml_exec <- function(FUN,
     # remove rows that have NA in outcome or predictors
     filter_all(function(x) !is.na(x))
   
-  # the outcome variable must be factor in case of regression prediction
+  # the outcome variable must be factor in case of classification prediction
   if (list(...)$mode == "classification" && !is.factor(df$outcome)) {
     if (is.logical(df$outcome)) {
       df$outcome <- factor(df$outcome, levels = c(TRUE, FALSE))
@@ -814,17 +851,21 @@ apply_model_to <- function(object,
       new_data[, col] <- FUN(new_data[[col]])
     }
   }
-  
+
+  # set the right prediction function
+  if (identical(attributes(object)$properties$engine_package, "xgboost")) {
+    pred_fn <- xgboost::xgb_predict
+  } else {
+    pred_fn <- stats::predict
+  }
   
   # bake recipe and get predictions ----
-  
   new_data <- bake(get_recipe(object), new_data = new_data)
-  out <- stats::predict(object, new_data, ...)
-  
+  out <- pred_fn(object, new_data, ...)
   
   # return results ----
   if (isTRUE(add_certainty)) {
-    preds <- stats::predict(object, new_data, type = "prob")
+    preds <- pred_fn(object, new_data, type = "prob")
     out <- bind_cols(stats::setNames(out, "predicted"),
                      preds) |> 
       mutate(certainty = row_function(max, data = preds), .after = 1)
