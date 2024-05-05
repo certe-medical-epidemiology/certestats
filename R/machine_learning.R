@@ -854,7 +854,7 @@ apply_model_to <- function(object,
 
   # set the right prediction function
   if (identical(attributes(object)$properties$engine_package, "xgboost")) {
-    pred_fn <- xgboost::xgb_predict
+    pred_fn <- parsnip::xgb_predict
   } else {
     pred_fn <- stats::predict
   }
