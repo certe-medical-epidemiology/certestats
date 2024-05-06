@@ -82,6 +82,63 @@ cqv <- function(x, na.rm = getOption("na.rm", FALSE)) {
 }
 
 #' @rdname distribution_metrics
+#' @param actual Vector of actual values
+#' @param predicted Vector of predicted values
+#' @details * [mse()] calculates the mean squared error
+#' @export
+mse <- function(actual, predicted, na.rm = getOption("na.rm", FALSE)) {
+  actual <- as.double(actual)
+  predicted <- as.double(predicted)
+  if (isTRUE(na.rm)) {
+    na.idx <- !is.na(actual) & !is.na(predicted)
+    actual <- actual[na.idx]
+    predicted <- predicted[na.idx]
+  }
+  mean((actual - predicted) ^ 2)
+}
+#' @rdname distribution_metrics
+#' @details * [mape()] calculates the mean absolute percentage error
+#' @export
+mape <- function(actual, predicted, na.rm = getOption("na.rm", FALSE)) {
+  actual <- as.double(actual)
+  predicted <- as.double(predicted)
+  if (isTRUE(na.rm)) {
+    na.idx <- !is.na(actual) & !is.na(predicted)
+    actual <- actual[na.idx]
+    predicted <- predicted[na.idx]
+  }
+  mean(abs((actual - predicted) / actual)) * 100
+}
+
+#' @rdname distribution_metrics
+#' @details * [rmse()] calculates the root mean squared error
+#' @export
+rmse <- function(actual, predicted, na.rm = getOption("na.rm", FALSE)) {
+  actual <- as.double(actual)
+  predicted <- as.double(predicted)
+  if (isTRUE(na.rm)) {
+    na.idx <- !is.na(actual) & !is.na(predicted)
+    actual <- actual[na.idx]
+    predicted <- predicted[na.idx]
+  }
+  sqrt(mean((actual - predicted) ^ 2))
+}
+
+#' @rdname distribution_metrics
+#' @details * [mae()] calculates the mean absolute error
+#' @export
+mae <- function(actual, predicted, na.rm = getOption("na.rm", FALSE)) {
+  actual <- as.double(actual)
+  predicted <- as.double(predicted)
+  if (isTRUE(na.rm)) {
+    na.idx <- !is.na(actual) & !is.na(predicted)
+    actual <- actual[na.idx]
+    predicted <- predicted[na.idx]
+  }
+  mean(abs(actual - predicted))
+}
+
+#' @rdname distribution_metrics
 #' @details * [z_score()] calculates the number of standard deviations from the mean: (x - mean) / sd
 #' @export
 z_score <- function(x, na.rm = getOption("na.rm", FALSE)) {

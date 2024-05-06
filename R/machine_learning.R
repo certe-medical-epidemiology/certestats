@@ -41,7 +41,7 @@
 #' @inheritParams parsnip::mlp
 #' @inheritParams parsnip::nearest_neighbor
 #' @inheritParams parsnip::rand_forest
-#' @inheritParams parsnip::xgb_train
+#' @inheritParams parsnip::boost_tree
 #' @inheritParams rsample::initial_split
 #' @details
 #' To predict **regression** (numeric values), the function [ml_logistic_regression()] cannot be used.
@@ -110,9 +110,9 @@
 #' # 'esbl_tests' is an included data set, see ?esbl_tests
 #' print(esbl_tests, n = 5)
 #' 
-#' # predict ESBL test outcome based on MICs
-#' model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
-#' model2 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
+#' # predict ESBL test outcome based on MICs using 2 different models
+#' model1 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
+#' model2 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
 #' 
 #' model1 |> get_metrics()
 #' model2 |> get_metrics()
@@ -131,13 +131,16 @@
 #' esbl_tests2 <- esbl_tests
 #' esbl_tests2[2, "CIP"] <- NA
 #' esbl_tests2[5, "AMC"] <- NA
+#' # with XGBoost, nothing will be changed (it can correct for missings):
 #' model1 |> apply_model_to(esbl_tests2)
+#' # with random forest (or others), missings will be imputed:
+#' model2 |> apply_model_to(esbl_tests2)
 #' 
 #' 
 #' # Tuning A Model -------------------------------------------------------
 #'  
 #' # tune the parameters of a model (will take some time)
-#' tuning <- model1 |> 
+#' tuning <- model2 |> 
 #'   tune_parameters(v = 5, levels = 3)
 #' autoplot(tuning)
 #' 
@@ -153,7 +156,8 @@
 #' # this is what iris data set looks like:
 #' head(iris)
 #' # create a model to predict the species:
-#' iris_model <- iris |> ml_random_forest(Species)
+#' iris_model <- iris |> ml_xg_boost(Species)
+#' iris_model_rf <- iris |> ml_random_forest(Species)
 #' # is it a bit reliable?
 #' get_metrics(iris_model)
 #' 
@@ -174,6 +178,9 @@
 #' to_predict <- to_predict[, c("Sepal.Width", "Petal.Width", "Petal.Length")]
 #' to_predict
 #' iris_model |> apply_model_to(to_predict)
+#' 
+#' # now compare that with a random forest model that requires imputation:
+#' iris_model_rf |> apply_model_to(to_predict)
 #' 
 #' 
 #' # Practical Example #2 -------------------------------------------------
@@ -385,11 +392,9 @@ ml_xg_boost <- function(.data,
                         scale = TRUE,
                         engine = "xgboost",
                         mode = c("classification", "regression", "unknown"),
-                        max_depth = 6,
-                        nrounds = 15,
-                        eta = 0.3,
+                        trees = 2000,
                         ...) {
-  ml_exec(FUN = parsnip::xgb_train,
+  ml_exec(FUN = parsnip::boost_tree,
           .data = .data,
           outcome = {{ outcome }},
           predictors = {{ predictors }},
@@ -401,9 +406,7 @@ ml_xg_boost <- function(.data,
           scale = scale,
           engine = engine,
           mode = mode[1L],
-          max_depth = max_depth,
-          nrounds = nrounds,
-          eta = eta,
+          trees = trees,
           ...)
 }
 
@@ -429,6 +432,16 @@ ml_exec <- function(FUN,
   if (!engine %in% c("lm", "glm")) {
     # this will ask to install packages like ranger or rpart
     check_is_installed(engine)
+  }
+  
+  # show which arguments are useful to set in the function:
+  args_function <- formals(FUN) # Get formal arguments of the function
+  args_given <- list(...)       # Arguments passed to FUN via ...
+  # filter out arguments that are already set in the call
+  args_to_note <- args_function[!names(args_function) %in% names(args_given)]
+  if (length(args_to_note) > 0 && interactive()) {
+    args_msg <- paste("- ", names(args_to_note), "=", sapply(args_to_note, function(x) if (!is.null(x)) deparse(x) else "NULL"), collapse = "\n")
+    message("Arguments currently set for `", deparse(substitute(FUN)), "()`:\n", args_msg)
   }
   
   err_msg <- ""
@@ -489,7 +502,7 @@ ml_exec <- function(FUN,
     mutate(across(all_of(predictors),
                   function(values) {
                     if (is.character(values)) {
-                      message("Transformed column '", cur_column(),
+                      warning("Transformed column '", cur_column(),
                               "' from <", type_sum(values), "> to <", type_sum(factor(0)), 
                               "> and then to <", type_sum(double(0)), "> to use as predictor")
                       values <- as.factor(values)
@@ -595,6 +608,11 @@ ml_exec <- function(FUN,
                            pred_outcome,
                            prediction)
   
+  if (interactive()) {
+    message("\nCreated ML model with these metrics:\n",
+            paste("-", metrics$.metric, "=", round(metrics$.estimate, 3), collapse = "\n"))
+  }
+  
   structure(mdl,
             class = c("certestats_ml", class(mdl)),
             properties = properties,
@@ -611,6 +629,10 @@ ml_exec <- function(FUN,
             correlation_filter = correlation_filter,
             centre = centre,
             scale = scale)
+}
+
+is_xgboost <- function(object) {
+  identical(attributes(object)$properties$engine_package, "xgboost")
 }
 
 #' @method print certestats_ml
@@ -768,7 +790,7 @@ predict.certestats_ml <- function(object,
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame]
 #' @param correct_mistakes a [logical] to indicate whether missing variables and missing values should be added to `new_data`
 #' @param impute_algorithm the algorithm to use in [impute()] if `correct_mistakes = TRUE`. Can be `"mice"` (default) for the [Multivariate Imputations by Chained Equations (MICE) algorithm][mice::mice], or `"single-point"` for a trained median.
-#' @importFrom recipes bake
+#' @importFrom recipes bake remove_role
 #' @importFrom dplyr bind_cols mutate filter pull as_tibble select any_of
 #' @export
 apply_model_to <- function(object,
@@ -785,34 +807,38 @@ apply_model_to <- function(object,
   # remove class so there will not be an infinite loop
   class(object) <- setdiff(class(object), "certestats_ml")
   
-  required_cols <- get_recipe(object)$var_info |>
+  cols_required <- get_recipe(object)$var_info |>
     filter(role == "predictor") |>
     pull(variable)
   # remove redundant columns
   new_data <- new_data |> 
-    select(any_of(required_cols))
+    select(any_of(cols_required))
   
   
   # check (1): new_data does not have missing columns ----
   
-  misses <- setdiff(required_cols, colnames(new_data))
-  if (length(misses) > 0) {
-    if (!isTRUE(correct_mistakes)) {
-      stop("Missing variables in `new_data`: ", toString(misses), ".")
+  cols_missing <- setdiff(cols_required, colnames(new_data))
+  if (length(cols_missing) > 0) {
+    if (!isTRUE(correct_mistakes) && !is_xgboost(object)) {
+      stop("Missing variables in `new_data`: ", toString(cols_missing), ".")
     }
-    for (col in misses) {
+    for (col in cols_missing) {
       # add as NA in the class of the original data:
       new_val <- attributes(object)$data_original[[col]]
       if (is.numeric(new_val)) {
         # take median
         new_val <- median(new_val, na.rm = TRUE)
-        message("Adding missing variable as median (= ", new_val, "): ", col)
+        if (!is_xgboost(object)) {
+          message("Adding missing variable as median (= ", new_val, "): ", col)
+        }
         new_data[, col] <- new_val
       } else {
         # take mode, value that occurs most often
         new_val <- new_val |> table()
         new_val <- names(new_val[order(new_val, decreasing = TRUE)[1]])
-        message("Adding missing variable as mode value (= \"", new_val, "\"): ", col)
+        if (!is_xgboost(object)) {
+          message("Adding missing variable as mode value (= \"", new_val, "\"): ", col)
+        }
         new_data[, col] <- new_val
       }
     }
@@ -821,7 +847,7 @@ apply_model_to <- function(object,
   
   # check (2): new_data does not have missing values ----
   
-  if (anyNA(new_data)) {
+  if (anyNA(new_data) && !is_xgboost(object)) {
     missings <- new_data |> vapply(FUN.VALUE = logical(1), anyNA)
     missings <- names(missings)[missings]
     if (!isTRUE(correct_mistakes)) {
@@ -852,20 +878,19 @@ apply_model_to <- function(object,
     }
   }
 
-  # set the right prediction function
-  if (identical(attributes(object)$properties$engine_package, "xgboost")) {
-    pred_fn <- parsnip::xgb_predict
-  } else {
-    pred_fn <- stats::predict
-  }
   
   # bake recipe and get predictions ----
-  new_data <- bake(get_recipe(object), new_data = new_data)
-  out <- pred_fn(object, new_data, ...)
+  model_recipe <- object |> get_recipe()
+  if (length(cols_missing) > 0 && is_xgboost(object)) {
+    model_recipe <- model_recipe |>
+      remove_role(any_of(cols_missing), old_role = "predictor")
+  }
+  new_data <- bake(model_recipe, new_data = new_data)
+  out <- stats::predict(object, new_data, ...)
   
   # return results ----
   if (isTRUE(add_certainty)) {
-    preds <- pred_fn(object, new_data, type = "prob")
+    preds <- stats::predict(object, new_data, type = "prob")
     out <- bind_cols(stats::setNames(out, "predicted"),
                      preds) |> 
       mutate(certainty = row_function(max, data = preds), .after = 1)
@@ -1063,7 +1088,9 @@ get_variable_weights <- function(object) {
   
   model_vars <- colnames(get_model_variables(object))
   for (col in model_vars[!model_vars %in% colnames(out)]) {
-    message("Note: Variable '", col, "' was in the recipe, but was excluded for training")
+    if (!is_xgboost(object)) {
+      message("Note: Variable '", col, "' was in the recipe, but was excluded for training")
+    }
     out[, col] <- 0
   }
   out <- out[, model_vars, drop = FALSE]
@@ -1098,6 +1125,8 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   params <- params[!params %in% c("mode", "engine",
                                   # neural network models
                                   "activation", "dropout", "learn_rate",
+                                  # extreme gradient boost trees
+                                  "sample_size",
                                   # linear and logistic regression models
                                   "penalty", "mixture")]
   if (isTRUE(only_params_in_model)) {
@@ -1155,19 +1184,36 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   # create the V-fold cross-validation (also known as k-fold cross-validation)
   vfold <- vfold_cv(model_prop$data_training, v = v)
   
+  # show a message the prints the overview of all tuning values
+  vals <- vapply(FUN.VALUE = character(1), tree_grid, function(x) paste0(trimws(format(unique(x), scientific = FALSE)), collapse = ", "))
+  message("\nThese parameters will be tuned with these values:\n",
+          paste0("  - ", names(vals), ": ", vals, collapse = "\n"))
+  
   # run the tuning
   if (interactive()) {
     cat("\n")
-    ans <- utils::askYesNo(paste0("This will run a tuning analysis using a ",
-                                  v, "-fold cross-validation for ",
-                                  nrow(tree_grid), " combinations. Continue?"))
-    if (!isTRUE(ans)) {
-      return(invisible(NULL))
+    ans <- utils::menu(title = paste0("This will run a tuning analysis using a ",
+                                      v, "-fold cross-validation for ", levels, "^", length(dials_fns), " = ",
+                                      format(nrow(tree_grid), big.mark = ","), " combinations. Continue?"),
+                       choices = c("Continue",
+                                   "Return tree grid",
+                                   "Return intended workflow",
+                                   "Return V-fold cross-validation object",
+                                   "Cancel"),
+                       graphics = FALSE)
+    if (ans == 1) {
+      message("[", round(Sys.time()), "] Running tuning workflow...")
+    } else if (ans == 2) {
+      return(tree_grid)
+    } else if (ans == 3) {
+      return(tree_wf)
+    } else if (ans == 4) {
+      return(vfold)
     } else {
-      message("[", Sys.time(), "] Running tuning workflow...")
+      return(invisible(NULL))
     }
   } else {
-    message("[", Sys.time(), "] Running tuning analysis using a ", v, "-fold cross-validation for ", nrow(tree_grid), " combinations...")
+    message("[", round(Sys.time()), "] Running tuning analysis using a ", v, "-fold cross-validation for ", nrow(tree_grid), " combinations...")
   }
   suppressWarnings(
     tree_res <- tree_wf |>
@@ -1176,7 +1222,7 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   )
   out <- tree_res |>
     collect_metrics() 
-  message("[", Sys.time(), "] Done.")
+  message("[", round(Sys.time()), "] Done.")
   
   out <- out |> 
     pivot_wider(id_cols = -.estimator, names_from = .metric, values_from = c(mean, std_err))

@@ -7,6 +7,10 @@
 \alias{sum_of_squares}
 \alias{cv}
 \alias{cqv}
+\alias{mse}
+\alias{mape}
+\alias{rmse}
+\alias{mae}
 \alias{z_score}
 \alias{midhinge}
 \alias{ewma}
@@ -28,6 +32,14 @@ sum_of_squares(x, correct_mean = TRUE, na.rm = getOption("na.rm", FALSE))
 cv(x, na.rm = getOption("na.rm", FALSE))
 
 cqv(x, na.rm = getOption("na.rm", FALSE))
+
+mse(actual, predicted, na.rm = getOption("na.rm", FALSE))
+
+mape(actual, predicted, na.rm = getOption("na.rm", FALSE))
+
+rmse(actual, predicted, na.rm = getOption("na.rm", FALSE))
+
+mae(actual, predicted, na.rm = getOption("na.rm", FALSE))
 
 z_score(x, na.rm = getOption("na.rm", FALSE))
 
@@ -57,6 +69,10 @@ deciles(x, na.rm = getOption("na.rm", FALSE))
 \item{level}{alpha level, defaults to 95\%}
 
 \item{correct_mean}{with \code{TRUE} (the default) correct for the mean will be applied, by summing each square of \code{x} after the mean of \code{x} has been subtracted, so that this says something about \code{x}. With \code{FALSE}, all \code{x^2} are simply added together, so this says something about \code{x}'s location in the data.}
+
+\item{actual}{Vector of actual values}
+
+\item{predicted}{Vector of predicted values}
 
 \item{lambda}{smoothing parameter, a value between 0 and 1. A value of 0 is equal to \code{x}, a value of 1 equal to the \emph{mean} of \code{x}. The EWMA looks back and has a delay - the rrEWMA takes the mean of a 'forward' and 'backward' EWMA.}
 
@@ -89,6 +105,22 @@ These are the explanations of the functions:
 
 \itemize{
 \item \code{\link[=cqv]{cqv()}} calculates the coefficient of quartile variation: (Q3 - Q1) / (Q3 + Q1)
+}
+
+\itemize{
+\item \code{\link[=mse]{mse()}} calculates the mean squared error
+}
+
+\itemize{
+\item \code{\link[=mape]{mape()}} calculates the mean absolute percentage error
+}
+
+\itemize{
+\item \code{\link[=rmse]{rmse()}} calculates the root mean squared error
+}
+
+\itemize{
+\item \code{\link[=mae]{mae()}} calculates the mean absolute error
 }
 
 \itemize{

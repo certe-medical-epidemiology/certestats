@@ -8,6 +8,7 @@
 \alias{ml_neural_network}
 \alias{ml_nearest_neighbour}
 \alias{ml_random_forest}
+\alias{ml_xg_boost}
 \alias{confusion_matrix.certestats_ml}
 \alias{autoplot.certestats_ml}
 \alias{predict.certestats_ml}
@@ -27,7 +28,7 @@
 \alias{tune_parameters}
 \alias{autoplot.certestats_tuning}
 \alias{check_testing_predictions}
-\title{Create a Traditional Machine Learning (ML) Model}
+\title{Create a Machine Learning (ML) Model}
 \usage{
 ml_decision_trees(
   .data,
@@ -121,6 +122,22 @@ ml_random_forest(
   centre = TRUE,
   scale = TRUE,
   engine = "ranger",
+  mode = c("classification", "regression", "unknown"),
+  trees = 2000,
+  ...
+)
+
+ml_xg_boost(
+  .data,
+  outcome,
+  predictors = everything(),
+  training_fraction = 0.75,
+  strata = NULL,
+  max_na_fraction = 0.01,
+  correlation_filter = TRUE,
+  centre = TRUE,
+  scale = TRUE,
+  engine = "xgboost",
   mode = c("classification", "regression", "unknown"),
   trees = 2000,
   ...
@@ -255,7 +272,7 @@ of parameters.}
 A machine learning model of class \code{certestats_ml} / \verb{_rpart} / \code{model_fit}.
 }
 \description{
-These functions can be used to create a traditional machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{\code{parsnip}}, \href{https://recipes.tidymodels.org}{\code{recipes}}, \href{https://rsample.tidymodels.org}{\code{rsample}}, \href{https://tune.tidymodels.org}{\code{tune}}, and \href{https://yardstick.tidymodels.org}{\code{yardstick}}) created by RStudio.
+These functions can be used to create a machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{\code{parsnip}}, \href{https://recipes.tidymodels.org}{\code{recipes}}, \href{https://rsample.tidymodels.org}{\code{rsample}}, \href{https://tune.tidymodels.org}{\code{tune}}, and \href{https://yardstick.tidymodels.org}{\code{yardstick}}) created by RStudio.
 }
 \details{
 To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
@@ -331,6 +348,7 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 \item \code{ml_neural_network}: \code{\link[parsnip:mlp]{parsnip::mlp()}}
 \item \code{ml_nearest_neighbour}: \code{\link[parsnip:nearest_neighbor]{parsnip::nearest_neighbor()}}
 \item \code{ml_random_forest}: \code{\link[parsnip:rand_forest]{parsnip::rand_forest()}}
+\item \code{ml_xg_boost}: \code{\link[parsnip:xgb_train]{parsnip::xgb_train()}}
 }
 }
 
@@ -338,9 +356,9 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 # 'esbl_tests' is an included data set, see ?esbl_tests
 print(esbl_tests, n = 5)
 
-# predict ESBL test outcome based on MICs
-model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
-model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
+# predict ESBL test outcome based on MICs using 2 different models
+model1 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
+model2 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
 
 model1 |> get_metrics()
 model2 |> get_metrics()
@@ -359,13 +377,16 @@ model1 |> apply_model_to(esbl_tests[, 1:15])
 esbl_tests2 <- esbl_tests
 esbl_tests2[2, "CIP"] <- NA
 esbl_tests2[5, "AMC"] <- NA
+# with XGBoost, nothing will be changed (it can correct for missings):
 model1 |> apply_model_to(esbl_tests2)
+# with random forest (or others), missings will be imputed:
+model2 |> apply_model_to(esbl_tests2)
 
 
 # Tuning A Model -------------------------------------------------------
  
 # tune the parameters of a model (will take some time)
-tuning <- model1 |> 
+tuning <- model2 |> 
   tune_parameters(v = 5, levels = 3)
 autoplot(tuning)
 
@@ -381,7 +402,8 @@ iris |>
 # this is what iris data set looks like:
 head(iris)
 # create a model to predict the species:
-iris_model <- iris |> ml_random_forest(Species)
+iris_model <- iris |> ml_xg_boost(Species)
+iris_model_rf <- iris |> ml_random_forest(Species)
 # is it a bit reliable?
 get_metrics(iris_model)
 
@@ -402,6 +424,9 @@ iris_model |> get_variable_weights()
 to_predict <- to_predict[, c("Sepal.Width", "Petal.Width", "Petal.Length")]
 to_predict
 iris_model |> apply_model_to(to_predict)
+
+# now compare that with a random forest model that requires imputation:
+iris_model_rf |> apply_model_to(to_predict)
 
 
 # Practical Example #2 -------------------------------------------------
