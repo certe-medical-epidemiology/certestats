@@ -26,6 +26,7 @@ test_that("ML works", {
   model_neural_network <- iris |> ml_neural_network(Species, where(is.double))
   model_nearest_neighbour <- iris |> ml_nearest_neighbour(Species, where(is.double))
   model_random_forest <- iris |> ml_random_forest(Species, where(is.double))
+  model_xg_boost <- iris |> ml_xg_boost(Species, where(is.double))
   
   expect_s3_class(model_decision_trees, "certestats_ml")
   expect_s3_class(model_linear_regression, "certestats_ml")
@@ -33,6 +34,7 @@ test_that("ML works", {
   expect_s3_class(model_neural_network, "certestats_ml")
   expect_s3_class(model_nearest_neighbour, "certestats_ml")
   expect_s3_class(model_random_forest, "certestats_ml")
+  expect_s3_class(model_xg_boost, "certestats_ml")
   
   expect_output(print(model_decision_trees))
   expect_identical(get_recipe(model_decision_trees),
@@ -57,12 +59,14 @@ test_that("ML works", {
   
   # missing values
   mdl <- iris |> ml_random_forest(Species)
+  mdl2 <- iris |> ml_xg_boost(Species)
   new <- iris |>
     select(matches("[.]")) |>
     slice(1:3) |>
     select(-Petal.Width) |> 
     mutate(Sepal.Width = as.integer(Sepal.Width))
   expect_message(mdl |> apply_model_to(new))
+  expect_silent(mdl2 |> apply_model_to(new))
   
   # get weights
   weights <- model_random_forest |> get_variable_weights()
@@ -89,6 +93,7 @@ test_that("ML works", {
   tuned_neural_network <- model_neural_network |> tune_parameters(levels = 1, v = 2)
   tuned_nearest_neighbour <- model_nearest_neighbour |> tune_parameters(levels = 1, v = 2)
   tuned_random_forest <- model_random_forest |> tune_parameters(levels = 1, v = 2)
+  tuned_xg_boost <- model_xg_boost |> tune_parameters(levels = 1, v = 2)
   
   tuned2 <- model_neural_network |> tune_parameters(epochs = dials::epochs(), levels = 1, v = 2)
   expect_error(model_neural_network |> tune_parameters(dials::epochs()))
@@ -99,15 +104,19 @@ test_that("ML works", {
   expect_true(tuned_neural_network |> is.data.frame())
   expect_true(tuned_nearest_neighbour |> is.data.frame())
   expect_true(tuned_random_forest |> is.data.frame())
+  expect_true(tuned_xg_boost |> is.data.frame())
   expect_s3_class(autoplot(tuned_decision_trees), "gg")
   
   # imputation
   model1 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
+  model2 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
   esbl_tests2 <- esbl_tests
   esbl_tests2[c(1, 3, 5), "AMC"] <- NA
   expect_message(model1 |> apply_model_to(esbl_tests2))
+  expect_silent(model2 |> apply_model_to(esbl_tests2))
   expect_message(model1 |> apply_model_to(esbl_tests2, impute_algorithm = "single"))
   expect_error(model1 |> apply_model_to(esbl_tests2, impute_algorithm = FALSE))
+  expect_silent(model2 |> apply_model_to(esbl_tests2, impute_algorithm = FALSE))
   
   # internals
   var_info <- get_recipe(model1)$var_info
