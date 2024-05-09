@@ -41,7 +41,7 @@
 #' 
 #' Whether a (suspected) cluster corresponds to an actual increase of disease in the area, needs to be assessed by an epidemiologist or biostatistician ([ATSDR, 2008](https://www.atsdr.cdc.gov/hec/csem/cluster/docs/clusters.pdf)).
 #' @importFrom dplyr n_distinct group_by summarise filter mutate ungroup select row_number tibble all_of count pull
-#' @importFrom lubridate interval days years year<-
+#' @importFrom lubridate interval days years year<- `%m-%`
 #' @importFrom tidyr fill complete
 #' @importFrom certestyle format2
 #' @importFrom AMR get_episode
@@ -151,12 +151,15 @@ early_warning_cluster <- function(df,
   df$date <- as.Date(df[, column_date, drop = TRUE])
   df$patient <- df[, column_patientid, drop = TRUE]
   df$row <- seq_len(nrow(df))
-  # determine the 'period', will be 0 for last n months and -1, -2, etc. for earlier periods
-  df$period <- as.integer(-floor(interval(start = df$date, end = max(df$date, na.rm = TRUE)) / months(1) / period_length_months))
+  
+  all_period_starts <- max(df$date, na.rm = TRUE) %m-% months(period_length_months * 1:999) + 1
+  all_period_starts <- c(all_period_starts[all_period_starts >= min(df$date, na.rm = TRUE)],
+                         min(df$date, na.rm = TRUE))
+  all_period_starts <- sort(unique(all_period_starts))
   
   # some checks
-  if (n_distinct(df$period, na.rm = TRUE) == 0) {
-    warning("All cases are within one period - no clusters found. Use ... to filter on specific cases.")
+  if (length(all_period_starts) == 1) {
+    warning("All cases are within one period - no clusters found.")
     return(structure(empty_output,
                      threshold_percentile = threshold_percentile,
                      based_on_historic_maximum = based_on_historic_maximum,
@@ -175,13 +178,17 @@ early_warning_cluster <- function(df,
   }
   
   df_details <- df |>
-    group_by(date, period) |>
+    group_by(date) |>
     summarise(cases = n_distinct(patient), .groups = "drop") |> 
+    arrange(desc(date)) |> 
     complete(date = seq(from = min(as.Date(date), na.rm = TRUE),
                         to = max(as.Date(date), na.rm = TRUE),
                         by = "1 day"),
              fill = list(cases = 0)) |>
-    fill(period, .direction = "down")
+    mutate(period = length(all_period_starts) - findInterval(x = date, vec = all_period_starts, rightmost.closed = FALSE)) |>
+    group_by(period) |>
+    mutate(day_in_period = row_number()) |>
+    ungroup()
   
   if (nrow(df_details) < 2 || nrow(df_details) < minimum_case_days) {
     # too few cases
@@ -208,8 +215,7 @@ early_warning_cluster <- function(df,
   
   df_details <- df_details |> 
     arrange(desc(date)) |> 
-    mutate(is_outlier = moving_avg %in% grDevices::boxplot.stats(moving_avg[!is.na(moving_avg)], coef = remove_outliers_coefficient)$out,
-           day_in_period = seq(from = max_period_length, to = max_period_length - dplyr::n() + 1, by = -1)) |> 
+    mutate(is_outlier = moving_avg %in% grDevices::boxplot.stats(moving_avg[!is.na(moving_avg)], coef = remove_outliers_coefficient)$out) |>
     arrange(date) |> 
     group_by(period_date) |>
     mutate(moving_avg_max = ifelse(length(moving_avg[!is.na(moving_avg) & period != 0 & !(remove_outliers & is_outlier)]) > 0,
