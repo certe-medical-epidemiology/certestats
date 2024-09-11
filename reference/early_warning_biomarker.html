@@ -3,7 +3,7 @@
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]--></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.20.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.20.2</span>
       </span>
     </div>
 
@@ -25,35 +25,35 @@
       <ul class="nav navbar-nav"><li>
   <a href="../index.html">
     <span class="fa fa-home"></span>
-     
+
     Home
   </a>
 </li>
 <li>
   <a href="../reference/index.html">
     <span class="fa fa-book-open"></span>
-     
+
     Manual
   </a>
 </li>
 <li>
   <a href="https://github.com/certe-medical-epidemiology/certestats" class="external-link">
     <span class="fab fa-github"></span>
-     
+
     Source Code
   </a>
 </li>
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/certe-medical-epidemiology" class="external-link">
     <span class="fab fa-github"></span>
-     
+
     Certe Med Epi
   </a>
 </li>
 <li>
   <a href="https://certe.nl" class="external-link">
     <span class="fa fa-flask"></span>
-     
+
     Certe Website
   </a>
 </li>
@@ -61,13 +61,13 @@
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Early Warning for Biomarkers</h1>
-    <small class="dont-index">Source: <a href="https://github.com/certe-medical-epidemiology/certestats/blob/HEAD/R/early_warning.R" class="external-link"><code>R/early_warning.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/certe-medical-epidemiology/certestats/blob/main/R/early_warning.R" class="external-link"><code>R/early_warning.R</code></a></small>
     <div class="hidden name"><code>early_warning_biomarker.Rd</code></div>
     </div>
 
@@ -95,63 +95,63 @@
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>df</dt>
+
+
+<dl><dt id="arg-df">df<a class="anchor" aria-label="anchor" href="#arg-df"></a></dt>
 <dd><p>A data frame containing clinical chemistry data with columns for patient ID, date, test code, and test result.</p></dd>
 
 
-<dt>testcode</dt>
+<dt id="arg-testcode">testcode<a class="anchor" aria-label="anchor" href="#arg-testcode"></a></dt>
 <dd><p>Value of the column containing test codes to filter on.</p></dd>
 
 
-<dt>...</dt>
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Filter arguments, e.g. <code>testcode == "eGFR"</code></p></dd>
 
 
-<dt>column_date</dt>
+<dt id="arg-column-date">column_date<a class="anchor" aria-label="anchor" href="#arg-column-date"></a></dt>
 <dd><p>Name of the column to use for dates. If left blank, the first date column will be used.</p></dd>
 
 
-<dt>column_patientid</dt>
+<dt id="arg-column-patientid">column_patientid<a class="anchor" aria-label="anchor" href="#arg-column-patientid"></a></dt>
 <dd><p>Name of the column to use for patient IDs. If left blank, the first column resembling <code>"patient|patid"</code> will be used.</p></dd>
 
 
-<dt>column_testcode</dt>
+<dt id="arg-column-testcode">column_testcode<a class="anchor" aria-label="anchor" href="#arg-column-testcode"></a></dt>
 <dd><p>Name of the column containing test codes.</p></dd>
 
 
-<dt>column_testresult</dt>
+<dt id="arg-column-testresult">column_testresult<a class="anchor" aria-label="anchor" href="#arg-column-testresult"></a></dt>
 <dd><p>Name of the column containing test results.</p></dd>
 
 
-<dt>threshold_min</dt>
+<dt id="arg-threshold-min">threshold_min<a class="anchor" aria-label="anchor" href="#arg-threshold-min"></a></dt>
 <dd><p>Minimum threshold for biomarkers.</p></dd>
 
 
-<dt>threshold_max</dt>
+<dt id="arg-threshold-max">threshold_max<a class="anchor" aria-label="anchor" href="#arg-threshold-max"></a></dt>
 <dd><p>Maximum threshold for biomarkers.</p></dd>
 
 
-<dt>window_days</dt>
+<dt id="arg-window-days">window_days<a class="anchor" aria-label="anchor" href="#arg-window-days"></a></dt>
 <dd><p>Number of days for the time window to check for changes.</p></dd>
 
 
-<dt>max_delta_absolute</dt>
+<dt id="arg-max-delta-absolute">max_delta_absolute<a class="anchor" aria-label="anchor" href="#arg-max-delta-absolute"></a></dt>
 <dd><p>Maximum allowable absolute change in biomarkers.</p></dd>
 
 
-<dt>max_delta_relative</dt>
+<dt id="arg-max-delta-relative">max_delta_relative<a class="anchor" aria-label="anchor" href="#arg-max-delta-relative"></a></dt>
 <dd><p>Maximum allowable relative change in biomarkers.</p></dd>
 
 
-<dt>direction</dt>
+<dt id="arg-direction">direction<a class="anchor" aria-label="anchor" href="#arg-direction"></a></dt>
 <dd><p>Direction of change to check ("up", "down", or "any").</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>A list with the following components:</p><ul><li><p><code>flags</code>: A list of flags per patient, containing data frames for each patient with details on dates, test codes, test results, and flagging criteria. The structure of each data frame includes the following columns:</p><ul><li><p><code>patient</code>: Patient identifier.</p></li>
+    <p>A list with the following components:</p><ul><li><p><code>flags</code>: A list of flags per patient, containing data frames for each patient with details on dates, test codes, test results, and flagging criteria. The structure of each data frame includes the following columns:</p><ul><li><p><code>patient</code>: Patient identifier.</p></li>
 <li><p><code>date</code>: Date of the biomarker measurement.</p></li>
 <li><p><code>testcode</code>: Code of the biomarker test.</p></li>
 <li><p><code>testresult</code>: Biomarker test result.</p></li>
@@ -203,7 +203,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>             flags.test.patient1             flags.test.patient2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                          "test"                          "test" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                flags.test.date1                flags.test.date2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19858"                         "19859" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19983"                         "19984" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            flags.test.testcode1            flags.test.testcode2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              NA                              NA </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          flags.test.testresult1          flags.test.testresult2 </span>
@@ -235,15 +235,15 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span>                details.patient9               details.patient10 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                          "test"                          "test" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date1                   details.date2 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19853"                         "19854" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19978"                         "19979" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date3                   details.date4 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19855"                         "19856" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19980"                         "19981" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date5                   details.date6 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19857"                         "19858" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19982"                         "19983" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date7                   details.date8 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19859"                         "19860" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19984"                         "19985" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   details.date9                  details.date10 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19861"                         "19862" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                         "19986"                         "19987" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               details.testcode1               details.testcode2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              NA                              NA </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               details.testcode3               details.testcode4 </span>
@@ -368,15 +368,15 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 

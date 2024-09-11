@@ -3,7 +3,7 @@
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]--></head><body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-reference-topic">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.20.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.20.2</span>
       </span>
     </div>
 
@@ -25,35 +25,35 @@
       <ul class="nav navbar-nav"><li>
   <a href="../index.html">
     <span class="fa fa-home"></span>
-     
+
     Home
   </a>
 </li>
 <li>
   <a href="../reference/index.html">
     <span class="fa fa-book-open"></span>
-     
+
     Manual
   </a>
 </li>
 <li>
   <a href="https://github.com/certe-medical-epidemiology/certestats" class="external-link">
     <span class="fab fa-github"></span>
-     
+
     Source Code
   </a>
 </li>
       </ul><ul class="nav navbar-nav navbar-right"><li>
   <a href="https://github.com/certe-medical-epidemiology" class="external-link">
     <span class="fab fa-github"></span>
-     
+
     Certe Med Epi
   </a>
 </li>
 <li>
   <a href="https://certe.nl" class="external-link">
     <span class="fa fa-flask"></span>
-     
+
     Certe Website
   </a>
 </li>
@@ -61,13 +61,13 @@
   </div><!--/.container -->
 </div><!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header">
     <h1>Create a Machine Learning (ML) Model</h1>
-    <small class="dont-index">Source: <a href="https://github.com/certe-medical-epidemiology/certestats/blob/HEAD/R/machine_learning.R" class="external-link"><code>R/machine_learning.R</code></a></small>
+    <small class="dont-index">Source: <a href="https://github.com/certe-medical-epidemiology/certestats/blob/main/R/machine_learning.R" class="external-link"><code>R/machine_learning.R</code></a></small>
     <div class="hidden name"><code>machine_learning.Rd</code></div>
     </div>
 
@@ -189,13 +189,13 @@
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S3 method for certestats_ml</span></span>
+<span><span class="co"># S3 method for class 'certestats_ml'</span></span>
 <span><span class="fu"><a href="confusion_matrix.html">confusion_matrix</a></span><span class="op">(</span><span class="va">data</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S3 method for certestats_ml</span></span>
+<span><span class="co"># S3 method for class 'certestats_ml'</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">object</span>, plot_type <span class="op">=</span> <span class="st">"roc"</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S3 method for certestats_ml</span></span>
+<span><span class="co"># S3 method for class 'certestats_ml'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict</a></span><span class="op">(</span><span class="va">object</span>, <span class="va">new_data</span>, type <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">apply_model_to</span><span class="op">(</span></span>
@@ -234,7 +234,7 @@
 <span></span>
 <span><span class="fu">tune_parameters</span><span class="op">(</span><span class="va">object</span>, <span class="va">...</span>, only_params_in_model <span class="op">=</span> <span class="cn">FALSE</span>, levels <span class="op">=</span> <span class="fl">5</span>, v <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># S3 method for certestats_tuning</span></span>
+<span><span class="co"># S3 method for class 'certestats_tuning'</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">object</span>, type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"marginals"</span>, <span class="st">"parameters"</span>, <span class="st">"performance"</span><span class="op">)</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">check_testing_predictions</span><span class="op">(</span><span class="va">object</span><span class="op">)</span></span></code></pre></div>
@@ -242,129 +242,131 @@
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>.data</dt>
+
+
+<dl><dt id="arg--data">.data<a class="anchor" aria-label="anchor" href="#arg--data"></a></dt>
 <dd><p>Data set to train</p></dd>
 
 
-<dt>outcome</dt>
+<dt id="arg-outcome">outcome<a class="anchor" aria-label="anchor" href="#arg-outcome"></a></dt>
 <dd><p>Outcome variable, also called the <em>response variable</em> or the <em>dependent variable</em>; the variable that must be predicted. The value will be evaluated in <code><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select()</a></code> and thus supports the <code>tidyselect</code> language. In case of classification prediction, this variable will be coerced to a <a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a>.</p></dd>
 
 
-<dt>predictors</dt>
+<dt id="arg-predictors">predictors<a class="anchor" aria-label="anchor" href="#arg-predictors"></a></dt>
 <dd><p>Explanatory variables, also called the <em>predictors</em> or the <em>independent variables</em>; the variables that are used to predict <code>outcome</code>. These variables will be transformed using <code><a href="https://rdrr.io/r/base/double.html" class="external-link">as.double()</a></code> (<a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a>s will be transformed to <a href="https://rdrr.io/r/base/character.html" class="external-link">character</a>s first). This value defaults to <code><a href="https://tidyselect.r-lib.org/reference/everything.html" class="external-link">everything()</a></code> and supports the <code>tidyselect</code> language.</p></dd>
 
 
-<dt>training_fraction</dt>
+<dt id="arg-training-fraction">training_fraction<a class="anchor" aria-label="anchor" href="#arg-training-fraction"></a></dt>
 <dd><p>Fraction of rows to be used for <em>training</em>, defaults to 75%. The rest will be used for <em>testing</em>. If given a number over 1, the number will be considered to be the required number of rows for <em>training</em>.</p></dd>
 
 
-<dt>strata</dt>
+<dt id="arg-strata">strata<a class="anchor" aria-label="anchor" href="#arg-strata"></a></dt>
 <dd><p>A variable in <code>data</code> (single character or name) used to conduct
 stratified sampling. When not <code>NULL</code>, each resample is created within the
 stratification variable. Numeric <code>strata</code> are binned into quartiles.</p></dd>
 
 
-<dt>max_na_fraction</dt>
+<dt id="arg-max-na-fraction">max_na_fraction<a class="anchor" aria-label="anchor" href="#arg-max-na-fraction"></a></dt>
 <dd><p>Maximum fraction of <code>NA</code> values (defaults to <code>0.01</code>) of the <code>predictors</code> before they are removed from the model</p></dd>
 
 
-<dt>correlation_filter</dt>
+<dt id="arg-correlation-filter">correlation_filter<a class="anchor" aria-label="anchor" href="#arg-correlation-filter"></a></dt>
 <dd><p>A <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether the <code>predictors</code> should be removed that have to much correlation with each other, using <code><a href="https://recipes.tidymodels.org/reference/step_corr.html" class="external-link">recipes::step_corr()</a></code></p></dd>
 
 
-<dt>centre</dt>
+<dt id="arg-centre">centre<a class="anchor" aria-label="anchor" href="#arg-centre"></a></dt>
 <dd><p>A <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether the <code>predictors</code> should be transformed so that their mean will be <code>0</code>, using <code><a href="https://recipes.tidymodels.org/reference/step_center.html" class="external-link">recipes::step_center()</a></code></p></dd>
 
 
-<dt>scale</dt>
+<dt id="arg-scale">scale<a class="anchor" aria-label="anchor" href="#arg-scale"></a></dt>
 <dd><p>A <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether the <code>predictors</code> should be transformed so that their standard deviation will be <code>1</code>, using <code><a href="https://recipes.tidymodels.org/reference/step_scale.html" class="external-link">recipes::step_scale()</a></code></p></dd>
 
 
-<dt>engine</dt>
+<dt id="arg-engine">engine<a class="anchor" aria-label="anchor" href="#arg-engine"></a></dt>
 <dd><p><span style="R">R</span> package or function name to be used for the model, will be passed on to <code><a href="https://parsnip.tidymodels.org/reference/set_engine.html" class="external-link">parsnip::set_engine()</a></code></p></dd>
 
 
-<dt>mode</dt>
+<dt id="arg-mode">mode<a class="anchor" aria-label="anchor" href="#arg-mode"></a></dt>
 <dd><p>Type of predicted value - defaults to <code>"classification"</code>, but can also be <code>"unknown"</code> or <code>"regression"</code></p></dd>
 
 
-<dt>tree_depth</dt>
+<dt id="arg-tree-depth">tree_depth<a class="anchor" aria-label="anchor" href="#arg-tree-depth"></a></dt>
 <dd><p>An integer for maximum depth of the tree.</p></dd>
 
 
-<dt>...</dt>
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Arguments to be passed on to the <code>parsnip</code> functions, see <em>Model Functions</em>.</p>
 <p>For the <code>tune_parameters()</code> function, these must be <code>dials</code> package calls, such as <code><a href="https://dials.tidymodels.org/reference/trees.html" class="external-link">dials::trees()</a></code> (see Examples).</p>
 <p>For <code><a href="https://parsnip.tidymodels.org/reference/predict.model_fit.html" class="external-link">predict()</a></code>, these must be arguments passed on to <code><a href="https://parsnip.tidymodels.org/reference/predict.model_fit.html" class="external-link">parsnip::predict.model_fit()</a></code></p></dd>
 
 
-<dt>penalty</dt>
+<dt id="arg-penalty">penalty<a class="anchor" aria-label="anchor" href="#arg-penalty"></a></dt>
 <dd><p>A non-negative number representing the total
 amount of regularization (specific engines only).</p></dd>
 
 
-<dt>epochs</dt>
+<dt id="arg-epochs">epochs<a class="anchor" aria-label="anchor" href="#arg-epochs"></a></dt>
 <dd><p>An integer for the number of training iterations.</p></dd>
 
 
-<dt>neighbors</dt>
+<dt id="arg-neighbors">neighbors<a class="anchor" aria-label="anchor" href="#arg-neighbors"></a></dt>
 <dd><p>A single integer for the number of neighbors
 to consider (often called <code>k</code>). For <span class="pkg">kknn</span>, a value of 5
 is used if <code>neighbors</code> is not specified.</p></dd>
 
 
-<dt>weight_func</dt>
+<dt id="arg-weight-func">weight_func<a class="anchor" aria-label="anchor" href="#arg-weight-func"></a></dt>
 <dd><p>A <em>single</em> character for the type of kernel function used
 to weight distances between samples. Valid choices are: <code>"rectangular"</code>,
 <code>"triangular"</code>, <code>"epanechnikov"</code>, <code>"biweight"</code>, <code>"triweight"</code>,
 <code>"cos"</code>, <code>"inv"</code>, <code>"gaussian"</code>, <code>"rank"</code>, or <code>"optimal"</code>.</p></dd>
 
 
-<dt>trees</dt>
+<dt id="arg-trees">trees<a class="anchor" aria-label="anchor" href="#arg-trees"></a></dt>
 <dd><p>An integer for the number of trees contained in
 the ensemble.</p></dd>
 
 
-<dt>object, data</dt>
+<dt id="arg-object-data">object, data<a class="anchor" aria-label="anchor" href="#arg-object-data"></a></dt>
 <dd><p>outcome of machine learning model</p></dd>
 
 
-<dt>plot_type</dt>
+<dt id="arg-plot-type">plot_type<a class="anchor" aria-label="anchor" href="#arg-plot-type"></a></dt>
 <dd><p>the plot type, can be <code>"roc"</code> (default), <code>"gain"</code>, <code>"lift"</code> or <code>"pr"</code>. These functions rely on <code><a href="https://yardstick.tidymodels.org/reference/roc_curve.html" class="external-link">yardstick::roc_curve()</a></code>, <code><a href="https://yardstick.tidymodels.org/reference/gain_curve.html" class="external-link">yardstick::gain_curve()</a></code>, <code><a href="https://yardstick.tidymodels.org/reference/lift_curve.html" class="external-link">yardstick::lift_curve()</a></code> and <code><a href="https://yardstick.tidymodels.org/reference/pr_curve.html" class="external-link">yardstick::pr_curve()</a></code> to construct the curves.</p></dd>
 
 
-<dt>new_data</dt>
+<dt id="arg-new-data">new_data<a class="anchor" aria-label="anchor" href="#arg-new-data"></a></dt>
 <dd><p>A rectangular data object, such as a data frame.</p></dd>
 
 
-<dt>type</dt>
+<dt id="arg-type">type<a class="anchor" aria-label="anchor" href="#arg-type"></a></dt>
 <dd><p>A single character value or <code>NULL</code>. Possible values
 are <code>"numeric"</code>, <code>"class"</code>, <code>"prob"</code>, <code>"conf_int"</code>, <code>"pred_int"</code>,
 <code>"quantile"</code>, <code>"time"</code>, <code>"hazard"</code>, <code>"survival"</code>, or <code>"raw"</code>. When <code>NULL</code>,
 <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> will choose an appropriate value based on the model's mode.</p></dd>
 
 
-<dt>add_certainty</dt>
+<dt id="arg-add-certainty">add_certainty<a class="anchor" aria-label="anchor" href="#arg-add-certainty"></a></dt>
 <dd><p>a <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether certainties should be added to the output <a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></p></dd>
 
 
-<dt>only_prediction</dt>
+<dt id="arg-only-prediction">only_prediction<a class="anchor" aria-label="anchor" href="#arg-only-prediction"></a></dt>
 <dd><p>a <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether predictions must be returned as <a href="https://rdrr.io/r/base/vector.html" class="external-link">vector</a>, otherwise returns a <a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></p></dd>
 
 
-<dt>correct_mistakes</dt>
+<dt id="arg-correct-mistakes">correct_mistakes<a class="anchor" aria-label="anchor" href="#arg-correct-mistakes"></a></dt>
 <dd><p>a <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether missing variables and missing values should be added to <code>new_data</code></p></dd>
 
 
-<dt>impute_algorithm</dt>
+<dt id="arg-impute-algorithm">impute_algorithm<a class="anchor" aria-label="anchor" href="#arg-impute-algorithm"></a></dt>
 <dd><p>the algorithm to use in <code><a href="impute.html">impute()</a></code> if <code>correct_mistakes = TRUE</code>. Can be <code>"mice"</code> (default) for the <a href="https://amices.org/mice/reference/mice.html" class="external-link">Multivariate Imputations by Chained Equations (MICE) algorithm</a>, or <code>"single-point"</code> for a trained median.</p></dd>
 
 
-<dt>only_params_in_model</dt>
+<dt id="arg-only-params-in-model">only_params_in_model<a class="anchor" aria-label="anchor" href="#arg-only-params-in-model"></a></dt>
 <dd><p>a <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> to indicate whether only parameters in the model should be tuned</p></dd>
 
 
-<dt>levels</dt>
+<dt id="arg-levels">levels<a class="anchor" aria-label="anchor" href="#arg-levels"></a></dt>
 <dd><p>An integer for the number of values of each parameter to use
 to make the regular grid. <code>levels</code> can be a single integer or a vector of
 integers that is the same length as the number of parameters in <code>...</code>.
@@ -372,15 +374,13 @@ integers that is the same length as the number of parameters in <code>...</code>
 of parameters.</p></dd>
 
 
-<dt>v</dt>
+<dt id="arg-v">v<a class="anchor" aria-label="anchor" href="#arg-v"></a></dt>
 <dd><p>The number of partitions of the data set.</p></dd>
 
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    
-
-<p>A machine learning model of class <code>certestats_ml</code> / <code>_rpart</code> / <code>model_fit</code>.</p>
+    <p>A machine learning model of class <code>certestats_ml</code> / <code>_rpart</code> / <code>model_fit</code>.</p>
     </div>
     <div id="details">
     <h2>Details</h2>
@@ -420,7 +420,7 @@ generics::fit()      yardstick::metrics()
     </div>
     <div id="attributes">
     <h2>Attributes</h2>
-    
+
 
 <p>The <code>ml_*()</code> functions return the following <a href="https://rdrr.io/r/base/attributes.html" class="external-link">attributes</a>:</p><ul><li><p><code>properties</code>: a <a href="https://rdrr.io/r/base/list.html" class="external-link">list</a> with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as <code>tree_depth</code> in <code>ml_decision_trees()</code>)</p></li>
 <li><p><code>recipe</code>: a <a href="https://recipes.tidymodels.org/reference/recipe.html" class="external-link">recipe</a> as generated with <code><a href="https://recipes.tidymodels.org/reference/prep.html" class="external-link">recipes::prep()</a></code>, to be used for training and testing</p></li>
@@ -439,7 +439,7 @@ generics::fit()      yardstick::metrics()
 </ul></div>
     <div id="model-functions">
     <h2>Model Functions</h2>
-    
+
 
 <p>These are the called functions from the <code>parsnip</code> package. Arguments set in <code>...</code> will be passed on to these <code>parsnip</code> functions:</p><ul><li><p><code>ml_decision_trees</code>: <code><a href="https://parsnip.tidymodels.org/reference/decision_tree.html" class="external-link">parsnip::decision_tree()</a></code></p></li>
 <li><p><code>ml_linear_regression</code>: <code><a href="https://parsnip.tidymodels.org/reference/linear_reg.html" class="external-link">parsnip::linear_reg()</a></code></p></li>
@@ -615,8 +615,8 @@ generics::fit()      yardstick::metrics()
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   - mtry: 1, 8, 16</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   - trees: 1, 1000, 2000</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   - min_n: 2, 21, 40</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [2024-05-09 10:23:31] Running tuning analysis using a 5-fold cross-validation for 27 combinations...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [2024-05-09 10:23:52] Done.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2024-09-11 08:22:09] Running tuning analysis using a 5-fold cross-validation for 27 combinations...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2024-09-11 08:22:29] Done.</span>
 <span class="r-in"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span><span class="va">tuning</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="machine_learning-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
@@ -629,8 +629,8 @@ generics::fit()      yardstick::metrics()
 <span class="r-msg co"><span class="r-pr">#&gt;</span> These parameters will be tuned with these values:</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   - mtry: 1, 2, 3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>   - trees: 1, 500, 1000, 1500, 2000</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [2024-05-09 10:23:53] Running tuning analysis using a 10-fold cross-validation for 15 combinations...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> [2024-05-09 10:24:06] Done.</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2024-09-11 08:22:30] Running tuning analysis using a 10-fold cross-validation for 15 combinations...</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> [2024-09-11 08:22:42] Done.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 15 × 10</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     mtry trees     n .config            accuracy brier_class roc_auc accuracy_se</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  <span style="color: #BCBCBC;">*</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                 <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
@@ -745,15 +745,15 @@ generics::fit()      yardstick::metrics()
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
 </div>
 
       </footer></div>
 
-  
 
 
-  
+
+
 
   </body></html>
 
