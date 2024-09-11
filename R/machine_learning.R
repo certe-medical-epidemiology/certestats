@@ -760,7 +760,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
   
   if ("certeplot2" %in% rownames(utils::installed.packages())) {
     p <- p +
-      certeplot2::theme_minimal2() +
+      plot2::theme_minimal2() +
       certeplot2::scale_colour_certe_d()
   }
   
@@ -1260,7 +1260,7 @@ autoplot.certestats_tuning <- function(object, type = c("marginals", "parameters
   
   if ("certeplot2" %in% rownames(utils::installed.packages())) {
     p <- p +
-      certeplot2::theme_minimal2() +
+      plot2::theme_minimal2() +
       certeplot2::scale_colour_certe_d()
   }
   p

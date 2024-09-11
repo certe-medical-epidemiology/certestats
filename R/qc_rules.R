@@ -194,9 +194,11 @@ qc_rule_text <- function(rule, threshold) {
 #' # turn into data.frame, e.g. for export
 #' head(as.data.frame(x))
 #' 
-#' if (require("certeplot2")) {
-#'   plot2(x,
-#'         subtitle = "Workflow 'example123'")
+#' \dontrun{
+#' 
+#' library(plot2)
+#' plot2(x, subtitle = "Workflow 'example123'")
+#' 
 #' }
 qc_test <- function(x, m = mean(x), s = sd(x), guideline = "Nelson") {
   if (guideline == "Nelson") {
