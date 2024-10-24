@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.20.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.21.0</span>
       </span>
     </div>
 
@@ -147,8 +147,8 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> Quality Control Rules according to Nelson</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -----------------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  n    =  250 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  mean =  0.09240544 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  sd   =  1.002662 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  mean =  -0.02053555 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  sd   =  0.9978076 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> -----------------------------------------</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 1: One point is more than 3 standard deviations from the mean</span>
@@ -161,20 +161,22 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 4: 14 (or more) points in a row alternate in direction, increasing then decreasing</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 198 199</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -1.345636 -1.396514</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 5: 2 out of 3 points in a row are &gt;2 sd from the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 179</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.981828</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 6: 4 out of 5 points in a row are &gt;1 sd from the mean</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 7: &gt;=15 points in a row are within 1 sd of the mean</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting positions:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1]  46  47  48  49  50  51 230 231 232 233 234</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting values:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [1] -0.51776649 -0.03520178  0.72680380  0.71107016  0.02003083  0.62155529</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7]  0.33149849  0.59915383  0.88502752 -0.11424407 -0.83551333</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> QC Rule 8: &gt;=8 points in a row outside 1 sd of the mean, in both directions</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No violations</span>
@@ -182,12 +184,12 @@
 <span class="r-in"><span><span class="co"># turn into data.frame, e.g. for export</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   index      value rule_1 rule_2 rule_3 rule_4 rule_5 rule_6 rule_7 rule_8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  0.6849748     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2  0.4710562     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3  0.8443839     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4  0.4042289     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5  1.2704395     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6 -0.2813179     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1 -0.3643988     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2 -0.2968842     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3 -1.5990327     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4  1.0284103     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5  1.1979185     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6  0.3255651     NA     NA     NA     NA     NA     NA     NA     NA</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span></span></span>
@@ -209,7 +211,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
