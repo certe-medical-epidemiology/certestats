@@ -110,14 +110,27 @@
 #' # 'esbl_tests' is an included data set, see ?esbl_tests
 #' print(esbl_tests, n = 5)
 #' 
+#' esbl_tests |> correlation_plot()
+#' 
 #' # predict ESBL test outcome based on MICs using 2 different models
 #' model1 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
-#' model2 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
+#' model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
+#' 
+#' # Assessing A Model ----------------------------------------------------
 #' 
 #' model1 |> get_metrics()
 #' model2 |> get_metrics()
 #' 
 #' model1 |> confusion_matrix()
+#' 
+#' model1 |> correlation_plot(add_values = FALSE)
+#' 
+#' model1 |> feature_importances()
+#' model1 |> feature_importances() |> autoplot()
+#' model2 |> feature_importance_plot()
+#' 
+#' # decision trees can also have a tree plot
+#' model2 |> tree_plot()
 #' 
 #' 
 #' # Applying A Model -----------------------------------------------------
@@ -634,6 +647,9 @@ ml_exec <- function(FUN,
 is_xgboost <- function(object) {
   identical(attributes(object)$properties$engine_package, "xgboost")
 }
+is_decisiontree <- function(object) {
+  identical(attributes(object)$properties$engine_package, "rpart")
+}
 
 #' @method print certestats_ml
 #' @noRd
@@ -665,8 +681,8 @@ print.certestats_ml <- function(x, ...) {
 #' @rdname machine_learning
 #' @export
 confusion_matrix.certestats_ml <- function(data, ...) {
-  confusion_matrix(truth = attributes(data)$predictions$truth,
-                   estimate = attributes(data)$predictions$predicted)
+  attributes(data)$predictions |>
+  confusion_matrix(truth:predicted)
 }
 
 #' @method autoplot certestats_ml
@@ -758,7 +774,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
     
   }
   
-  if ("certeplot2" %in% rownames(utils::installed.packages())) {
+  if ("package:certeplot2" %in% search()) {
     p <- p +
       plot2::theme_minimal2() +
       certeplot2::scale_colour_certe_d()
@@ -912,6 +928,151 @@ apply_model_to <- function(object,
 #' @export
 metrics.certestats_ml <- function(data, ...) {
   get_metrics(data)
+}
+
+#' @rdname machine_learning
+#' @importFrom dplyr select as_tibble tibble
+#' @details
+#' Use [feature_importances()] to get the importance of all features/variables. Use [autoplot()] afterwards to plot the results. These two functions are combined in [feature_importance_plot()].
+#' @export
+feature_importances <- function(object, ...) {
+  if (!inherits(object, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
+  }
+  if (is_xgboost(object)) {
+    out <- xgboost::xgb.importance(model = object$fit) |> 
+      as_tibble() |>
+      select(feature = Feature, importance = Gain, gain = Gain, cover = Cover, frequency = Frequency)
+    
+  } else if (is_decisiontree(object)) {
+    out <- object$fit$variable.importance
+    out <- tibble(feature = names(out), importance = out / sum(out, na.rm = TRUE))
+    
+  } else {
+    stop("Currently only supported for XGBoost and decision tree models.")
+  }
+  structure(out,
+            class = c("certestats_feature_importances", class(out)))
+}
+
+#' @rdname machine_learning
+#' @export
+feature_importance_plot <- function(object, ...) {
+  autoplot(feature_importances(object, ...))
+}
+
+#' @method autoplot certestats_feature_importances
+#' @importFrom ggplot2 ggplot geom_col coord_flip labs theme element_line element_blank scale_fill_discrete
+#' @importFrom tidyr pivot_longer
+#' @importFrom certestyle colourpicker
+#' @rdname machine_learning
+#' @export
+autoplot.certestats_feature_importances <- function(object, ...) {
+  obj <- as.data.frame(object)
+  obj$feature <- factor(obj$feature, levels = rev(obj$feature), ordered = TRUE)
+  
+  if ("gain" %in% colnames(obj)) {
+    obj <- obj |>
+      select(-importance) |>
+      pivot_longer(-feature, names_to = "Type") |>
+      mutate(Type = tools::toTitleCase(Type))
+    p <- ggplot(obj) +
+      geom_col(aes(x = feature, y = value, fill = Type),
+               position = "dodge2",
+               width = 0.75)
+  } else {
+    p <- ggplot(obj) +
+      geom_col(aes(x = feature, y = importance))
+  }
+  
+  p <- p +
+    coord_flip() +
+    labs(title = "Feature Importance",
+         y = "",
+         x = "")
+  
+  if ("package:certeplot2" %in% search()) {
+    p <- p +
+      plot2::theme_minimal2() +
+      scale_fill_discrete(type = colourpicker("certe", 3))
+  }
+  
+  p <- p +
+    theme(panel.grid.major.x = element_line(linewidth = 0.5),
+          panel.grid.minor = element_line(linewidth = 0.25),
+          panel.grid.major.y = element_blank())
+  
+  p
+}
+
+#' @rdname machine_learning
+#' @export
+tree_plot <- function(object, ...) {
+  if (!is_decisiontree(object)) {
+    stop("Tree plots only work for decision tree models.")
+  }
+  rpart.plot::rpart.plot(object$fit, roundint = FALSE, ...)
+}
+
+#' @rdname machine_learning
+#' @param add_values a [logical] to indicate whether values must be printed in the tiles
+#' @details
+#' Use [correlation_plot()] to plot the correlation between all variables, even characters. If the input is a `certestats` ML model, the training data of the model will be plotted.
+#' @importFrom tibble rownames_to_column
+#' @importFrom tidyr pivot_longer
+#' @importFrom dplyr mutate_if select_if rename
+#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradient2 geom_text
+#' @importFrom certestyle colourpicker
+#' @export
+correlation_plot <- function(data, add_values = TRUE) {
+  if (inherits(data, "certestats_ml")) {
+    data <- attributes(data)$data_training
+  }
+  
+  if (!is.data.frame(data)) {
+    stop('`data` must be a data.frame')
+  }
+  
+  corr <- data |>
+    mutate_if(is.character, as.factor) |>
+    mutate_if(is.factor, as.integer) |>
+    select_if(is.numeric) |>
+    stats::cor() |>
+    as.data.frame(stringsAsFactors = FALSE) |> 
+    rownames_to_column(var = "rowname") |> 
+    pivot_longer(-rowname, names_to = "y", values_to = "Correlation") |> 
+    rename(x = rowname)
+  
+  corr$x <- factor(corr$x, levels = colnames(data), ordered = TRUE)
+  corr$y <- factor(corr$y, levels = rev(colnames(data)), ordered = TRUE)
+  
+  p <- ggplot(corr) +
+    geom_tile(aes(x, y, fill = Correlation))
+  
+  p <- p +
+    labs(title = "Correlation Plot",
+         y = "",
+         x = "")
+  
+  if ("package:certeplot2" %in% search()) {
+    p <- p +
+      plot2::theme_minimal2() +
+      scale_fill_gradient2(low = colourpicker("certeroze"),
+                           mid = "white",
+                           high = colourpicker("certeblauw"),
+                           limits = c(-1, 1))
+  } else {
+    p <- p +
+      scale_fill_gradient2(limits = c(-1, 1))
+  }
+  
+  if (isTRUE(add_values)) {
+    p <- p +
+      geom_text(aes(x, y, label = round(Correlation, 2)), size = 3)
+  }
+  
+  p
+  
 }
 
 #' @rdname machine_learning
@@ -1258,7 +1419,7 @@ autoplot.certestats_tuning <- function(object, type = c("marginals", "parameters
                        labels = function(x) paste0(format(x * 100), "%")) +
     labs(title = "Tuning Parameters")
   
-  if ("certeplot2" %in% rownames(utils::installed.packages())) {
+  if ("package:certeplot2" %in% search()) {
     p <- p +
       plot2::theme_minimal2() +
       certeplot2::scale_colour_certe_d()

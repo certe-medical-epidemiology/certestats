@@ -13,6 +13,11 @@
 \alias{autoplot.certestats_ml}
 \alias{predict.certestats_ml}
 \alias{apply_model_to}
+\alias{feature_importances}
+\alias{feature_importance_plot}
+\alias{autoplot.certestats_feature_importances}
+\alias{tree_plot}
+\alias{correlation_plot}
 \alias{get_metrics}
 \alias{get_accuracy}
 \alias{get_kappa}
@@ -159,6 +164,16 @@ apply_model_to(
   ...
 )
 
+feature_importances(object, ...)
+
+feature_importance_plot(object, ...)
+
+\method{autoplot}{certestats_feature_importances}(object, ...)
+
+tree_plot(object, ...)
+
+correlation_plot(data, add_values = TRUE)
+
 get_metrics(object)
 
 get_accuracy(object)
@@ -258,6 +273,8 @@ are \code{"numeric"}, \code{"class"}, \code{"prob"}, \code{"conf_int"}, \code{"p
 
 \item{impute_algorithm}{the algorithm to use in \code{\link[=impute]{impute()}} if \code{correct_mistakes = TRUE}. Can be \code{"mice"} (default) for the \link[mice:mice]{Multivariate Imputations by Chained Equations (MICE) algorithm}, or \code{"single-point"} for a trained median.}
 
+\item{add_values}{a \link{logical} to indicate whether values must be printed in the tiles}
+
 \item{only_params_in_model}{a \link{logical} to indicate whether only parameters in the model should be tuned}
 
 \item{levels}{An integer for the number of values of each parameter to use
@@ -309,6 +326,10 @@ Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operatin
 
 The \code{\link[parsnip:predict.model_fit]{predict()}} function can be used to fit a model on a new data set. Its wrapper \code{\link[=apply_model_to]{apply_model_to()}} works in the same way, but can also detect missing variables and missing data points within variables (and can add or fill them), and detects data type differences between the trained data and the input data.
 
+Use \code{\link[=feature_importances]{feature_importances()}} to get the importance of all features/variables. Use \code{\link[=autoplot]{autoplot()}} afterwards to plot the results. These two functions are combined in \code{\link[=feature_importance_plot]{feature_importance_plot()}}.
+
+Use \code{\link[=correlation_plot]{correlation_plot()}} to plot the correlation between all variables, even characters. If the input is a \code{certestats} ML model, the training data of the model will be plotted.
+
 Use the \code{\link[=get_model_variables]{get_model_variables()}} function to return a zero-row \link{data.frame} with the variables that were used for training, even before the recipe steps.
 
 Use the \code{\link[=get_variable_weights]{get_variable_weights()}} function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a data set with 1 row, of which the values sum up to 1.
@@ -356,14 +377,27 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 # 'esbl_tests' is an included data set, see ?esbl_tests
 print(esbl_tests, n = 5)
 
+esbl_tests |> correlation_plot()
+
 # predict ESBL test outcome based on MICs using 2 different models
 model1 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
-model2 <- esbl_tests |> ml_random_forest(esbl, where(is.double))
+model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
+
+# Assessing A Model ----------------------------------------------------
 
 model1 |> get_metrics()
 model2 |> get_metrics()
 
 model1 |> confusion_matrix()
+
+model1 |> correlation_plot(add_values = FALSE)
+
+model1 |> feature_importances()
+model1 |> feature_importances() |> autoplot()
+model2 |> feature_importance_plot()
+
+# decision trees can also have a tree plot
+model2 |> tree_plot()
 
 
 # Applying A Model -----------------------------------------------------

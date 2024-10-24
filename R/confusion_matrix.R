@@ -27,7 +27,7 @@
 #' @import yardstick
 #' @inheritSection math_functions Default values of `na.rm`
 #' @importFrom tibble tibble
-#' @importFrom dplyr bind_rows mutate select
+#' @importFrom dplyr bind_rows mutate select filter
 #' @rdname confusion_matrix
 #' @export
 #' @examples
@@ -64,9 +64,9 @@ confusion_matrix.default <- function(data,
   } else if (is.table(data)) {
     stop("A `table` must have nrow == ncol")
   } else if (is.null(data)) {
-    data <- tibble(truth = truth, estimate = estimate)
+    data <- tibble(truth = truth, predicted = estimate)
     truth <- 1
-    estimate <- 2
+    predicted <- 2
   }
   if (is.table(data)) {
     df <- as.data.frame(data)
@@ -74,7 +74,9 @@ confusion_matrix.default <- function(data,
     rownames(long_df) <- NULL
     data <- long_df
     truth <- 1
-    estimate <- 2
+    predicted <- 2
+    colnames(data)[1] <- "truth"
+    colnames(data)[2] <- ".pred_"
   }
   
   # do all metrics from the yardstick package!
@@ -114,7 +116,7 @@ confusion_matrix.default <- function(data,
     error_message <- NULL
     tryCatch({
       outcome <- data |>
-        fn(truth, estimate)
+        fn(truth = truth, colnames(data)[colnames(data) %like% "^[.]pred_"][1])
     }, error = function(e) {
       if (inherits(e, "rlang_error")) {
         e$message <- paste0(rlang::cnd_header(e), rlang::cnd_body(e))
@@ -129,14 +131,26 @@ confusion_matrix.default <- function(data,
       if (error_message %like% "should be a numeric") {
         tryCatch({
           outcome <- data |>
-            mutate(across(estimate, as.double)) |> 
-            fn(truth, estimate, na_rm = na.rm)
+            mutate(across(colnames(data)[colnames(data) %like% "^[.]pred_"][1], as.double)) |> 
+            fn(truth = truth, colnames(data)[colnames(data) %like% "^[.]pred_"][1], na_rm = na.rm)
         }, error = function(e) NULL)
         if (is.null(outcome)) {
           tryCatch({
             outcome <- data |>
               mutate(across(truth, as.double)) |> 
-              fn(truth, estimate, na_rm = na.rm)
+              fn(truth = truth, colnames(data)[colnames(data) %like% "^[.]pred_"][1], na_rm = na.rm)
+          }, error = function(e) NULL)
+        }
+      } else if (error_message %like% "estimate.*should be a factor") {
+        tryCatch({
+          outcome <- data |>
+            fn(truth = truth, predicted, na_rm = na.rm)
+        }, error = function(e) NULL)
+        if (is.null(outcome)) {
+          tryCatch({
+            outcome <- data |>
+              mutate(across(truth, as.factor)) |> 
+              fn(truth = truth, predicted, na_rm = na.rm)
           }, error = function(e) NULL)
         }
       }
