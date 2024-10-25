@@ -15,6 +15,8 @@
 \alias{apply_model_to}
 \alias{feature_importances}
 \alias{feature_importance_plot}
+\alias{roc_plot}
+\alias{gain_plot}
 \alias{autoplot.certestats_feature_importances}
 \alias{tree_plot}
 \alias{correlation_plot}
@@ -167,6 +169,10 @@ apply_model_to(
 feature_importances(object, ...)
 
 feature_importance_plot(object, ...)
+
+roc_plot(object, ...)
+
+gain_plot(object, ...)
 
 \method{autoplot}{certestats_feature_importances}(object, ...)
 
@@ -377,11 +383,12 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 # 'esbl_tests' is an included data set, see ?esbl_tests
 print(esbl_tests, n = 5)
 
-esbl_tests |> correlation_plot()
+esbl_tests |> correlation_plot(add_values = FALSE)
 
 # predict ESBL test outcome based on MICs using 2 different models
 model1 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
 model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
+
 
 # Assessing A Model ----------------------------------------------------
 
@@ -390,6 +397,7 @@ model2 |> get_metrics()
 
 model1 |> confusion_matrix()
 
+# a correlation plot of a model shows the training data
 model1 |> correlation_plot(add_values = FALSE)
 
 model1 |> feature_importances()

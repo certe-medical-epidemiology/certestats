@@ -45,6 +45,11 @@ test_that("ML works", {
   expect_s3_class(autoplot(model_decision_trees, plot_type = "lift"), "gg")
   expect_s3_class(autoplot(model_decision_trees, plot_type = "pr"), "gg")
   
+  expect_s3_class(correlation_plot(model_decision_trees), "gg")
+  expect_s3_class(feature_importance_plot(model_decision_trees), "gg")
+  expect_s3_class(feature_importance_plot(model_xg_boost), "gg")
+  expect_s3_class(roc_plot(model_decision_trees), "gg")
+  
   expect_s3_class(confusion_matrix(model_decision_trees), "certestats_confusion_matrix")
   
   # model variables

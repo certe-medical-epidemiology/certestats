@@ -110,11 +110,12 @@
 #' # 'esbl_tests' is an included data set, see ?esbl_tests
 #' print(esbl_tests, n = 5)
 #' 
-#' esbl_tests |> correlation_plot()
+#' esbl_tests |> correlation_plot(add_values = FALSE)
 #' 
 #' # predict ESBL test outcome based on MICs using 2 different models
 #' model1 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
 #' model2 <- esbl_tests |> ml_decision_trees(esbl, where(is.double))
+#' 
 #' 
 #' # Assessing A Model ----------------------------------------------------
 #' 
@@ -123,6 +124,7 @@
 #' 
 #' model1 |> confusion_matrix()
 #' 
+#' # a correlation plot of a model shows the training data
 #' model1 |> correlation_plot(add_values = FALSE)
 #' 
 #' model1 |> feature_importances()
@@ -959,6 +961,18 @@ feature_importances <- function(object, ...) {
 #' @export
 feature_importance_plot <- function(object, ...) {
   autoplot(feature_importances(object, ...))
+}
+
+#' @rdname machine_learning
+#' @export
+roc_plot <- function(object, ...) {
+  autoplot(object, plot_type = "roc", ...)
+}
+
+#' @rdname machine_learning
+#' @export
+gain_plot <- function(object, ...) {
+  autoplot(object, plot_type = "gain", ...)
 }
 
 #' @method autoplot certestats_feature_importances
