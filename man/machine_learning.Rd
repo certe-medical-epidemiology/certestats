@@ -330,7 +330,7 @@ generics::fit()      yardstick::metrics()
     output            attributes(output)
 }
 
-The \code{\link[parsnip:predict.model_fit]{predict()}} function can be used to fit a model on a new data set. Its wrapper \code{\link[=apply_model_to]{apply_model_to()}} works in the same way, but can also detect missing variables and missing data points within variables (and can add or fill them), and detects data type differences between the trained data and the input data.
+The \code{\link[parsnip:predict.model_fit]{predict()}} function can be used to fit a model on a new data set. Its wrapper \code{\link[=apply_model_to]{apply_model_to()}} works in the same way, but can also detect and fix missing variables, missing data points, and data type differences between the trained data and the input data.
 
 Use \code{\link[=feature_importances]{feature_importances()}} to get the importance of all features/variables. Use \code{\link[=autoplot]{autoplot()}} afterwards to plot the results. These two functions are combined in \code{\link[=feature_importance_plot]{feature_importance_plot()}}.
 
@@ -436,7 +436,7 @@ autoplot(tuning)
 
 # tuning analysis by specifying (some) parameters
 iris |> 
-  ml_random_forest(Species) |> 
+  ml_xg_boost(Species) |> 
   tune_parameters(mtry = dials::mtry(range = c(1, 3)),
                   trees = dials::trees())
 
@@ -458,13 +458,13 @@ to_predict <- data.frame(Sepal.Length = 5,
                          Petal.Width = 0.5)
 to_predict
 
-# should be 'setosa' in the 'predicted' column:
+# should be 'setosa' in the 'predicted' column with huge certainty:
 iris_model |> apply_model_to(to_predict)
 
 # which variables are generally important (only trained variables)?
-iris_model |> get_variable_weights()
+iris_model |> feature_importances()
 
-# how would the model do without the important 'Sepal.Length' column?
+# how would the model do without the 'Sepal.Length' column?
 to_predict <- to_predict[, c("Sepal.Width", "Petal.Width", "Petal.Length")]
 to_predict
 iris_model |> apply_model_to(to_predict)
@@ -472,14 +472,17 @@ iris_model |> apply_model_to(to_predict)
 # now compare that with a random forest model that requires imputation:
 iris_model_rf |> apply_model_to(to_predict)
 
+# the certainly is very different.
+
 
 # Practical Example #2 -------------------------------------------------
 
 # this example shows plotting methods for a model
 
 # train model to predict genus based on MICs:
-genus <- esbl_tests |> ml_neural_network(genus, everything())
+genus <- esbl_tests |> ml_xg_boost(genus, everything())
 genus |> get_metrics()
+genus |> feature_importance_plot()
 genus |> autoplot()
 genus |> autoplot(plot_type = "gain")
 genus |> autoplot(plot_type = "pr")

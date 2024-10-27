@@ -161,7 +161,7 @@
 #' 
 #' # tuning analysis by specifying (some) parameters
 #' iris |> 
-#'   ml_random_forest(Species) |> 
+#'   ml_xg_boost(Species) |> 
 #'   tune_parameters(mtry = dials::mtry(range = c(1, 3)),
 #'                   trees = dials::trees())
 #' 
@@ -183,13 +183,13 @@
 #'                          Petal.Width = 0.5)
 #' to_predict
 #' 
-#' # should be 'setosa' in the 'predicted' column:
+#' # should be 'setosa' in the 'predicted' column with huge certainty:
 #' iris_model |> apply_model_to(to_predict)
 #' 
 #' # which variables are generally important (only trained variables)?
-#' iris_model |> get_variable_weights()
+#' iris_model |> feature_importances()
 #' 
-#' # how would the model do without the important 'Sepal.Length' column?
+#' # how would the model do without the 'Sepal.Length' column?
 #' to_predict <- to_predict[, c("Sepal.Width", "Petal.Width", "Petal.Length")]
 #' to_predict
 #' iris_model |> apply_model_to(to_predict)
@@ -197,14 +197,17 @@
 #' # now compare that with a random forest model that requires imputation:
 #' iris_model_rf |> apply_model_to(to_predict)
 #' 
+#' # the certainly is very different.
+#' 
 #' 
 #' # Practical Example #2 -------------------------------------------------
 #' 
 #' # this example shows plotting methods for a model
 #' 
 #' # train model to predict genus based on MICs:
-#' genus <- esbl_tests |> ml_neural_network(genus, everything())
+#' genus <- esbl_tests |> ml_xg_boost(genus, everything())
 #' genus |> get_metrics()
+#' genus |> feature_importance_plot()
 #' genus |> autoplot()
 #' genus |> autoplot(plot_type = "gain")
 #' genus |> autoplot(plot_type = "pr")
@@ -702,7 +705,7 @@ confusion_matrix.certestats_ml <- function(data, ...) {
 #' @rdname machine_learning
 #' @param object,data outcome of machine learning model
 #' @inheritParams parsnip::predict.model_fit
-#' @details The [`predict()`][parsnip::predict.model_fit()] function can be used to fit a model on a new data set. Its wrapper [apply_model_to()] works in the same way, but can also detect missing variables and missing data points within variables (and can add or fill them), and detects data type differences between the trained data and the input data.
+#' @details The [`predict()`][parsnip::predict.model_fit()] function can be used to fit a model on a new data set. Its wrapper [apply_model_to()] works in the same way, but can also detect and fix missing variables, missing data points, and data type differences between the trained data and the input data.
 #' @export
 predict.certestats_ml <- function(object,
                                   new_data,
@@ -747,7 +750,7 @@ apply_model_to <- function(object,
     select(any_of(cols_required))
   
   
-  # check (1): new_data does not have missing columns ----
+  # check (1): new_data must not have missing columns ----
   
   cols_missing <- setdiff(cols_required, colnames(new_data))
   if (length(cols_missing) > 0) {
@@ -777,7 +780,7 @@ apply_model_to <- function(object,
   }
   
   
-  # check (2): new_data does not have missing values ----
+  # check (2): new_data must not have missing values ----
   
   if (anyNA(new_data) && !is_xgboost(object)) {
     missings <- new_data |> vapply(FUN.VALUE = logical(1), anyNA)
@@ -793,7 +796,7 @@ apply_model_to <- function(object,
   }
   
   
-  # check (3): new_data does not have different structure ----
+  # check (3): new_data must not have different structure ----
   
   data_types_old <- vapply(attributes(object)$data_original |> select(any_of(colnames(new_data))), FUN.VALUE = character(1), mode)
   data_types_new <- vapply(new_data, FUN.VALUE = character(1), mode)
