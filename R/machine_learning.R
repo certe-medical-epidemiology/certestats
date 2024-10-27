@@ -73,7 +73,7 @@
 #'        |                      |
 #'     output            attributes(output)
 #' }
-#' @return A machine learning model of class `certestats_ml` / `_rpart` / `model_fit`.
+#' @return A machine learning model of class `certestats_ml` / ... / `model_fit`.
 #' 
 #' @section Attributes:
 #' The `ml_*()` functions return the following [attributes][base::attributes()]:
@@ -219,7 +219,7 @@ ml_decision_trees <- function(.data,
                               scale = TRUE,
                               engine = "rpart",
                               mode = c("classification", "regression", "unknown"),
-                              tree_depth = 10,
+                              tree_depth = 30,
                               ...) {
   ml_exec(FUN = parsnip::decision_tree,
           .data = .data,
@@ -376,7 +376,7 @@ ml_random_forest <- function(.data,
                              scale = TRUE,
                              engine = "ranger",
                              mode = c("classification", "regression", "unknown"),
-                             trees = 2000,
+                             trees = 500,
                              ...) {
   ml_exec(FUN = parsnip::rand_forest,
           .data = .data,
@@ -407,7 +407,7 @@ ml_xg_boost <- function(.data,
                         scale = TRUE,
                         engine = "xgboost",
                         mode = c("classification", "regression", "unknown"),
-                        trees = 2000,
+                        trees = 20,
                         ...) {
   ml_exec(FUN = parsnip::boost_tree,
           .data = .data,
@@ -430,6 +430,7 @@ ml_xg_boost <- function(.data,
 #' @importFrom parsnip set_engine
 #' @importFrom recipes recipe step_corr step_center step_scale all_predictors all_outcomes prep bake
 #' @importFrom rsample initial_split training testing
+#' @importFrom certestyle format2
 #' @importFrom generics fit
 ml_exec <- function(FUN,
                     .data,
@@ -444,6 +445,8 @@ ml_exec <- function(FUN,
                     engine,
                     ...) {
   
+  start_the_clock <- Sys.time()
+  
   if (!engine %in% c("lm", "glm")) {
     # this will ask to install packages like ranger or rpart
     check_is_installed(engine)
@@ -452,8 +455,8 @@ ml_exec <- function(FUN,
   # show which arguments are useful to set in the function:
   args_function <- formals(FUN) # Get formal arguments of the function
   args_given <- list(...)       # Arguments passed to FUN via ...
-  # filter out arguments that are already set in the call
-  args_to_note <- args_function[!names(args_function) %in% names(args_given)]
+  # update function arguments with given arguments
+  args_to_note <- modifyList(args_function, args_given)
   if (length(args_to_note) > 0 && interactive()) {
     args_msg <- paste("- ", names(args_to_note), "=", sapply(args_to_note, function(x) if (!is.null(x)) deparse(x) else "NULL"), collapse = "\n")
     message("Arguments currently set for `", deparse(substitute(FUN)), "()`:\n", args_msg)
@@ -517,7 +520,7 @@ ml_exec <- function(FUN,
     mutate(across(all_of(predictors),
                   function(values) {
                     if (is.character(values)) {
-                      warning("Transformed column '", cur_column(),
+                      message("NOTE: Transformed predictor '", cur_column(),
                               "' from <", type_sum(values), "> to <", type_sum(factor(0)), 
                               "> and then to <", type_sum(double(0)), "> to use as predictor")
                       values <- as.factor(values)
@@ -535,7 +538,7 @@ ml_exec <- function(FUN,
       df$outcome <- factor(df$outcome, levels = c(TRUE, FALSE))
     } else {
       if (is.numeric(df$outcome)) {
-        warning("The outcome variable is numeric, should the mode not be 'regression' instead of 'classification'?", call. = FALSE)
+        message("NOTE: The outcome variable is numeric, should the mode not be 'regression' instead of 'classification'?")
       }
       df$outcome <- factor(df$outcome)
     }
@@ -547,9 +550,9 @@ ml_exec <- function(FUN,
   }
   if (training_fraction >= 1) {
     # in case of a higher training_fraction than nrow(df), or if training_fraction = 1
-    warning("Training size set to ", round(training_fraction * nrow(df)),
+    message("NOTE: Training size set to ", round(training_fraction * nrow(df)),
             ", while data size is ", nrow(df),
-            " - training size has been set to ", nrow(df) - 1, call. = FALSE)
+            " - training size has been set to ", nrow(df) - 1)
     training_fraction <- (nrow(df) - 1) / nrow(df)
   }
   
@@ -592,9 +595,14 @@ ml_exec <- function(FUN,
   df_testing <- mdl_recipe |> bake(df_split_test)
   
   # create actual model
-  mdl <- FUN(...) |>
-    set_engine(engine) |>
-    fit(outcome ~ ., data = df_training)
+  mdl <- FUN(...) |> set_engine(engine)
+  if (interactive()) {
+    message("\n[", format2(Sys.time(), "HH:MM:SS"), "] Fitting model...", appendLF = FALSE)
+  }
+  mdl <- mdl |> fit(outcome ~ ., data = df_training)
+  if (interactive()) {
+    message("Done.")
+  }
   
   # save structure of original input data
   df_structure <- df.bak |> 
@@ -623,9 +631,12 @@ ml_exec <- function(FUN,
                            pred_outcome,
                            prediction)
   
+  run_time <- Sys.time() - start_the_clock
+  
   if (interactive()) {
     message("\nCreated ML model with these metrics:\n",
             paste("-", metrics$.metric, "=", round(metrics$.estimate, 3), collapse = "\n"))
+    message("\nModel trained in ~", format(round(run_time)), ".\n")
   }
   
   structure(mdl,
@@ -643,7 +654,8 @@ ml_exec <- function(FUN,
             metrics = metrics,
             correlation_filter = correlation_filter,
             centre = centre,
-            scale = scale)
+            scale = scale,
+            run_time = run_time)
 }
 
 is_xgboost <- function(object) {
@@ -661,6 +673,7 @@ print.certestats_ml <- function(x, ...) {
   cat("'certestats' Machine Learning Model\n\n",
       paste0(format(names(model_prop$properties)), " : ", model_prop$properties, "\n"),
       sep = "")
+  cat(paste0("\nTrained in ~", format(round(model_prop$run_time)), ".\n"))
   if (model_prop$properties$mode == "classification") {
     cat("\nClassification certainty (based on testing data):\n")
     intervals <- c(0, 0.5, 0.68, 0.95, 0.98, 1)
@@ -670,7 +683,6 @@ print.certestats_ml <- function(x, ...) {
   }
   cat("\nMetrics:\n")
   print(metrics(x))
-  cat(strrep("-", options()$width -2), "\n", sep = "")
   print(model_prop$recipe)
   cat(strrep("-", options()$width -2), "\n", sep = "")
   # print the rest like it used to be
@@ -685,104 +697,6 @@ print.certestats_ml <- function(x, ...) {
 confusion_matrix.certestats_ml <- function(data, ...) {
   attributes(data)$predictions |>
   confusion_matrix(truth:predicted)
-}
-
-#' @method autoplot certestats_ml
-#' @rdname machine_learning
-#' @param plot_type the plot type, can be `"roc"` (default), `"gain"`, `"lift"` or `"pr"`. These functions rely on [yardstick::roc_curve()], [yardstick::gain_curve()], [yardstick::lift_curve()] and [yardstick::pr_curve()] to construct the curves.
-#' @details Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, the gain curve, the lift curve, or the precision-recall (PR) curve. For the ROC curve, the (overall) area under the curve (AUC) will be printed as subtitle.
-#' @importFrom ggplot2 autoplot ggplot aes geom_path geom_abline coord_equal scale_x_continuous scale_y_continuous labs element_line
-#' @importFrom dplyr bind_cols starts_with
-#' @importFrom yardstick roc_curve roc_auc gain_curve lift_curve pr_curve
-#' @export
-autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
-  model_prop <- attributes(object)
-  plot_type <- tolower(plot_type)[1L]
-  
-  if (plot_type == "roc") {
-    curve_fn <- roc_curve
-  } else if (plot_type == "gain") {
-    curve_fn <- gain_curve
-  } else if (plot_type == "lift") {
-    curve_fn <- lift_curve
-  } else if (plot_type == "pr") {
-    curve_fn <- pr_curve
-  } else {
-    stop("invalid plot_type", call. = FALSE)
-  }
-  
-  if (all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
-    curve <- curve_fn(model_prop$predictions,
-                      truth = truth,
-                      ".pred_TRUE")
-    if (plot_type == "roc") {
-      roc_auc <- roc_auc(model_prop$predictions,
-                         truth = truth,
-                         ".pred_TRUE")
-    }
-  } else {
-    curve <- curve_fn(model_prop$predictions,
-                      truth = truth,
-                      starts_with(".pred"))
-    if (plot_type == "roc") {
-      roc_auc <- roc_auc(model_prop$predictions,
-                         truth = truth,
-                         starts_with(".pred"))
-    }
-  }
-  if (plot_type == "roc") {
-    if (".level" %in% colnames(curve) &&
-        !all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
-      for (val in unique(curve$.level)) {
-        auc <- get_auc(model_prop$predictions, val)
-        curve$.level[curve$.level == val] <- paste0(curve$.level[curve$.level == val],
-                                                    " (AUC: ", round(auc$.estimate, digits = 3), ")")
-      }
-      multiple_outcomes <- TRUE
-      p <- ggplot(curve, aes(x = 1 - specificity, y = sensitivity, colour = .level))
-    } else {
-      multiple_outcomes <- FALSE
-      p <- ggplot(curve, aes(x = 1 - specificity, y = sensitivity))
-    }
-    p <- p +
-      geom_path(linewidth = 0.75) +
-      geom_abline(lty = 3) +
-      coord_equal() +
-      scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
-      scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
-      labs(title = "Receiver Operating Characteristic (ROC) Curve",
-           subtitle = paste0(ifelse(isTRUE(multiple_outcomes), "Overall ", ""),
-                             "Area Under the Curve (AUC): ",
-                             round(roc_auc$.estimate, digits = 3)),
-           colour = "Outcome Variable")
-    
-  } else if (plot_type == "pr") {
-    suppressMessages(
-      p <- curve |>
-        # thse is defined in the yardstick package:
-        autoplot() +
-        scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
-        scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
-        labs(title = "Precision Recall (PR) Curve")
-    )
-    
-  } else {
-    p <- curve |>
-      # these ones are defined in the yardstick package:
-      autoplot() +
-      scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
-      scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
-      labs(title = paste(tools::toTitleCase(plot_type), "Curve"))
-    
-  }
-  
-  if ("package:certeplot2" %in% search()) {
-    p <- p +
-      plot2::theme_minimal2() +
-      certeplot2::scale_colour_certe_d()
-  }
-  
-  p
 }
 
 #' @rdname machine_learning
@@ -933,7 +847,7 @@ metrics.certestats_ml <- function(data, ...) {
 }
 
 #' @rdname machine_learning
-#' @importFrom dplyr select as_tibble tibble
+#' @importFrom dplyr select mutate as_tibble tibble rowwise mutate c_across ungroup arrange desc
 #' @details
 #' Use [feature_importances()] to get the importance of all features/variables. Use [autoplot()] afterwards to plot the results. These two functions are combined in [feature_importance_plot()].
 #' @export
@@ -944,7 +858,12 @@ feature_importances <- function(object, ...) {
   if (is_xgboost(object)) {
     out <- xgboost::xgb.importance(model = object$fit) |> 
       as_tibble() |>
-      select(feature = Feature, importance = Gain, gain = Gain, cover = Cover, frequency = Frequency)
+      select(feature = Feature, gain = Gain, cover = Cover, frequency = Frequency) |>
+      rowwise() |>
+      mutate(importance = mean(c_across(gain:frequency)),
+             .after = 1) |>
+      ungroup() |> 
+      arrange(desc(importance))
     
   } else if (is_decisiontree(object)) {
     out <- object$fit$variable.importance
@@ -975,50 +894,6 @@ gain_plot <- function(object, ...) {
   autoplot(object, plot_type = "gain", ...)
 }
 
-#' @method autoplot certestats_feature_importances
-#' @importFrom ggplot2 ggplot geom_col coord_flip labs theme element_line element_blank scale_fill_discrete
-#' @importFrom tidyr pivot_longer
-#' @importFrom certestyle colourpicker
-#' @rdname machine_learning
-#' @export
-autoplot.certestats_feature_importances <- function(object, ...) {
-  obj <- as.data.frame(object)
-  obj$feature <- factor(obj$feature, levels = rev(obj$feature), ordered = TRUE)
-  
-  if ("gain" %in% colnames(obj)) {
-    obj <- obj |>
-      select(-importance) |>
-      pivot_longer(-feature, names_to = "Type") |>
-      mutate(Type = tools::toTitleCase(Type))
-    p <- ggplot(obj) +
-      geom_col(aes(x = feature, y = value, fill = Type),
-               position = "dodge2",
-               width = 0.75)
-  } else {
-    p <- ggplot(obj) +
-      geom_col(aes(x = feature, y = importance))
-  }
-  
-  p <- p +
-    coord_flip() +
-    labs(title = "Feature Importance",
-         y = "",
-         x = "")
-  
-  if ("package:certeplot2" %in% search()) {
-    p <- p +
-      plot2::theme_minimal2() +
-      scale_fill_discrete(type = colourpicker("certe", 3))
-  }
-  
-  p <- p +
-    theme(panel.grid.major.x = element_line(linewidth = 0.5),
-          panel.grid.minor = element_line(linewidth = 0.25),
-          panel.grid.major.y = element_blank())
-  
-  p
-}
-
 #' @rdname machine_learning
 #' @export
 tree_plot <- function(object, ...) {
@@ -1030,15 +905,16 @@ tree_plot <- function(object, ...) {
 
 #' @rdname machine_learning
 #' @param add_values a [logical] to indicate whether values must be printed in the tiles
+#' @param cols columns to use for correlation plot, defaults to [`everything()`][dplyr::everything()]
 #' @details
 #' Use [correlation_plot()] to plot the correlation between all variables, even characters. If the input is a `certestats` ML model, the training data of the model will be plotted.
 #' @importFrom tibble rownames_to_column
 #' @importFrom tidyr pivot_longer
-#' @importFrom dplyr mutate_if select_if rename
+#' @importFrom dplyr mutate_if select_if rename select
 #' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradient2 geom_text
 #' @importFrom certestyle colourpicker
 #' @export
-correlation_plot <- function(data, add_values = TRUE) {
+correlation_plot <- function(data, add_values = TRUE, cols = everything()) {
   if (inherits(data, "certestats_ml")) {
     data <- attributes(data)$data_training
   }
@@ -1047,9 +923,12 @@ correlation_plot <- function(data, add_values = TRUE) {
     stop('`data` must be a data.frame')
   }
   
+  data <- data |> select({{ cols }})
+  
   corr <- data |>
     mutate_if(is.character, as.factor) |>
     mutate_if(is.factor, as.integer) |>
+    mutate_if(is.logical, as.integer) |>
     select_if(is.numeric) |>
     stats::cor() |>
     as.data.frame(stringsAsFactors = FALSE) |> 
@@ -1082,7 +961,9 @@ correlation_plot <- function(data, add_values = TRUE) {
   
   if (isTRUE(add_values)) {
     p <- p +
-      geom_text(aes(x, y, label = round(Correlation, 2)), size = 3)
+      geom_text(aes(x, y, label = round(Correlation, 2)),
+                colour = ifelse(abs(corr$Correlation) > 0.55, "white", "black"),
+                size = 3)
   }
   
   p
@@ -1421,6 +1302,154 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
             result = tree_res)
 }
 
+#' @rdname machine_learning
+#' @details The [check_testing_predictions()] function combines the data used for testing from the original data with its predictions, so the original data can be reviewed per prediction.
+#' @importFrom dplyr as_tibble slice select bind_cols
+#' @export
+check_testing_predictions <- function(object) {
+  if (!inherits(object, "certestats_ml")) {
+    stop("Only output from certestats::ml_*() functions can be used.")
+  }
+  out <- bind_cols(attributes(object)$predictions,
+                   get_original_data(object) |>
+                     slice(get_rows_testing(object))) |> 
+    as_tibble()
+  if (all(out$truth %in% c("TRUE", "FALSE", NA))) {
+    out$truth <- as.logical(out$truth)
+    out$predicted <- as.logical(out$predicted)
+  }
+  out
+}
+
+#' @method autoplot certestats_ml
+#' @rdname machine_learning
+#' @param plot_type the plot type, can be `"roc"` (default), `"gain"`, `"lift"` or `"pr"`. These functions rely on [yardstick::roc_curve()], [yardstick::gain_curve()], [yardstick::lift_curve()] and [yardstick::pr_curve()] to construct the curves.
+#' @details Use [autoplot()] on a model to plot the receiver operating characteristic (ROC) curve, the gain curve, the lift curve, or the precision-recall (PR) curve. For the ROC curve, the (overall) area under the curve (AUC) will be printed as subtitle.
+#' @importFrom ggplot2 autoplot ggplot aes geom_path geom_abline coord_equal scale_x_continuous scale_y_continuous labs element_line
+#' @importFrom dplyr bind_cols starts_with
+#' @importFrom yardstick roc_curve roc_auc gain_curve lift_curve pr_curve
+#' @export
+autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
+  model_prop <- attributes(object)
+  plot_type <- tolower(plot_type)[1L]
+  
+  if (plot_type == "roc") {
+    curve_fn <- roc_curve
+  } else if (plot_type == "gain") {
+    curve_fn <- gain_curve
+  } else if (plot_type == "lift") {
+    curve_fn <- lift_curve
+  } else if (plot_type == "pr") {
+    curve_fn <- pr_curve
+  } else {
+    stop("invalid plot_type", call. = FALSE)
+  }
+  
+  if (all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
+    curve <- curve_fn(model_prop$predictions,
+                      truth = truth,
+                      ".pred_TRUE")
+    if (plot_type == "roc") {
+      roc_auc <- roc_auc(model_prop$predictions,
+                         truth = truth,
+                         ".pred_TRUE")
+    }
+  } else {
+    curve <- curve_fn(model_prop$predictions,
+                      truth = truth,
+                      starts_with(".pred"))
+    if (plot_type == "roc") {
+      roc_auc <- roc_auc(model_prop$predictions,
+                         truth = truth,
+                         starts_with(".pred"))
+    }
+  }
+  if (plot_type == "roc") {
+    if (".level" %in% colnames(curve) &&
+        !all(c(".pred_TRUE", ".pred_FALSE") %in% colnames(model_prop$predictions))) {
+      for (val in unique(curve$.level)) {
+        auc <- get_auc(model_prop$predictions, val)
+        curve$.level[curve$.level == val] <- paste0(curve$.level[curve$.level == val],
+                                                    " (AUC: ", round(auc$.estimate, digits = 3), ")")
+      }
+      multiple_outcomes <- TRUE
+      p <- ggplot(curve, aes(x = 1 - specificity, y = sensitivity, colour = .level))
+    } else {
+      multiple_outcomes <- FALSE
+      p <- ggplot(curve, aes(x = 1 - specificity, y = sensitivity))
+    }
+    p <- p +
+      geom_path(linewidth = 0.75) +
+      geom_abline(lty = 3) +
+      coord_equal() +
+      scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
+      scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
+      labs(title = "Receiver Operating Characteristic (ROC) Curve",
+           subtitle = paste0(ifelse(isTRUE(multiple_outcomes), "Overall ", ""),
+                             "Area Under the Curve (AUC): ",
+                             round(roc_auc$.estimate, digits = 3)),
+           colour = "Outcome Variable")
+    
+  } else if (plot_type == "pr") {
+    suppressMessages(
+      p <- curve |>
+        # thse is defined in the yardstick package:
+        autoplot() +
+        scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
+        scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
+        labs(title = "Precision Recall (PR) Curve")
+    )
+    
+  } else {
+    p <- curve |>
+      # these ones are defined in the yardstick package:
+      autoplot() +
+      scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
+      scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
+      labs(title = paste(tools::toTitleCase(plot_type), "Curve"))
+    
+  }
+  
+  if ("package:certeplot2" %in% search()) {
+    p <- p +
+      plot2::theme_minimal2() +
+      certeplot2::scale_colour_certe_d()
+  }
+  
+  p
+}
+
+#' @method autoplot certestats_feature_importances
+#' @importFrom ggplot2 ggplot geom_col coord_flip labs theme element_line element_blank scale_fill_discrete
+#' @importFrom tidyr pivot_longer
+#' @importFrom certestyle colourpicker
+#' @rdname machine_learning
+#' @export
+autoplot.certestats_feature_importances <- function(object, ...) {
+  obj <- as.data.frame(object)
+  obj$feature <- factor(obj$feature, levels = rev(obj$feature), ordered = TRUE)
+  
+  p <- ggplot(obj) +
+    geom_col(aes(x = feature, y = importance)) +
+    coord_flip() +
+    labs(title = "Feature Importances",
+         y = "",
+         x = "")
+  
+  if ("package:certeplot2" %in% search()) {
+    p <- p +
+      plot2::theme_minimal2() +
+      scale_fill_discrete(type = colourpicker("certe", 3))
+  }
+  
+  p <- p +
+    theme(panel.grid.major.x = element_line(linewidth = 0.5),
+          panel.grid.minor = element_line(linewidth = 0.25),
+          panel.grid.major.y = element_blank())
+  
+  p
+}
+
 #' @method autoplot certestats_tuning
 #' @inheritParams tune::autoplot.tune_results
 #' @importFrom ggplot2 scale_y_continuous labs
@@ -1439,23 +1468,4 @@ autoplot.certestats_tuning <- function(object, type = c("marginals", "parameters
       certeplot2::scale_colour_certe_d()
   }
   p
-}
-
-#' @rdname machine_learning
-#' @details The [check_testing_predictions()] function combines the data used for testing from the original data with its predictions, so the original data can be reviewed per prediction.
-#' @importFrom dplyr as_tibble slice select bind_cols
-#' @export
-check_testing_predictions <- function(object) {
-  if (!inherits(object, "certestats_ml")) {
-    stop("Only output from certestats::ml_*() functions can be used.")
-  }
-  out <- bind_cols(attributes(object)$predictions,
-                   get_original_data(object) |>
-                     slice(get_rows_testing(object))) |> 
-    as_tibble()
-  if (all(out$truth %in% c("TRUE", "FALSE", NA))) {
-    out$truth <- as.logical(out$truth)
-    out$predicted <- as.logical(out$predicted)
-  }
-  out
 }

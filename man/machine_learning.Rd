@@ -10,14 +10,12 @@
 \alias{ml_random_forest}
 \alias{ml_xg_boost}
 \alias{confusion_matrix.certestats_ml}
-\alias{autoplot.certestats_ml}
 \alias{predict.certestats_ml}
 \alias{apply_model_to}
 \alias{feature_importances}
 \alias{feature_importance_plot}
 \alias{roc_plot}
 \alias{gain_plot}
-\alias{autoplot.certestats_feature_importances}
 \alias{tree_plot}
 \alias{correlation_plot}
 \alias{get_metrics}
@@ -33,8 +31,10 @@
 \alias{get_model_variables}
 \alias{get_variable_weights}
 \alias{tune_parameters}
-\alias{autoplot.certestats_tuning}
 \alias{check_testing_predictions}
+\alias{autoplot.certestats_ml}
+\alias{autoplot.certestats_feature_importances}
+\alias{autoplot.certestats_tuning}
 \title{Create a Machine Learning (ML) Model}
 \usage{
 ml_decision_trees(
@@ -49,7 +49,7 @@ ml_decision_trees(
   scale = TRUE,
   engine = "rpart",
   mode = c("classification", "regression", "unknown"),
-  tree_depth = 10,
+  tree_depth = 30,
   ...
 )
 
@@ -130,7 +130,7 @@ ml_random_forest(
   scale = TRUE,
   engine = "ranger",
   mode = c("classification", "regression", "unknown"),
-  trees = 2000,
+  trees = 500,
   ...
 )
 
@@ -146,13 +146,11 @@ ml_xg_boost(
   scale = TRUE,
   engine = "xgboost",
   mode = c("classification", "regression", "unknown"),
-  trees = 2000,
+  trees = 20,
   ...
 )
 
 \method{confusion_matrix}{certestats_ml}(data, ...)
-
-\method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
 
 \method{predict}{certestats_ml}(object, new_data, type = NULL, ...)
 
@@ -174,11 +172,9 @@ roc_plot(object, ...)
 
 gain_plot(object, ...)
 
-\method{autoplot}{certestats_feature_importances}(object, ...)
-
 tree_plot(object, ...)
 
-correlation_plot(data, add_values = TRUE)
+correlation_plot(data, add_values = TRUE, cols = everything())
 
 get_metrics(object)
 
@@ -206,9 +202,13 @@ get_variable_weights(object)
 
 tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
 
-\method{autoplot}{certestats_tuning}(object, type = c("marginals", "parameters", "performance"), ...)
-
 check_testing_predictions(object)
+
+\method{autoplot}{certestats_ml}(object, plot_type = "roc", ...)
+
+\method{autoplot}{certestats_feature_importances}(object, ...)
+
+\method{autoplot}{certestats_tuning}(object, type = c("marginals", "parameters", "performance"), ...)
 }
 \arguments{
 \item{.data}{Data set to train}
@@ -262,8 +262,6 @@ the ensemble.}
 
 \item{object, data}{outcome of machine learning model}
 
-\item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
-
 \item{new_data}{A rectangular data object, such as a data frame.}
 
 \item{type}{A single character value or \code{NULL}. Possible values
@@ -281,6 +279,8 @@ are \code{"numeric"}, \code{"class"}, \code{"prob"}, \code{"conf_int"}, \code{"p
 
 \item{add_values}{a \link{logical} to indicate whether values must be printed in the tiles}
 
+\item{cols}{columns to use for correlation plot, defaults to \code{\link[dplyr:reexports]{everything()}}}
+
 \item{only_params_in_model}{a \link{logical} to indicate whether only parameters in the model should be tuned}
 
 \item{levels}{An integer for the number of values of each parameter to use
@@ -290,9 +290,11 @@ integers that is the same length as the number of parameters in \code{...}.
 of parameters.}
 
 \item{v}{The number of partitions of the data set.}
+
+\item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
 }
 \value{
-A machine learning model of class \code{certestats_ml} / \verb{_rpart} / \code{model_fit}.
+A machine learning model of class \code{certestats_ml} / ... / \code{model_fit}.
 }
 \description{
 These functions can be used to create a machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{\code{parsnip}}, \href{https://recipes.tidymodels.org}{\code{recipes}}, \href{https://rsample.tidymodels.org}{\code{rsample}}, \href{https://tune.tidymodels.org}{\code{tune}}, and \href{https://yardstick.tidymodels.org}{\code{yardstick}}) created by RStudio.
@@ -328,8 +330,6 @@ generics::fit()      yardstick::metrics()
     output            attributes(output)
 }
 
-Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, the gain curve, the lift curve, or the precision-recall (PR) curve. For the ROC curve, the (overall) area under the curve (AUC) will be printed as subtitle.
-
 The \code{\link[parsnip:predict.model_fit]{predict()}} function can be used to fit a model on a new data set. Its wrapper \code{\link[=apply_model_to]{apply_model_to()}} works in the same way, but can also detect missing variables and missing data points within variables (and can add or fill them), and detects data type differences between the trained data and the input data.
 
 Use \code{\link[=feature_importances]{feature_importances()}} to get the importance of all features/variables. Use \code{\link[=autoplot]{autoplot()}} afterwards to plot the results. These two functions are combined in \code{\link[=feature_importance_plot]{feature_importance_plot()}}.
@@ -343,6 +343,8 @@ Use the \code{\link[=get_variable_weights]{get_variable_weights()}} function to 
 Use the \code{\link[=tune_parameters]{tune_parameters()}} function to analyse tune parameters of any \verb{ml_*()} function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a \link[rsample:vfold_cv]{V-fold cross-validation}, of which the number of partitions can be set with \code{v}. The number of \code{levels} will be used to split the range of the parameters. For example, a range of 1-10 with \code{levels = 2} will lead to \verb{[1, 10]}, while \code{levels = 5} will lead to \verb{[1, 3, 5, 7, 9]}. The resulting \link{data.frame} will be sorted from best to worst. These results can also be plotted using \code{\link[=autoplot]{autoplot()}}.
 
 The \code{\link[=check_testing_predictions]{check_testing_predictions()}} function combines the data used for testing from the original data with its predictions, so the original data can be reviewed per prediction.
+
+Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operating characteristic (ROC) curve, the gain curve, the lift curve, or the precision-recall (PR) curve. For the ROC curve, the (overall) area under the curve (AUC) will be printed as subtitle.
 }
 \section{Attributes}{
 
