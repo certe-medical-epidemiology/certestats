@@ -24,10 +24,11 @@
 #' @param outcome Outcome variable, also called the *response variable* or the *dependent variable*; the variable that must be predicted. The value will be evaluated in [`select()`][dplyr::select()] and thus supports the `tidyselect` language. In case of classification prediction, this variable will be coerced to a [factor].
 #' @param predictors Explanatory variables, also called the *predictors* or the *independent variables*; the variables that are used to predict `outcome`. These variables will be transformed using [as.double()] ([factor]s will be transformed to [character]s first). This value defaults to [`everything()`][tidyselect::everything()] and supports the `tidyselect` language.
 #' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*. If given a number over 1, the number will be considered to be the required number of rows for *training*.
-#' @param correlation_filter A [logical] to indicate whether the `predictors` should be removed that have to much correlation with each other, using [recipes::step_corr()]
-#' @param centre A [logical] to indicate whether the `predictors` should be transformed so that their mean will be `0`, using [recipes::step_center()]
-#' @param scale A [logical] to indicate whether the `predictors` should be transformed so that their standard deviation will be `1`, using [recipes::step_scale()]
-#' @param max_na_fraction Maximum fraction of `NA` values (defaults to `0.01`) of the `predictors` before they are removed from the model
+#' @param correlation_threshold A value (default 0.9) to indicate the correlation threshold. Predictors with a correlation higher than this value with be removed from the model, using [recipes::step_corr()]
+# @param na_filter A [logical] to remove rows where the `predictors` contain `NA`, using [recipes::step_naomit()]
+#' @param centre A [logical] to indicate whether the `predictors` should be transformed so that their mean will be `0`, using [recipes::step_center()]. Binary columns will be skipped.
+#' @param scale A [logical] to indicate whether the `predictors` should be transformed so that their standard deviation will be `1`, using [recipes::step_scale()]. Binary columns will be skipped.
+#' @param na_threshold Maximum fraction of `NA` values (defaults to `0.01`) of the `predictors` before they are removed from the model, using [recipes::step_select()]
 #' @param mode Type of predicted value - defaults to `"classification"`, but can also be `"unknown"` or `"regression"`
 #' @param engine \R package or function name to be used for the model, will be passed on to [parsnip::set_engine()]
 #' @param ... Arguments to be passed on to the `parsnip` functions, see *Model Functions*.
@@ -89,7 +90,7 @@
 #' * `rows_testing`: an [integer] vector of rows used for training in `data_original`
 #' * `predictions`: a [data.frame] containing predicted values based on the testing data
 #' * `metrics`: a [data.frame] with model metrics as returned by [yardstick::metrics()]
-#' * `correlation_filter`: a [logical] indicating whether [recipes::step_corr()] has been applied
+#' * `correlation_threshold`: a [logical] indicating whether [recipes::step_corr()] has been applied
 #' * `centre`: a [logical] indicating whether [recipes::step_center()] has been applied
 #' * `scale`: a [logical] indicating whether [recipes::step_scale()] has been applied
 #' 
@@ -110,7 +111,7 @@
 #' # 'esbl_tests' is an included data set, see ?esbl_tests
 #' print(esbl_tests, n = 5)
 #' 
-#' esbl_tests |> correlation_plot(add_values = FALSE)
+#' esbl_tests |> correlation_plot(add_values = FALSE) # red will be removed from model
 #' 
 #' # predict ESBL test outcome based on MICs using 2 different models
 #' model1 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))
@@ -211,13 +212,44 @@
 #' genus |> autoplot()
 #' genus |> autoplot(plot_type = "gain")
 #' genus |> autoplot(plot_type = "pr")
+ml_xg_boost <- function(.data,
+                        outcome,
+                        predictors = everything(),
+                        training_fraction = 0.75,
+                        strata = NULL,
+                        na_threshold = 0.01,
+                        correlation_threshold = 0.9,
+                        centre = TRUE,
+                        scale = TRUE,
+                        engine = "xgboost",
+                        mode = c("classification", "regression", "unknown"),
+                        trees = 15,
+                        ...) {
+  ml_exec(FUN = parsnip::boost_tree,
+          .data = .data,
+          outcome = {{ outcome }},
+          predictors = {{ predictors }},
+          training_fraction = training_fraction,
+          strata = {{ strata }},
+          na_threshold = na_threshold,
+          correlation_threshold = correlation_threshold,
+          centre = centre,
+          scale = scale,
+          engine = engine,
+          mode = mode[1L],
+          trees = trees,
+          ...)
+}
+
+#' @rdname machine_learning
+#' @export
 ml_decision_trees <- function(.data,
                               outcome,
                               predictors = everything(),
                               training_fraction = 0.75,
                               strata = NULL,
-                              max_na_fraction = 0.01,
-                              correlation_filter = TRUE,
+                              na_threshold = 0.01,
+                              correlation_threshold = 0.9,
                               centre = TRUE,
                               scale = TRUE,
                               engine = "rpart",
@@ -230,8 +262,8 @@ ml_decision_trees <- function(.data,
           predictors = {{ predictors }},
           training_fraction = training_fraction,
           strata = {{ strata }},
-          max_na_fraction = max_na_fraction,
-          correlation_filter = correlation_filter,
+          na_threshold = na_threshold,
+          correlation_threshold = correlation_threshold,
           centre = centre,
           scale = scale,
           engine = engine,
@@ -242,61 +274,32 @@ ml_decision_trees <- function(.data,
 
 #' @rdname machine_learning
 #' @export
-ml_linear_regression <- function(.data,
-                                 outcome,
-                                 predictors = everything(),
-                                 training_fraction = 0.75,
-                                 strata = NULL,
-                                 max_na_fraction = 0.01,
-                                 correlation_filter = TRUE,
-                                 centre = TRUE,
-                                 scale = TRUE,
-                                 engine = "lm",
-                                 mode = "regression",
-                                 ...) {
-  ml_exec(FUN = parsnip::linear_reg,
+ml_random_forest <- function(.data,
+                             outcome,
+                             predictors = everything(),
+                             training_fraction = 0.75,
+                             strata = NULL,
+                             na_threshold = 0.01,
+                             correlation_threshold = 0.9,
+                             centre = TRUE,
+                             scale = TRUE,
+                             engine = "ranger",
+                             mode = c("classification", "regression", "unknown"),
+                             trees = 500,
+                             ...) {
+  ml_exec(FUN = parsnip::rand_forest,
           .data = .data,
           outcome = {{ outcome }},
           predictors = {{ predictors }},
           training_fraction = training_fraction,
           strata = {{ strata }},
-          max_na_fraction = max_na_fraction,
-          correlation_filter = correlation_filter,
+          na_threshold = na_threshold,
+          correlation_threshold = correlation_threshold,
           centre = centre,
           scale = scale,
           engine = engine,
-          mode = mode,
-          ...)
-}
-
-#' @rdname machine_learning
-#' @export
-ml_logistic_regression <- function(.data,
-                                   outcome,
-                                   predictors = everything(),
-                                   training_fraction = 0.75,
-                                   strata = NULL,
-                                   max_na_fraction = 0.01,
-                                   correlation_filter = TRUE,
-                                   centre = TRUE,
-                                   scale = TRUE,
-                                   engine = "glm",
-                                   mode = "classification",
-                                   penalty = 0.1,
-                                   ...) {
-  ml_exec(FUN = parsnip::logistic_reg,
-          .data = .data,
-          outcome = {{ outcome }},
-          predictors = {{ predictors }},
-          training_fraction = training_fraction,
-          strata = {{ strata }},
-          max_na_fraction = max_na_fraction,
-          correlation_filter = correlation_filter,
-          centre = centre,
-          scale = scale,
-          engine = engine,
-          mode = mode,
-          penalty = penalty,
+          mode = mode[1L],
+          trees = trees,
           ...)
 }
 
@@ -307,8 +310,8 @@ ml_neural_network <- function(.data,
                               predictors = everything(),
                               training_fraction = 0.75,
                               strata = NULL,
-                              max_na_fraction = 0.01,
-                              correlation_filter = TRUE,
+                              na_threshold = 0.01,
+                              correlation_threshold = 0.9,
                               centre = TRUE,
                               scale = TRUE,
                               engine = "nnet",
@@ -322,8 +325,8 @@ ml_neural_network <- function(.data,
           predictors = {{ predictors }},
           training_fraction = training_fraction,
           strata = {{ strata }},
-          max_na_fraction = max_na_fraction,
-          correlation_filter = correlation_filter,
+          na_threshold = na_threshold,
+          correlation_threshold = correlation_threshold,
           centre = centre,
           scale = scale,
           engine = engine,
@@ -340,8 +343,8 @@ ml_nearest_neighbour <- function(.data,
                                  predictors = everything(),
                                  training_fraction = 0.75,
                                  strata = NULL,
-                                 max_na_fraction = 0.01,
-                                 correlation_filter = TRUE,
+                                 na_threshold = 0.01,
+                                 correlation_threshold = 0.9,
                                  centre = TRUE,
                                  scale = TRUE,
                                  engine = "kknn",
@@ -355,8 +358,8 @@ ml_nearest_neighbour <- function(.data,
           predictors = {{ predictors }},
           training_fraction = training_fraction,
           strata = {{ strata }},
-          max_na_fraction = max_na_fraction,
-          correlation_filter = correlation_filter,
+          na_threshold = na_threshold,
+          correlation_threshold = correlation_threshold,
           centre = centre,
           scale = scale,
           engine = engine,
@@ -368,70 +371,68 @@ ml_nearest_neighbour <- function(.data,
 
 #' @rdname machine_learning
 #' @export
-ml_random_forest <- function(.data,
-                             outcome,
-                             predictors = everything(),
-                             training_fraction = 0.75,
-                             strata = NULL,
-                             max_na_fraction = 0.01,
-                             correlation_filter = TRUE,
-                             centre = TRUE,
-                             scale = TRUE,
-                             engine = "ranger",
-                             mode = c("classification", "regression", "unknown"),
-                             trees = 500,
-                             ...) {
-  ml_exec(FUN = parsnip::rand_forest,
+ml_linear_regression <- function(.data,
+                                 outcome,
+                                 predictors = everything(),
+                                 training_fraction = 0.75,
+                                 strata = NULL,
+                                 na_threshold = 0.01,
+                                 correlation_threshold = 0.9,
+                                 centre = TRUE,
+                                 scale = TRUE,
+                                 engine = "lm",
+                                 mode = "regression",
+                                 ...) {
+  ml_exec(FUN = parsnip::linear_reg,
           .data = .data,
           outcome = {{ outcome }},
           predictors = {{ predictors }},
           training_fraction = training_fraction,
           strata = {{ strata }},
-          max_na_fraction = max_na_fraction,
-          correlation_filter = correlation_filter,
+          na_threshold = na_threshold,
+          correlation_threshold = correlation_threshold,
           centre = centre,
           scale = scale,
           engine = engine,
-          mode = mode[1L],
-          trees = trees,
+          mode = mode,
           ...)
 }
 
 #' @rdname machine_learning
 #' @export
-ml_xg_boost <- function(.data,
-                        outcome,
-                        predictors = everything(),
-                        training_fraction = 0.75,
-                        strata = NULL,
-                        max_na_fraction = 0.01,
-                        correlation_filter = TRUE,
-                        centre = TRUE,
-                        scale = TRUE,
-                        engine = "xgboost",
-                        mode = c("classification", "regression", "unknown"),
-                        trees = 20,
-                        ...) {
-  ml_exec(FUN = parsnip::boost_tree,
+ml_logistic_regression <- function(.data,
+                                   outcome,
+                                   predictors = everything(),
+                                   training_fraction = 0.75,
+                                   strata = NULL,
+                                   na_threshold = 0.01,
+                                   correlation_threshold = 0.9,
+                                   centre = TRUE,
+                                   scale = TRUE,
+                                   engine = "glm",
+                                   mode = "classification",
+                                   penalty = 0.1,
+                                   ...) {
+  ml_exec(FUN = parsnip::logistic_reg,
           .data = .data,
           outcome = {{ outcome }},
           predictors = {{ predictors }},
           training_fraction = training_fraction,
           strata = {{ strata }},
-          max_na_fraction = max_na_fraction,
-          correlation_filter = correlation_filter,
+          na_threshold = na_threshold,
+          correlation_threshold = correlation_threshold,
           centre = centre,
           scale = scale,
           engine = engine,
-          mode = mode[1L],
-          trees = trees,
+          mode = mode,
+          penalty = penalty,
           ...)
 }
 
-#' @importFrom dplyr mutate select across filter_all filter bind_cols all_of cur_column slice summarise type_sum
+#' @importFrom dplyr mutate select across filter bind_cols all_of slice summarise mutate_all where
 #' @importFrom yardstick metrics
 #' @importFrom parsnip set_engine
-#' @importFrom recipes recipe step_corr step_center step_scale all_predictors all_outcomes prep bake
+#' @importFrom recipes recipe step_corr step_center step_scale step_select step_naomit all_predictors all_outcomes prep bake step_mutate_at step_dummy all_nominal_predictors all_numeric_predictors
 #' @importFrom rsample initial_split training testing
 #' @importFrom certestyle format2
 #' @importFrom generics fit
@@ -441,8 +442,8 @@ ml_exec <- function(FUN,
                     predictors,
                     training_fraction,
                     strata,
-                    max_na_fraction,
-                    correlation_filter,
+                    na_threshold,
+                    correlation_threshold,
                     centre,
                     scale,
                     engine,
@@ -456,10 +457,10 @@ ml_exec <- function(FUN,
   }
   
   # show which arguments are useful to set in the function:
-  args_function <- formals(FUN) # Get formal arguments of the function
-  args_given <- list(...)       # Arguments passed to FUN via ...
+  args_function <- formals(FUN)
+  args_given <- list(...)
   # update function arguments with given arguments
-  args_to_note <- modifyList(args_function, args_given)
+  args_to_note <- utils::modifyList(args_function, args_given)
   if (length(args_to_note) > 0 && interactive()) {
     args_msg <- paste("- ", names(args_to_note), "=", sapply(args_to_note, function(x) if (!is.null(x)) deparse(x) else "NULL"), collapse = "\n")
     message("Arguments currently set for `", deparse(substitute(FUN)), "()`:\n", args_msg)
@@ -506,37 +507,12 @@ ml_exec <- function(FUN,
     .strata <- NULL
   }
   # save this one for later
-  df.bak <- df |> 
-    select(-all_of(.strata))
-  # select only columns to keep in model
-  df <- df |> 
-    select(outcome = {{ outcome }}, {{ predictors }}, all_of(.strata))
-  
-  # this will allow `predictors = everything()`, without selecting the outcome var with it
-  predictors <- df |> 
-    select(-c(outcome, all_of(.strata))) |> 
-    colnames()
-  
-  # format data to work with it
-  df <- df |>
-    # force all predictors as double
-    mutate(across(all_of(predictors),
-                  function(values) {
-                    if (is.character(values)) {
-                      message("NOTE: Transformed predictor '", cur_column(),
-                              "' from <", type_sum(values), "> to <", type_sum(factor(0)), 
-                              "> and then to <", type_sum(double(0)), "> to use as predictor")
-                      values <- as.factor(values)
-                    }
-                    as.double(values)
-                  })) |>
-    # remove columns that do not comply to max_na_fraction
-    select(where(function(x) sum(is.na(x)) / length(x) <= max_na_fraction)) |>
-    # remove rows that have NA in outcome or predictors
-    filter_all(function(x) !is.na(x))
+  df.bak <- df |> select(-all_of(.strata))
+  # select only columns to keep in model for now
+  df <- df |> select(outcome = {{ outcome }}, {{ predictors }}, all_of(.strata))
   
   # the outcome variable must be factor in case of classification prediction
-  if (list(...)$mode == "classification" && !is.factor(df$outcome)) {
+  if (list(...)$mode == "classification" && !inherits(df$outcome, c("factor", "character"))) {
     if (is.logical(df$outcome)) {
       df$outcome <- factor(df$outcome, levels = c(TRUE, FALSE))
     } else {
@@ -570,26 +546,34 @@ ml_exec <- function(FUN,
                     list(...))
   )
   
-  if (nrow(df) == 0) {
-    stop("No more rows left for analysis (max_na_fraction = ", max_na_fraction, "). Check column values.", call. = FALSE)
-  }
-  
   df_split <- initial_split(df, strata = all_of(.strata), prop = training_fraction)
   df_split_train <- df_split |> training() |> select(-all_of(.strata))
   df_split_test <- df_split |> testing() |> select(-all_of(.strata))
   
-  # create recipe
+  ## Create recipe ----
   mdl_recipe <- df_split_train |> recipe(outcome ~ .)
-  if (isTRUE(correlation_filter)) {
-    mdl_recipe <- mdl_recipe |> step_corr(all_predictors())
-  }
+  
+  # make dummies for all characters/factors
+  mdl_recipe <- mdl_recipe |> step_dummy(all_nominal_predictors())
+  # flag all binary columns
+  mdl_recipe <- mdl_recipe |> step_mutate_at(all_predictors(), fn = try_binary)
+  # unselect columns with too many NAs
+  mdl_recipe <- mdl_recipe |> step_select(where(function(x) sum(is.na(x)) / length(x) <= !!na_threshold))
+  # unselect columns that correlate too much
+  mdl_recipe <- mdl_recipe |> step_corr(all_predictors(), -where(is.binary), threshold = correlation_threshold)
+  # filter rows with NA
+  mdl_recipe <- mdl_recipe |> step_naomit(all_predictors())
+  # centre out numeric features
   if (isTRUE(centre)) {
-    mdl_recipe <- mdl_recipe |> step_center(all_predictors(), -all_outcomes())
+    mdl_recipe <- mdl_recipe |> step_center(all_predictors(), -all_outcomes(), -where(is.binary))
   }
+  # scale out numeric features
   if (isTRUE(scale)) {
-    mdl_recipe <- mdl_recipe |> step_scale(all_predictors(), -all_outcomes())
+    mdl_recipe <- mdl_recipe |> step_scale(all_predictors(), -all_outcomes(), -where(is.binary))
   }
   mdl_recipe <- mdl_recipe |> prep()
+  
+  ## Fit model ----
   
   # train
   df_training <- mdl_recipe |> bake(new_data = NULL)
@@ -606,6 +590,8 @@ ml_exec <- function(FUN,
   if (interactive()) {
     message("Done.")
   }
+  
+  ## Get performance metrics ----
   
   # save structure of original input data
   df_structure <- df.bak |> 
@@ -642,6 +628,8 @@ ml_exec <- function(FUN,
     message("\nModel trained in ~", format(round(run_time)), ".\n")
   }
   
+  ## Return model with properties ----
+  
   structure(mdl,
             class = c("certestats_ml", class(mdl)),
             properties = properties,
@@ -655,7 +643,7 @@ ml_exec <- function(FUN,
             rows_testing = seq_len(nrow(df))[!seq_len(nrow(df)) %in% df_split$in_id],
             predictions = predictions,
             metrics = metrics,
-            correlation_filter = correlation_filter,
+            correlation_threshold = correlation_threshold,
             centre = centre,
             scale = scale,
             run_time = run_time)
@@ -669,27 +657,28 @@ is_decisiontree <- function(object) {
 }
 
 #' @method print certestats_ml
+#' @importFrom cli cli_h1 cli_h2
 #' @noRd
 #' @export
 print.certestats_ml <- function(x, ...) {
   model_prop <- attributes(x)
-  cat("'certestats' Machine Learning Model\n\n",
-      paste0(format(names(model_prop$properties)), " : ", model_prop$properties, "\n"),
+  cli_h1("Train Arguments")
+  cat(paste0(format(names(model_prop$properties)), " : ", model_prop$properties, "\n"),
       sep = "")
   cat(paste0("\nTrained in ~", format(round(model_prop$run_time)), ".\n"))
   if (model_prop$properties$mode == "classification") {
-    cat("\nClassification certainty (based on testing data):\n")
+    cli_h1("Classification Certainty")
     intervals <- c(0, 0.5, 0.68, 0.95, 0.98, 1)
     q <- quantile(model_prop$predictions$certainty, intervals, na.rm = TRUE)
     names(q) <- paste0("p", intervals * 100)
     print(q)
+    cat("\nBased on testing data.\n")
   }
-  cat("\nMetrics:\n")
+  cli_h1("Metrics")
   print(metrics(x))
   print(model_prop$recipe)
-  cat(strrep("-", options()$width -2), "\n", sep = "")
   # print the rest like it used to be
-  cat("Model Object:\n\n")
+  cli_h1("Model Object")
   class(x) <- class(x)[class(x) != "certestats_ml"]
   print(x)
 }
@@ -820,8 +809,13 @@ apply_model_to <- function(object,
     model_recipe <- model_recipe |>
       remove_role(any_of(cols_missing), old_role = "predictor")
   }
+  if ("outcome" %in% model_recipe$var_info$variable && !"outcome" %in% colnames(new_data)) {
+    # this will otherwise give an error because of applying step_select() in ml_exec()
+    new_data$outcome <- model_recipe$ptype$outcome[1]
+  }
+  # the actual baking
   new_data <- bake(model_recipe, new_data = new_data)
-  out <- stats::predict(object, new_data, ...)
+  out <- stats::predict(object, new_data, ...) # this includes `type` if coming from predict.certestats_ml()
   
   # return results ----
   if (isTRUE(add_certainty)) {
@@ -913,12 +907,15 @@ tree_plot <- function(object, ...) {
 #' Use [correlation_plot()] to plot the correlation between all variables, even characters. If the input is a `certestats` ML model, the training data of the model will be plotted.
 #' @importFrom tibble rownames_to_column
 #' @importFrom tidyr pivot_longer
-#' @importFrom dplyr mutate_if select_if rename select
-#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradient2 geom_text
+#' @importFrom dplyr mutate_if select_if rename select filter mutate
+#' @importFrom ggplot2 ggplot aes geom_tile scale_fill_gradient2 geom_text scale_colour_manual
 #' @importFrom certestyle colourpicker
 #' @export
-correlation_plot <- function(data, add_values = TRUE, cols = everything()) {
+correlation_plot <- function(data, add_values = TRUE, cols = everything(), correlation_threshold = 0.9) {
   if (inherits(data, "certestats_ml")) {
+    if (missing(correlation_threshold)) {
+      correlation_threshold <- attributes(data)$correlation_threshold
+    }
     data <- attributes(data)$data_training
   }
   
@@ -937,25 +934,32 @@ correlation_plot <- function(data, add_values = TRUE, cols = everything()) {
     as.data.frame(stringsAsFactors = FALSE) |> 
     rownames_to_column(var = "rowname") |> 
     pivot_longer(-rowname, names_to = "y", values_to = "Correlation") |> 
-    rename(x = rowname)
-  
-  corr$x <- factor(corr$x, levels = colnames(data), ordered = TRUE)
-  corr$y <- factor(corr$y, levels = rev(colnames(data)), ordered = TRUE)
+    rename(x = rowname) |>
+    filter(x != y) |>
+    mutate(x = factor(x, levels = colnames(data), ordered = TRUE),
+           y = factor(y, levels = rev(colnames(data)), ordered = TRUE))
   
   p <- ggplot(corr) +
-    geom_tile(aes(x, y, fill = Correlation))
+    geom_tile(aes(x, y, fill = Correlation)) +
+    geom_tile(data = corr |> filter(abs(Correlation) >= correlation_threshold & Correlation != 1),
+              aes(x, y, colour = paste0("\u2265 ", correlation_threshold,
+                                        "\n\u2264 -", correlation_threshold)),
+              fill = NA,
+              linewidth = 1) +
+    scale_colour_manual(values = "red", labels = function(x) x)
   
   p <- p +
     labs(title = "Correlation Plot",
          y = "",
-         x = "")
+         x = "",
+         colour = "Threshold")
   
   if ("package:certeplot2" %in% search()) {
     p <- p +
       plot2::theme_minimal2() +
-      scale_fill_gradient2(low = colourpicker("certeroze"),
+      scale_fill_gradient2(low = colourpicker("certeroze0"),
                            mid = "white",
-                           high = colourpicker("certeblauw"),
+                           high = colourpicker("certeblauw0"),
                            limits = c(-1, 1))
   } else {
     p <- p +

@@ -2,13 +2,13 @@
 % Please edit documentation in R/machine_learning.R
 \name{machine_learning}
 \alias{machine_learning}
+\alias{ml_xg_boost}
 \alias{ml_decision_trees}
-\alias{ml_linear_regression}
-\alias{ml_logistic_regression}
+\alias{ml_random_forest}
 \alias{ml_neural_network}
 \alias{ml_nearest_neighbour}
-\alias{ml_random_forest}
-\alias{ml_xg_boost}
+\alias{ml_linear_regression}
+\alias{ml_logistic_regression}
 \alias{confusion_matrix.certestats_ml}
 \alias{predict.certestats_ml}
 \alias{apply_model_to}
@@ -37,14 +37,30 @@
 \alias{autoplot.certestats_tuning}
 \title{Create a Machine Learning (ML) Model}
 \usage{
+ml_xg_boost(
+  .data,
+  outcome,
+  predictors = everything(),
+  training_fraction = 0.75,
+  strata = NULL,
+  na_threshold = 0.01,
+  correlation_threshold = 0.9,
+  centre = TRUE,
+  scale = TRUE,
+  engine = "xgboost",
+  mode = c("classification", "regression", "unknown"),
+  trees = 15,
+  ...
+)
+
 ml_decision_trees(
   .data,
   outcome,
   predictors = everything(),
   training_fraction = 0.75,
   strata = NULL,
-  max_na_fraction = 0.01,
-  correlation_filter = TRUE,
+  na_threshold = 0.01,
+  correlation_threshold = 0.9,
   centre = TRUE,
   scale = TRUE,
   engine = "rpart",
@@ -53,34 +69,19 @@ ml_decision_trees(
   ...
 )
 
-ml_linear_regression(
+ml_random_forest(
   .data,
   outcome,
   predictors = everything(),
   training_fraction = 0.75,
   strata = NULL,
-  max_na_fraction = 0.01,
-  correlation_filter = TRUE,
+  na_threshold = 0.01,
+  correlation_threshold = 0.9,
   centre = TRUE,
   scale = TRUE,
-  engine = "lm",
-  mode = "regression",
-  ...
-)
-
-ml_logistic_regression(
-  .data,
-  outcome,
-  predictors = everything(),
-  training_fraction = 0.75,
-  strata = NULL,
-  max_na_fraction = 0.01,
-  correlation_filter = TRUE,
-  centre = TRUE,
-  scale = TRUE,
-  engine = "glm",
-  mode = "classification",
-  penalty = 0.1,
+  engine = "ranger",
+  mode = c("classification", "regression", "unknown"),
+  trees = 500,
   ...
 )
 
@@ -90,8 +91,8 @@ ml_neural_network(
   predictors = everything(),
   training_fraction = 0.75,
   strata = NULL,
-  max_na_fraction = 0.01,
-  correlation_filter = TRUE,
+  na_threshold = 0.01,
+  correlation_threshold = 0.9,
   centre = TRUE,
   scale = TRUE,
   engine = "nnet",
@@ -107,8 +108,8 @@ ml_nearest_neighbour(
   predictors = everything(),
   training_fraction = 0.75,
   strata = NULL,
-  max_na_fraction = 0.01,
-  correlation_filter = TRUE,
+  na_threshold = 0.01,
+  correlation_threshold = 0.9,
   centre = TRUE,
   scale = TRUE,
   engine = "kknn",
@@ -118,35 +119,34 @@ ml_nearest_neighbour(
   ...
 )
 
-ml_random_forest(
+ml_linear_regression(
   .data,
   outcome,
   predictors = everything(),
   training_fraction = 0.75,
   strata = NULL,
-  max_na_fraction = 0.01,
-  correlation_filter = TRUE,
+  na_threshold = 0.01,
+  correlation_threshold = 0.9,
   centre = TRUE,
   scale = TRUE,
-  engine = "ranger",
-  mode = c("classification", "regression", "unknown"),
-  trees = 500,
+  engine = "lm",
+  mode = "regression",
   ...
 )
 
-ml_xg_boost(
+ml_logistic_regression(
   .data,
   outcome,
   predictors = everything(),
   training_fraction = 0.75,
   strata = NULL,
-  max_na_fraction = 0.01,
-  correlation_filter = TRUE,
+  na_threshold = 0.01,
+  correlation_threshold = 0.9,
   centre = TRUE,
   scale = TRUE,
-  engine = "xgboost",
-  mode = c("classification", "regression", "unknown"),
-  trees = 20,
+  engine = "glm",
+  mode = "classification",
+  penalty = 0.1,
   ...
 )
 
@@ -174,7 +174,12 @@ gain_plot(object, ...)
 
 tree_plot(object, ...)
 
-correlation_plot(data, add_values = TRUE, cols = everything())
+correlation_plot(
+  data,
+  add_values = TRUE,
+  cols = everything(),
+  correlation_threshold = 0.9
+)
 
 get_metrics(object)
 
@@ -223,25 +228,28 @@ check_testing_predictions(object)
 stratified sampling. When not \code{NULL}, each resample is created within the
 stratification variable. Numeric \code{strata} are binned into quartiles.}
 
-\item{max_na_fraction}{Maximum fraction of \code{NA} values (defaults to \code{0.01}) of the \code{predictors} before they are removed from the model}
+\item{na_threshold}{Maximum fraction of \code{NA} values (defaults to \code{0.01}) of the \code{predictors} before they are removed from the model, using \code{\link[recipes:step_select]{recipes::step_select()}}}
 
-\item{correlation_filter}{A \link{logical} to indicate whether the \code{predictors} should be removed that have to much correlation with each other, using \code{\link[recipes:step_corr]{recipes::step_corr()}}}
+\item{correlation_threshold}{A value (default 0.9) to indicate the correlation threshold. Predictors with a correlation higher than this value with be removed from the model, using \code{\link[recipes:step_corr]{recipes::step_corr()}}}
 
-\item{centre}{A \link{logical} to indicate whether the \code{predictors} should be transformed so that their mean will be \code{0}, using \code{\link[recipes:step_center]{recipes::step_center()}}}
+\item{centre}{A \link{logical} to indicate whether the \code{predictors} should be transformed so that their mean will be \code{0}, using \code{\link[recipes:step_center]{recipes::step_center()}}. Binary columns will be skipped.}
 
-\item{scale}{A \link{logical} to indicate whether the \code{predictors} should be transformed so that their standard deviation will be \code{1}, using \code{\link[recipes:step_scale]{recipes::step_scale()}}}
+\item{scale}{A \link{logical} to indicate whether the \code{predictors} should be transformed so that their standard deviation will be \code{1}, using \code{\link[recipes:step_scale]{recipes::step_scale()}}. Binary columns will be skipped.}
 
 \item{engine}{\R package or function name to be used for the model, will be passed on to \code{\link[parsnip:set_engine]{parsnip::set_engine()}}}
 
 \item{mode}{Type of predicted value - defaults to \code{"classification"}, but can also be \code{"unknown"} or \code{"regression"}}
 
-\item{tree_depth}{An integer for maximum depth of the tree.}
+\item{trees}{An integer for the number of trees contained in
+the ensemble.}
 
 \item{...}{Arguments to be passed on to the \code{parsnip} functions, see \emph{Model Functions}.
 
 For the \code{\link[=tune_parameters]{tune_parameters()}} function, these must be \code{dials} package calls, such as \code{dials::trees()} (see Examples).
 
 For \code{\link[parsnip:predict.model_fit]{predict()}}, these must be arguments passed on to \code{\link[parsnip:predict.model_fit]{parsnip::predict.model_fit()}}}
+
+\item{tree_depth}{An integer for maximum depth of the tree.}
 
 \item{penalty}{A non-negative number representing the total
 amount of regularization (specific engines only).}
@@ -256,9 +264,6 @@ is used if \code{neighbors} is not specified.}
 to weight distances between samples. Valid choices are: \code{"rectangular"},
 \code{"triangular"}, \code{"epanechnikov"}, \code{"biweight"}, \code{"triweight"},
 \code{"cos"}, \code{"inv"}, \code{"gaussian"}, \code{"rank"}, or \code{"optimal"}.}
-
-\item{trees}{An integer for the number of trees contained in
-the ensemble.}
 
 \item{object, data}{outcome of machine learning model}
 
@@ -361,7 +366,7 @@ The \verb{ml_*()} functions return the following \link[base:attributes]{attribut
 \item \code{rows_testing}: an \link{integer} vector of rows used for training in \code{data_original}
 \item \code{predictions}: a \link{data.frame} containing predicted values based on the testing data
 \item \code{metrics}: a \link{data.frame} with model metrics as returned by \code{\link[yardstick:metrics]{yardstick::metrics()}}
-\item \code{correlation_filter}: a \link{logical} indicating whether \code{\link[recipes:step_corr]{recipes::step_corr()}} has been applied
+\item \code{correlation_threshold}: a \link{logical} indicating whether \code{\link[recipes:step_corr]{recipes::step_corr()}} has been applied
 \item \code{centre}: a \link{logical} indicating whether \code{\link[recipes:step_center]{recipes::step_center()}} has been applied
 \item \code{scale}: a \link{logical} indicating whether \code{\link[recipes:step_scale]{recipes::step_scale()}} has been applied
 }
@@ -385,7 +390,7 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 # 'esbl_tests' is an included data set, see ?esbl_tests
 print(esbl_tests, n = 5)
 
-esbl_tests |> correlation_plot(add_values = FALSE)
+esbl_tests |> correlation_plot(add_values = FALSE) # red will be removed from model
 
 # predict ESBL test outcome based on MICs using 2 different models
 model1 <- esbl_tests |> ml_xg_boost(esbl, where(is.double))

@@ -20,13 +20,13 @@
 test_that("ML works", {
   library(dplyr)
   
+  model_xg_boost <- iris |> ml_xg_boost(Species, where(is.double))
   model_decision_trees <- iris |> ml_decision_trees(Species, where(is.double))
-  model_linear_regression <- iris |> ml_linear_regression(Sepal.Length, where(is.double))
-  model_logistic_regression <- suppressWarnings(iris |> ml_logistic_regression(Species, where(is.double)))
+  model_random_forest <- iris |> ml_random_forest(Species, where(is.double))
   model_neural_network <- iris |> ml_neural_network(Species, where(is.double))
   model_nearest_neighbour <- iris |> ml_nearest_neighbour(Species, where(is.double))
-  model_random_forest <- iris |> ml_random_forest(Species, where(is.double))
-  model_xg_boost <- iris |> ml_xg_boost(Species, where(is.double))
+  model_linear_regression <- iris |> ml_linear_regression(Sepal.Length, where(is.double))
+  model_logistic_regression <- suppressWarnings(iris |> ml_logistic_regression(Species, where(is.double)))
   
   expect_s3_class(model_decision_trees, "certestats_ml")
   expect_s3_class(model_linear_regression, "certestats_ml")
@@ -59,7 +59,6 @@ test_that("ML works", {
   expect_true(is.data.frame(get_metrics(model_decision_trees)))
   expect_true(all(c("predicted", ".pred_setosa", ".pred_versicolor", ".pred_virginica") %in% colnames(apply_model_to(model_decision_trees, iris))))
   expect_true(model_decision_trees |> apply_model_to(iris, only_prediction = TRUE) |> is.factor())
-  expect_warning(iris |> ml_decision_trees(Species, where(is.double), training_fraction = 10000))
   expect_error(iris |> ml_decision_trees(as.character(Species), where(is.double)))
   
   # missing values

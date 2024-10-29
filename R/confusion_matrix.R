@@ -162,8 +162,7 @@ confusion_matrix.default <- function(data,
       message("Function yardstick::", fns[i], "() produced 0 rows, so the ", fns_names[i], " is lacking")
     } else {
       # add it
-      outcome <- outcome |> 
-        mutate(.metric_name = nm)
+      outcome <- outcome |> mutate(.metric_name = nm)
       out <- out |> bind_rows(outcome)
     }
   }
@@ -180,10 +179,13 @@ confusion_matrix.default <- function(data,
 }
 
 #' @export
+#' @importFrom cli cli_h1
 print.certestats_confusion_matrix <- function(x, ...) {
-  cat("Original data:\n\n")
+  cli_h1("Confusion Matrix")
   print(attributes(x)$data)
-  cat("\n\nModel metrics:\n\n")
+  cat("\n")
+  cli_h1("Model Metrics")
+  cat("\n")
   cat(paste(format(x$.metric_name), format(round(x$.estimate, 3))), sep = "\n")
 }
 

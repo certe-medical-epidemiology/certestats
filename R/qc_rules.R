@@ -254,19 +254,21 @@ qc_test <- function(x, m = mean(x), s = sd(x), guideline = "Nelson") {
 }
 
 #' @method print qc_test
+#' @importFrom cli cli_h1 cli_h2
 #' @noRd
 #' @export
 print.qc_test <- function(x, ...) {
-  title <- paste("Quality Control Rules according to", attributes(x)$guideline)
-  cat(title, "\n", sep = "")
-  cat(strrep("-", nchar(title)), "\n", sep = "")
+  cli_h1(paste("Quality Control Rules According to", attributes(x)$guideline))
   cat(" n    = ", length(attributes(x)$values), "\n")
   cat(" mean = ", mean(attributes(x)$values), "\n")
   cat(" sd   = ", sd(attributes(x)$values), "\n")
-  cat(strrep("-", nchar(title)), "\n", sep = "")
+  
   for (i in seq_len(length(x))) {
     rule <- as.integer(gsub("[^0-9]", "", names(x)[i]))
-    cat("\nQC Rule ", rule, ": ", qc_rule_text(rule, attributes(x)$threshold[i]), "\n", sep = "")
+    cat("\n")
+    cli_h2(paste0("QC Rule ", rule, ": ", tools::toTitleCase(qc_rule_text(rule, attributes(x)$threshold[i]))))
+    # cat(col_blue(qc_rule_text(rule, attributes(x)$threshold[i])), "\n")
+    # cat(qc_rule_text(rule, attributes(x)$threshold[i]), "\n", sep = "")
     if (length(x[[i]]) == 0) {
       cat("No violations\n")
     } else {
