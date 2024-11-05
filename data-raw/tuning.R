@@ -23,7 +23,7 @@
 # training_data <- df_split %>%
 #   rsample::training()
 # 
-# vfold <- rsample::vfold_cv(training_data)
+# kfold <- rsample::vfold_cv(training_data)
 
 tree_wf <- workflows::workflow() %>%
   workflows::add_model(tune_spec) %>%
@@ -31,7 +31,7 @@ tree_wf <- workflows::workflow() %>%
 
 tree_res <- tree_wf %>% 
   tune::tune_grid(
-    resamples = vfold,
+    resamples = kfold,
     grid = tree_grid
   )
 tree_res

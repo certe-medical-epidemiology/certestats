@@ -157,7 +157,7 @@
 #'  
 #' # tune the parameters of a model (will take some time)
 #' tuning <- model2 |> 
-#'   tune_parameters(v = 5, levels = 3)
+#'   tune_parameters(k = 5, levels = 3)
 #' autoplot(tuning)
 #' 
 #' # tuning analysis by specifying (some) parameters
@@ -1164,7 +1164,8 @@ get_variable_weights <- function(object) {
 #' @param only_params_in_model a [logical] to indicate whether only parameters in the model should be tuned
 #' @inheritParams dials::grid_regular
 #' @inheritParams rsample::vfold_cv
-#' @details Use the [tune_parameters()] function to analyse tune parameters of any `ml_*()` function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a [V-fold cross-validation][rsample::vfold_cv()], of which the number of partitions can be set with `v`. The number of `levels` will be used to split the range of the parameters. For example, a range of 1-10 with `levels = 2` will lead to `[1, 10]`, while `levels = 5` will lead to `[1, 3, 5, 7, 9]`. The resulting [data.frame] will be sorted from best to worst. These results can also be plotted using [autoplot()].
+#' @param k The number of partitions of the data set
+#' @details Use the [tune_parameters()] function to analyse tune parameters of any `ml_*()` function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a [K-fold cross-validation][rsample::vfold_cv()], of which the number of partitions can be set with `k`. The number of `levels` will be used to split the range of the parameters. For example, a range of 1-10 with `levels = 2` will lead to `[1, 10]`, while `levels = 5` will lead to `[1, 3, 5, 7, 9]`. The resulting [data.frame] will be sorted from best to worst. These results can also be plotted using [autoplot()].
 #' @importFrom parsnip set_engine set_mode
 #' @importFrom dials grid_regular
 #' @importFrom workflows workflow add_model add_formula
@@ -1174,7 +1175,7 @@ get_variable_weights <- function(object) {
 #' @importFrom dplyr arrange desc across starts_with rename_with everything
 #' @importFrom tidyr pivot_wider
 #' @export
-tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 5, v = 10) {
+tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 5, k = 10) {
   if (!inherits(object, "certestats_ml")) {
     stop("Only output from certestats::ml_*() functions can be used.")
   }
@@ -1244,8 +1245,8 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
     add_model(model_spec) |>
     add_formula(outcome ~ .)
   
-  # create the V-fold cross-validation (also known as k-fold cross-validation)
-  vfold <- vfold_cv(model_prop$data_training, v = v)
+  # create the K-fold cross-validation (also known as v-fold cross-validation)
+  k_fold <- vfold_cv(model_prop$data_training, v = k)
   
   # show a message the prints the overview of all tuning values
   vals <- vapply(FUN.VALUE = character(1), tree_grid, function(x) paste0(trimws(format(unique(x), scientific = FALSE)), collapse = ", "))
@@ -1256,12 +1257,12 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   if (interactive()) {
     cat("\n")
     ans <- utils::menu(title = paste0("This will run a tuning analysis using a ",
-                                      v, "-fold cross-validation for ", levels, "^", length(dials_fns), " = ",
+                                      k, "-fold cross-validation for ", levels, "^", length(dials_fns), " = ",
                                       format(nrow(tree_grid), big.mark = ","), " combinations. Continue?"),
                        choices = c("Continue",
                                    "Return tree grid",
                                    "Return intended workflow",
-                                   "Return V-fold cross-validation object",
+                                   "Return K-fold cross-validation object",
                                    "Cancel"),
                        graphics = FALSE)
     if (ans == 1) {
@@ -1271,16 +1272,16 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
     } else if (ans == 3) {
       return(tree_wf)
     } else if (ans == 4) {
-      return(vfold)
+      return(k_fold)
     } else {
       return(invisible(NULL))
     }
   } else {
-    message("[", round(Sys.time()), "] Running tuning analysis using a ", v, "-fold cross-validation for ", nrow(tree_grid), " combinations...")
+    message("[", round(Sys.time()), "] Running tuning analysis using a ", k, "-fold cross-validation for ", nrow(tree_grid), " combinations...")
   }
   suppressWarnings(
     tree_res <- tree_wf |>
-      tune_grid(resamples = vfold,
+      tune_grid(resamples = k_fold,
                 grid = tree_grid)
   )
   out <- tree_res |>

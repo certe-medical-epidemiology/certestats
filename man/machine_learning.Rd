@@ -205,7 +205,7 @@ get_model_variables(object)
 
 get_variable_weights(object)
 
-tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, v = 10)
+tune_parameters(object, ..., only_params_in_model = FALSE, levels = 5, k = 10)
 
 check_testing_predictions(object)
 
@@ -294,7 +294,7 @@ integers that is the same length as the number of parameters in \code{...}.
 \code{levels} can be a named integer vector, with names that match the id values
 of parameters.}
 
-\item{v}{The number of partitions of the data set.}
+\item{k}{The number of partitions of the data set}
 
 \item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
 }
@@ -345,7 +345,7 @@ Use the \code{\link[=get_model_variables]{get_model_variables()}} function to re
 
 Use the \code{\link[=get_variable_weights]{get_variable_weights()}} function to determine the (rough) estimated weights of each variable in the model. This is not as reliable as retrieving coefficients, but it does work for any model. The weights are determined by running the model over all the highest and lowest values of each variable in the trained data. The function returns a data set with 1 row, of which the values sum up to 1.
 
-Use the \code{\link[=tune_parameters]{tune_parameters()}} function to analyse tune parameters of any \verb{ml_*()} function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a \link[rsample:vfold_cv]{V-fold cross-validation}, of which the number of partitions can be set with \code{v}. The number of \code{levels} will be used to split the range of the parameters. For example, a range of 1-10 with \code{levels = 2} will lead to \verb{[1, 10]}, while \code{levels = 5} will lead to \verb{[1, 3, 5, 7, 9]}. The resulting \link{data.frame} will be sorted from best to worst. These results can also be plotted using \code{\link[=autoplot]{autoplot()}}.
+Use the \code{\link[=tune_parameters]{tune_parameters()}} function to analyse tune parameters of any \verb{ml_*()} function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a \link[rsample:vfold_cv]{K-fold cross-validation}, of which the number of partitions can be set with \code{k}. The number of \code{levels} will be used to split the range of the parameters. For example, a range of 1-10 with \code{levels = 2} will lead to \verb{[1, 10]}, while \code{levels = 5} will lead to \verb{[1, 3, 5, 7, 9]}. The resulting \link{data.frame} will be sorted from best to worst. These results can also be plotted using \code{\link[=autoplot]{autoplot()}}.
 
 The \code{\link[=check_testing_predictions]{check_testing_predictions()}} function combines the data used for testing from the original data with its predictions, so the original data can be reviewed per prediction.
 
@@ -436,7 +436,7 @@ model2 |> apply_model_to(esbl_tests2)
  
 # tune the parameters of a model (will take some time)
 tuning <- model2 |> 
-  tune_parameters(v = 5, levels = 3)
+  tune_parameters(k = 5, levels = 3)
 autoplot(tuning)
 
 # tuning analysis by specifying (some) parameters

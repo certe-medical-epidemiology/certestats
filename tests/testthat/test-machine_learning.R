@@ -91,15 +91,15 @@ test_that("ML works", {
   
   # tuning parameters
   expect_error(tune_parameters("test"))
-  tuned_decision_trees <- model_decision_trees |> tune_parameters(levels = 3, v = 2)
-  tuned_linear_regression <- model_linear_regression |> tune_parameters(levels = 1, v = 2)
-  tuned_logistic_regression <- model_logistic_regression |> tune_parameters(levels = 1, v = 2)
-  tuned_neural_network <- model_neural_network |> tune_parameters(levels = 1, v = 2)
-  tuned_nearest_neighbour <- model_nearest_neighbour |> tune_parameters(levels = 1, v = 2)
-  tuned_random_forest <- model_random_forest |> tune_parameters(levels = 1, v = 2)
-  tuned_xg_boost <- model_xg_boost |> tune_parameters(levels = 1, v = 2)
+  tuned_decision_trees <- model_decision_trees |> tune_parameters(levels = 3, k = 2)
+  tuned_linear_regression <- model_linear_regression |> tune_parameters(levels = 1, k = 2)
+  tuned_logistic_regression <- model_logistic_regression |> tune_parameters(levels = 1, k = 2)
+  tuned_neural_network <- model_neural_network |> tune_parameters(levels = 1, k = 2)
+  tuned_nearest_neighbour <- model_nearest_neighbour |> tune_parameters(levels = 1, k = 2)
+  tuned_random_forest <- model_random_forest |> tune_parameters(levels = 1, k = 2)
+  tuned_xg_boost <- model_xg_boost |> tune_parameters(levels = 1, k = 2)
   
-  tuned2 <- model_neural_network |> tune_parameters(epochs = dials::epochs(), levels = 1, v = 2)
+  tuned2 <- model_neural_network |> tune_parameters(epochs = dials::epochs(), levels = 1, k = 2)
   expect_error(model_neural_network |> tune_parameters(dials::epochs()))
   # try to run on any of our ML functions
   expect_true(tuned_decision_trees |> is.data.frame())
