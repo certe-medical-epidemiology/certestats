@@ -844,7 +844,7 @@ metrics.certestats_ml <- function(data, ...) {
 }
 
 #' @rdname machine_learning
-#' @importFrom dplyr select mutate as_tibble tibble rowwise mutate c_across ungroup arrange desc
+#' @importFrom dplyr select mutate as_tibble tibble arrange desc
 #' @details
 #' Use [feature_importances()] to get the importance of all features/variables. Use [autoplot()] afterwards to plot the results. These two functions are combined in [feature_importance_plot()].
 #' @export
@@ -855,11 +855,9 @@ feature_importances <- function(object, ...) {
   if (is_xgboost(object)) {
     out <- xgboost::xgb.importance(model = object$fit) |> 
       as_tibble() |>
-      select(feature = Feature, gain = Gain, cover = Cover, frequency = Frequency) |>
-      rowwise() |>
-      mutate(importance = mean(c_across(gain:frequency)),
-             .after = 1) |>
-      ungroup() |> 
+      select(feature = Feature, gain = Gain, cover = Cover, frequency = Frequency)
+    out$importance <- 0.6 * out$gain + 0.2 * out$cover + 0.2 * out$frequency
+    out <- out |> 
       arrange(desc(importance))
     
   } else if (is_decisiontree(object)) {
@@ -946,13 +944,12 @@ correlation_plot <- function(data, add_values = TRUE, cols = everything(), corre
                                         "\n\u2264 -", correlation_threshold)),
               fill = NA,
               linewidth = 1) +
-    scale_colour_manual(values = "red", labels = function(x) x)
-  
-  p <- p +
+    scale_colour_manual(values = "red", labels = function(x) x) +
     labs(title = "Correlation Plot",
          y = "",
          x = "",
-         colour = "Threshold")
+         colour = "Threshold",
+         caption = paste("Min-max:", paste(round(range(corr$Correlation, na.rm = TRUE), 2), collapse = "-")))
   
   if ("package:certeplot2" %in% search()) {
     p <- p +
@@ -1401,7 +1398,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
   } else if (plot_type == "pr") {
     suppressMessages(
       p <- curve |>
-        # thse is defined in the yardstick package:
+        # autoplot is defined in the yardstick package:
         autoplot() +
         scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
         scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x * 100, "%")) +
@@ -1410,7 +1407,7 @@ autoplot.certestats_ml <- function(object, plot_type = "roc", ...) {
     
   } else {
     p <- curve |>
-      # these ones are defined in the yardstick package:
+      # autoplot is defined in the yardstick package:
       autoplot() +
       scale_x_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
       scale_y_continuous(expand = c(0, 0), labels = function(x) paste0(x, "%")) +
@@ -1442,7 +1439,8 @@ autoplot.certestats_feature_importances <- function(object, ...) {
     coord_flip() +
     labs(title = "Feature Importances",
          y = "",
-         x = "")
+         x = "",
+         caption = if ("gain" %in% colnames(obj)) "Calculated as: 0.6 * Gain + 0.2 * Cover + 0.2 * Frequency" else NULL)
   
   if ("package:certeplot2" %in% search()) {
     p <- p +
