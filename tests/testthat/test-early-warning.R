@@ -25,8 +25,8 @@ test_that("early warning works", {
                                     size = 300),
                       patient = sample(LETTERS, size = 300, replace = TRUE))
   
-  out1 <- cases |> early_warning_cluster()
-  out2 <- cases |> early_warning_cluster(minimum_case_days = 99)
+  out1 <- cases |> detect_disease_clusters()
+  out2 <- cases |> detect_disease_clusters(minimum_case_days = 99)
   
   expect_true(is.data.frame(format(out1)))
   expect_true(is.data.frame(format(out2)))

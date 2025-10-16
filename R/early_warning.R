@@ -17,9 +17,9 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-#' Early Warning for Disease Clusters
+#' Detect Disease Clusters
 #' 
-#' Detect disease clusters with [early_warning_cluster()]. Use [has_clusters()] to return `TRUE` or `FALSE` based on its output, or employ [format()] to format the result.
+#' Detect disease clusters with [detect_disease_clusters()]. Use [has_clusters()] to return `TRUE` or `FALSE` based on its output, or employ [format()] to format the result.
 #' @param df Data set: This must consist of **only positive results**. The minimal data set should include a date column and a patient column. Do not summarize on patient IDs; this will be handled automatically.
 #' @param column_date Name of the column to use for dates. If left blank, the first date column will be used.
 #' @param column_patientid Name of the column to use for patient IDs. If left blank, the first column resembling `"patient|patid"` will be used.
@@ -45,8 +45,8 @@
 #' @importFrom tidyr fill complete
 #' @importFrom certestyle format2
 #' @importFrom AMR get_episode
-#' @seealso [early_warning_biomarker()]
-#' @rdname early_warning_cluster
+#' @seealso [detect_biomarker_changes()]
+#' @rdname detect_disease_clusters
 #' @export
 #' @examples
 #' cases <- data.frame(date = sample(seq(as.Date("2015-01-01"),
@@ -57,15 +57,15 @@
 #'
 #' # -----------------------------------------------------------
 #' 
-#' check <- early_warning_cluster(cases, threshold_percentile = 0.99)
+#' check <- detect_disease_clusters(cases, threshold_percentile = 0.99)
 #' 
 #' has_clusters(check)
 #' check
 #' 
 #' 
-#' check2 <- early_warning_cluster(cases,
-#'                                 minimum_cases = 1,
-#'                                 threshold_percentile = 0.75)
+#' check2 <- detect_disease_clusters(cases,
+#'                                   minimum_cases = 1,
+#'                                   threshold_percentile = 0.75)
 #' 
 #' check2
 #' check2 |> format()
@@ -80,22 +80,26 @@
 #' check2 |> has_cluster_after("2022-06-01")
 #' 
 #' check2 |> unclass()
-early_warning_cluster <- function(df,
-                                  column_date = NULL,
-                                  column_patientid = NULL,
-                                  based_on_historic_maximum = FALSE,
-                                  period_length_months = 12,
-                                  minimum_cases = 5,
-                                  minimum_days = 0,
-                                  minimum_case_days = 2,
-                                  minimum_case_fraction_in_period = 0.02,
-                                  threshold_percentile = 97.5,
-                                  remove_outliers = TRUE,
-                                  remove_outliers_coefficient = 1.5,
-                                  moving_average_days = 7,
-                                  moving_average_side = "left",
-                                  case_free_days = 14,
-                                  ...) {
+#' 
+#' if (require("certeplot2")) {
+#'   check2 |> plot2()
+#' }
+detect_disease_clusters <- function(df,
+                                    column_date = NULL,
+                                    column_patientid = NULL,
+                                    based_on_historic_maximum = FALSE,
+                                    period_length_months = 12,
+                                    minimum_cases = 5,
+                                    minimum_days = 0,
+                                    minimum_case_days = 2,
+                                    minimum_case_fraction_in_period = 0.02,
+                                    threshold_percentile = 97.5,
+                                    remove_outliers = TRUE,
+                                    remove_outliers_coefficient = 1.5,
+                                    moving_average_days = 7,
+                                    moving_average_side = "left",
+                                    case_free_days = 14,
+                                    ...) {
   
   year <- function(x) as.integer(format(x, "%Y"))
   unify_years <- function(x) {
@@ -171,7 +175,7 @@ early_warning_cluster <- function(df,
                      minimum_case_days = minimum_case_days,
                      minimum_case_fraction_in_period = minimum_case_fraction_in_period,
                      period_length_months = period_length_months,
-                     class = "early_warning_cluster"))
+                     class = "detect_disease_clusters"))
   }
   if (n_distinct(df$patient) == nrow(df)) {
     warning("Only unique patients found - this is uncommon. Did you summarise accidentally on patient IDs?")
@@ -203,7 +207,7 @@ early_warning_cluster <- function(df,
                      minimum_case_days = minimum_case_days,
                      minimum_case_fraction_in_period = minimum_case_fraction_in_period,
                      period_length_months = period_length_months,
-                     class = "early_warning_cluster"))
+                     class = "detect_disease_clusters"))
   }
   
   df_details <- df_details |>
@@ -284,25 +288,25 @@ early_warning_cluster <- function(df,
             minimum_case_days = minimum_case_days,
             minimum_case_fraction_in_period = minimum_case_fraction_in_period,
             period_length_months = period_length_months,
-            class = "early_warning_cluster")
+            class = "detect_disease_clusters")
 }
 
 #' @importFrom dplyr n_distinct
-#' @rdname early_warning_cluster
-#' @param x output of [early_warning_cluster()]
+#' @rdname detect_disease_clusters
+#' @param x output of [detect_disease_clusters()]
 #' @export
 n_clusters <- function(x) {
   n_distinct(x$clusters$cluster)
 }
 
-#' @rdname early_warning_cluster
+#' @rdname detect_disease_clusters
 #' @param n number of clusters, defaults to 1
 #' @export
 has_clusters <- function(x, n = 1) {
   n_clusters(x) >= n
 }
 
-#' @rdname early_warning_cluster
+#' @rdname detect_disease_clusters
 #' @param dates date(s) to test whether any of the clusters currently has this date in it, defaults to yesterday.
 #' @details
 #' The function [has_ongoing_cluster()] returns a [logical] vector with the same length as `dates`, so `dates` can have any length.
@@ -316,14 +320,14 @@ has_ongoing_cluster <- function(x, dates = Sys.Date() - 1) {
 }
 
 #' @param date date to test whether there are any clusters since or until this date.
-#' @rdname early_warning_cluster
+#' @rdname detect_disease_clusters
 #' @export
 has_cluster_before <- function(x, date) {
   out <- format(x)
   any(out$first_day < as.Date(date), na.rm = TRUE)
 }
 
-#' @rdname early_warning_cluster
+#' @rdname detect_disease_clusters
 #' @export
 has_cluster_after <- function(x, date) {
   out <- format(x)
@@ -333,7 +337,7 @@ has_cluster_after <- function(x, date) {
 #' @noRd
 #' @importFrom dplyr group_by summarise
 #' @export
-format.early_warning_cluster <- function(x, ...) {
+format.detect_disease_clusters <- function(x, ...) {
   if (nrow(x$clusters) == 0) {
     data.frame(cluster = integer(0),
                first_day = Sys.Date()[0],
@@ -361,7 +365,7 @@ format.early_warning_cluster <- function(x, ...) {
 #' @importFrom cli cli_ol cli_ul cli_li cli_text cli_end cli_h2
 #' @noRd
 #' @export
-print.early_warning_cluster <- function(x, ...) {
+print.detect_disease_clusters <- function(x, ...) {
   out <- format(x)
   signed_nr <- function(n) {
     n <- format(n)
@@ -420,10 +424,10 @@ print.early_warning_cluster <- function(x, ...) {
   }
 }
 
-#' Early Warning for Biomarkers
+#' Detect Unexpected Changes in Biomarkers
 #' 
-#' The `early_warning_biomarker` function is designed to detect unexpected changes in biomarker values for individual patients based on clinical chemistry data. It will flag cases where patients' biomarker results deviate from defined thresholds or exhibit significant changes within a specified time window.
-#' @inheritParams early_warning_cluster
+#' The `detect_biomarker_changes` function is designed to detect unexpected changes in biomarker values for individual patients based on clinical chemistry data. It will flag cases where patients' biomarker results deviate from defined thresholds or exhibit significant changes within a specified time window.
+#' @inheritParams detect_disease_clusters
 #' @param df A data frame containing clinical chemistry data with columns for patient ID, date, test code, and test result.
 #' @param ... Filter arguments, e.g. `testcode == "eGFR"`
 #' @param testcode Value of the column containing test codes to filter on.
@@ -446,7 +450,7 @@ print.early_warning_cluster <- function(x, ...) {
 #' - Enhancing patient care by enabling proactive interventions when necessary.
 #' - Supporting data-driven clinical epidemiology studies and research.
 #' 
-#' The [format()] function allows you to format the results of the `early_warning_biomarker()` function for better readability and analysis. It organises the flag information into a structured data frame for easier inspection.
+#' The [format()] function allows you to format the results of the `detect_biomarker_changes()` function for better readability and analysis. It organises the flag information into a structured data frame for easier inspection.
 #' @return A list with the following components:
 #' 
 #'   - `flags`: A list of flags per patient, containing data frames for each patient with details on dates, test codes, test results, and flagging criteria. The structure of each data frame includes the following columns:
@@ -463,32 +467,32 @@ print.early_warning_cluster <- function(x, ...) {
 #'
 #' - `details`: A data frame containing all patient details and calculated flags, regardless of whether they meet the flagging criteria. The data frame includes the same columns as the individual patient data frames.
 #' @importFrom dplyr arrange group_by filter mutate select lag ungroup
-#' @seealso [early_warning_cluster()]
-#' @rdname early_warning_biomarker
+#' @seealso [detect_disease_clusters()]
+#' @rdname detect_biomarker_changes
 #' @export
 #' @examples
 #' data <- data.frame(date = Sys.Date() + 1:10,
 #'                    patient = "test",
 #'                    value = c(10,12,14,15,13,21,22,19,14,12))
 #' 
-#' check <- data |> early_warning_biomarker(window_days = 6, max_delta_absolute = 10)
+#' check <- data |> detect_biomarker_changes(window_days = 6, max_delta_absolute = 10)
 #' 
 #' check
 #' 
 #' unlist(check)
-early_warning_biomarker <- function(df,
-                                    testcode = NULL,
-                                    ...,
-                                    column_date = NULL,
-                                    column_patientid = NULL,
-                                    column_testcode = NULL,
-                                    column_testresult = NULL,
-                                    threshold_min = NULL,
-                                    threshold_max = NULL,
-                                    window_days = NULL,
-                                    max_delta_absolute = NULL,
-                                    max_delta_relative = NULL,
-                                    direction = "any") {
+detect_biomarker_changes <- function(df,
+                                     testcode = NULL,
+                                     ...,
+                                     column_date = NULL,
+                                     column_patientid = NULL,
+                                     column_testcode = NULL,
+                                     column_testresult = NULL,
+                                     threshold_min = NULL,
+                                     threshold_max = NULL,
+                                     window_days = NULL,
+                                     max_delta_absolute = NULL,
+                                     max_delta_relative = NULL,
+                                     direction = "any") {
   
   if (!is.null(max_delta_relative) && max_delta_relative > 1) {
     max_delta_relative <- max_delta_relative / 100
@@ -601,13 +605,13 @@ early_warning_biomarker <- function(df,
     select(-any_flag)
   flags <- split(df_flags, df_flags$patient)
   return(structure(list(flags = flags, details = df_details),
-                   class = c("early_warning_biomarker", "list")))
+                   class = c("detect_biomarker_changes", "list")))
 }
 
 #' @importFrom dplyr bind_rows as_tibble
 #' @noRd
 #' @export
-format.early_warning_biomarker <- function(x, ...) {
+format.detect_biomarker_changes <- function(x, ...) {
   if (length(x$flags) == 0) {
     out <- data.frame(patient = NA_character_,
                       total_flags = NA_integer_,
@@ -630,7 +634,7 @@ format.early_warning_biomarker <- function(x, ...) {
 
 #' @noRd
 #' @export
-print.early_warning_biomarker <- function(x, ...) {
+print.detect_biomarker_changes <- function(x, ...) {
   cat("A total of ", length(x$flags), " patients with a total of ",
       sum(vapply(FUN.VALUE = integer(1), x$flags, nrow)), " flags.\n\n", sep = "")
   print(format(x), ...)

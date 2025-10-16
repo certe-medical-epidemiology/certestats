@@ -34,7 +34,7 @@ regression(x, ...)
 \item{object}{data to plot}
 }
 \description{
-Functions to do fast regression modelling. The functions return a \link{tibble} with statistics. Use \code{\link[=plot]{plot()}} for an extensive model visualisation.
+Functions to do fast regression modelling. The functions return a \link[tibble:tibble]{tibble::tibble} with statistics. Use \code{\link[=plot]{plot()}} for an extensive model visualisation.
 }
 \examples{
 runif(10) |> regression()

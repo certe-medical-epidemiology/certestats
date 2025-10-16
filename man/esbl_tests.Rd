@@ -5,7 +5,7 @@
 \alias{esbl_tests}
 \title{Example Data Set with ESBL Test Outcomes}
 \format{
-A \link{tibble}/\link{data.frame} with 500 observations and 19 variables:
+A \link[tibble:tibble]{tibble::tibble}/\link{data.frame} with 500 observations and 19 variables:
 \itemize{
 \item \code{esbl}: Outcome of ESBL test (\code{TRUE} (n = 250), \code{FALSE} (n = 250))
 \item \code{genus}: Taxonomic genus of the bacteria (\emph{Citrobacter} (n = 42), \emph{Enterobacter} (n = 30), \emph{Escherichia} (n = 301), \emph{Klebsiella} (n = 70), \emph{Morganella} (n = 24), \emph{Proteus} (n = 33))
