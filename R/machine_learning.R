@@ -753,27 +753,31 @@ apply_model_to <- function(object,
   
   cols_missing <- setdiff(cols_required, colnames(new_data))
   if (length(cols_missing) > 0) {
-    if (!isTRUE(correct_mistakes) && !is_xgboost(object)) {
+    if (!isTRUE(correct_mistakes) && is_xgboost(object)) {
       stop("Missing variables in `new_data`: ", toString(cols_missing), ".")
     }
-    for (col in cols_missing) {
-      # add as NA in the class of the original data:
-      new_val <- attributes(object)$data_original[[col]]
-      if (is.numeric(new_val)) {
-        # take median
-        new_val <- median(new_val, na.rm = TRUE)
-        if (!is_xgboost(object)) {
+    if (!is_xgboost(object)) {
+      for (col in cols_missing) {
+        # add as NA in the class of the original data:
+        new_val <- attributes(object)$data_original[[col]]
+        if (is.numeric(new_val)) {
+          # take median
           message("Adding missing variable as median (= ", new_val, "): ", col)
-        }
-        new_data[, col] <- new_val
-      } else {
-        # take mode, value that occurs most often
-        new_val <- new_val |> table()
-        new_val <- names(new_val[order(new_val, decreasing = TRUE)[1]])
-        if (!is_xgboost(object)) {
+          new_val <- median(new_val, na.rm = TRUE)
+          new_data[, col] <- new_val
+        } else {
+          # take mode, value that occurs most often
           message("Adding missing variable as mode value (= \"", new_val, "\"): ", col)
+          new_val <- new_val |> table()
+          new_val <- names(new_val[order(new_val, decreasing = TRUE)[1]])
+          new_data[, col] <- new_val
         }
-        new_data[, col] <- new_val
+      }
+    } else {
+      # is xgboost, make the missings NA
+      message("Missing variables in the data: ", toString(cols_missing))
+      for (i in cols_missing) {
+        new_data[, i] <- attributes(object)$data_original[1, i][2]
       }
     }
   }
@@ -815,10 +819,15 @@ apply_model_to <- function(object,
   
   # bake recipe and get predictions ----
   model_recipe <- object |> get_recipe()
-  if (length(cols_missing) > 0 && is_xgboost(object)) {
-    model_recipe <- model_recipe |>
-      remove_role(any_of(cols_missing), old_role = "predictor")
-  }
+  # if (length(cols_missing) > 0 && is_xgboost(object)) {
+  #   # make the missings NA
+  #   for (i in cols_missing) {
+  #     new_data[, cols_missing] <- NA
+  #   }
+  #   print(new_data)
+  #   # model_recipe <- model_recipe |>
+  #   #   remove_role(any_of(cols_missing), old_role = "predictor")
+  # }
   if ("outcome" %in% model_recipe$var_info$variable && !"outcome" %in% colnames(new_data)) {
     # this will otherwise give an error because of applying step_rm() in ml_exec()
     new_data$outcome <- model_recipe$ptype$outcome[1]
