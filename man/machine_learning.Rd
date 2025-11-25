@@ -157,8 +157,8 @@ ml_logistic_regression(
 apply_model_to(
   object,
   new_data,
-  add_certainty = TRUE,
   only_prediction = FALSE,
+  only_certainty = FALSE,
   correct_mistakes = TRUE,
   impute_algorithm = "mice",
   ...
@@ -228,7 +228,7 @@ check_testing_predictions(object)
 stratified sampling. When not \code{NULL}, each resample is created within the
 stratification variable. Numeric \code{strata} are binned into quartiles.}
 
-\item{na_threshold}{Maximum fraction of \code{NA} values (defaults to \code{0.01}) of the \code{predictors} before they are removed from the model, using \code{\link[recipes:step_select]{recipes::step_select()}}}
+\item{na_threshold}{Maximum fraction of \code{NA} values (defaults to \code{0.01}) of the \code{predictors} before they are removed from the model, using \code{\link[recipes:step_rm]{recipes::step_rm()}}}
 
 \item{correlation_threshold}{A value (default 0.9) to indicate the correlation threshold. Predictors with a correlation higher than this value with be removed from the model, using \code{\link[recipes:step_corr]{recipes::step_corr()}}}
 
@@ -274,9 +274,9 @@ are \code{"numeric"}, \code{"class"}, \code{"prob"}, \code{"conf_int"}, \code{"p
 \code{"quantile"}, \code{"time"}, \code{"hazard"}, \code{"survival"}, or \code{"raw"}. When \code{NULL},
 \code{predict()} will choose an appropriate value based on the model's mode.}
 
-\item{add_certainty}{a \link{logical} to indicate whether certainties should be added to the output \link{data.frame}}
-
 \item{only_prediction}{a \link{logical} to indicate whether predictions must be returned as \link{vector}, otherwise returns a \link{data.frame}}
+
+\item{only_certainty}{a \link{logical} to indicate whether certainties must be returned as \link{vector}, otherwise returns a \link{data.frame}}
 
 \item{correct_mistakes}{a \link{logical} to indicate whether missing variables and missing values should be added to \code{new_data}}
 
@@ -335,7 +335,7 @@ generics::fit()      yardstick::metrics()
     output            attributes(output)
 }
 
-The \code{\link[parsnip:predict.model_fit]{predict()}} function can be used to fit a model on a new data set. Its wrapper \code{\link[=apply_model_to]{apply_model_to()}} works in the same way, but can also detect and fix missing variables, missing data points, and data type differences between the trained data and the input data.
+The \code{\link[parsnip:predict.model_fit]{predict()}} function can be used to fit a model on a new data set. Its wrapper \code{\link[=apply_model_to]{apply_model_to()}} works in the same way, but can also detects and fixes missing variables, missing data points, and data type differences between the trained data and the input data.
 
 Use \code{\link[=feature_importances]{feature_importances()}} to get the importance of all features/variables. Use \code{\link[=autoplot]{autoplot()}} afterwards to plot the results. These two functions are combined in \code{\link[=feature_importance_plot]{feature_importance_plot()}}.
 
@@ -422,6 +422,10 @@ model1 |> predict(esbl_tests)
 
 # but apply_model_to() contains more info and can apply corrections:
 model1 |> apply_model_to(esbl_tests)
+# and to format the result, e.g. for an API:
+model1 |> apply_model_to(esbl_tests) |> dplyr::slice(1:10) |> format()
+
+# put in only parts of new data:
 model1 |> apply_model_to(esbl_tests[, 1:15])
 esbl_tests2 <- esbl_tests
 esbl_tests2[2, "CIP"] <- NA
@@ -465,6 +469,11 @@ to_predict
 
 # should be 'setosa' in the 'predicted' column with huge certainty:
 iris_model |> apply_model_to(to_predict)
+
+# API formatting:
+iris_model |> apply_model_to(to_predict) |> format()
+iris_model |> apply_model_to(to_predict, only_prediction = TRUE)
+iris_model |> apply_model_to(to_predict, only_certainty = TRUE)
 
 # which variables are generally important (only trained variables)?
 iris_model |> feature_importances()

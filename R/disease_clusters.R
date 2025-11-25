@@ -81,9 +81,8 @@
 #' 
 #' check2 |> unclass()
 #' 
-#' if (require("certeplot2")) {
-#'   check2 |> plot2()
-#' }
+#' # plot the results
+#' # check2 |> plot2()
 detect_disease_clusters <- function(df,
                                     column_date = NULL,
                                     column_patientid = NULL,
@@ -417,7 +416,7 @@ print.detect_disease_clusters <- function(x, ...) {
     
     cli_h2("Summary")
     cli_text("In total {.strong {sum(out$cases)} cases} between {dates(min(out$first_day), max(out$last_day))}, spread over {nrow(out)} cluster(s).")
-    cli_text("Use {.fn certeplot2::plot2} to plot the results.")
+    cli_text("Use {.fn plot2::plot2} to plot the results.")
   } else {
     cli_text(intro)
     invisible(NULL)

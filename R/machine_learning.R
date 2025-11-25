@@ -28,7 +28,7 @@
 # @param na_filter A [logical] to remove rows where the `predictors` contain `NA`, using [recipes::step_naomit()]
 #' @param centre A [logical] to indicate whether the `predictors` should be transformed so that their mean will be `0`, using [recipes::step_center()]. Binary columns will be skipped.
 #' @param scale A [logical] to indicate whether the `predictors` should be transformed so that their standard deviation will be `1`, using [recipes::step_scale()]. Binary columns will be skipped.
-#' @param na_threshold Maximum fraction of `NA` values (defaults to `0.01`) of the `predictors` before they are removed from the model, using [recipes::step_select()]
+#' @param na_threshold Maximum fraction of `NA` values (defaults to `0.01`) of the `predictors` before they are removed from the model, using [recipes::step_rm()]
 #' @param mode Type of predicted value - defaults to `"classification"`, but can also be `"unknown"` or `"regression"`
 #' @param engine \R package or function name to be used for the model, will be passed on to [parsnip::set_engine()]
 #' @param ... Arguments to be passed on to the `parsnip` functions, see *Model Functions*.
@@ -143,6 +143,10 @@
 #' 
 #' # but apply_model_to() contains more info and can apply corrections:
 #' model1 |> apply_model_to(esbl_tests)
+#' # and to format the result, e.g. for an API:
+#' model1 |> apply_model_to(esbl_tests) |> dplyr::slice(1:10) |> format()
+#' 
+#' # put in only parts of new data:
 #' model1 |> apply_model_to(esbl_tests[, 1:15])
 #' esbl_tests2 <- esbl_tests
 #' esbl_tests2[2, "CIP"] <- NA
@@ -186,6 +190,11 @@
 #' 
 #' # should be 'setosa' in the 'predicted' column with huge certainty:
 #' iris_model |> apply_model_to(to_predict)
+#' 
+#' # API formatting:
+#' iris_model |> apply_model_to(to_predict) |> format()
+#' iris_model |> apply_model_to(to_predict, only_prediction = TRUE)
+#' iris_model |> apply_model_to(to_predict, only_certainty = TRUE)
 #' 
 #' # which variables are generally important (only trained variables)?
 #' iris_model |> feature_importances()
@@ -432,7 +441,7 @@ ml_logistic_regression <- function(.data,
 #' @importFrom dplyr mutate select across filter bind_cols all_of slice summarise mutate_all where
 #' @importFrom yardstick metrics
 #' @importFrom parsnip set_engine
-#' @importFrom recipes recipe step_corr step_center step_scale step_select step_naomit all_predictors all_outcomes prep bake step_mutate_at step_dummy all_nominal_predictors all_numeric_predictors
+#' @importFrom recipes recipe step_corr step_center step_scale step_rm step_naomit all_predictors all_outcomes prep bake step_mutate_at step_dummy all_nominal_predictors all_numeric_predictors
 #' @importFrom rsample initial_split training testing
 #' @importFrom certestyle format2
 #' @importFrom generics fit
@@ -558,7 +567,7 @@ ml_exec <- function(FUN,
   # flag all binary columns
   mdl_recipe <- mdl_recipe |> step_mutate_at(all_predictors(), fn = try_binary)
   # unselect columns with too many NAs
-  mdl_recipe <- mdl_recipe |> step_select(where(function(x) sum(is.na(x)) / length(x) <= !!na_threshold))
+  mdl_recipe <- mdl_recipe |> step_rm(where(function(x) sum(is.na(x)) / length(x) > !!na_threshold))
   # unselect columns that correlate too much
   mdl_recipe <- mdl_recipe |> step_corr(all_predictors(), -where(is.binary), threshold = correlation_threshold)
   # filter rows with NA
@@ -694,24 +703,25 @@ confusion_matrix.certestats_ml <- function(data, ...) {
 #' @rdname machine_learning
 #' @param object,data outcome of machine learning model
 #' @inheritParams parsnip::predict.model_fit
-#' @details The [`predict()`][parsnip::predict.model_fit()] function can be used to fit a model on a new data set. Its wrapper [apply_model_to()] works in the same way, but can also detect and fix missing variables, missing data points, and data type differences between the trained data and the input data.
+#' @details The [`predict()`][parsnip::predict.model_fit()] function can be used to fit a model on a new data set. Its wrapper [apply_model_to()] works in the same way, but can also detects and fixes missing variables, missing data points, and data type differences between the trained data and the input data.
+#' @importFrom dplyr as_tibble
 #' @export
 predict.certestats_ml <- function(object,
                                   new_data,
                                   type = NULL,
                                   ...) {
-  apply_model_to(object = object,
-                 new_data = new_data,
-                 type = type,
-                 add_certainty = FALSE,
-                 only_prediction = FALSE,
-                 correct_mistakes = FALSE,
-                 ...)
+  out <- apply_model_to(object = object,
+                        new_data = new_data,
+                        type = type,
+                        only_prediction = FALSE,
+                        correct_mistakes = FALSE,
+                        ...)
+  as_tibble(out[, 1])
 }
 
 #' @rdname machine_learning
-#' @param add_certainty a [logical] to indicate whether certainties should be added to the output [data.frame]
 #' @param only_prediction a [logical] to indicate whether predictions must be returned as [vector], otherwise returns a [data.frame]
+#' @param only_certainty a [logical] to indicate whether certainties must be returned as [vector], otherwise returns a [data.frame]
 #' @param correct_mistakes a [logical] to indicate whether missing variables and missing values should be added to `new_data`
 #' @param impute_algorithm the algorithm to use in [impute()] if `correct_mistakes = TRUE`. Can be `"mice"` (default) for the [Multivariate Imputations by Chained Equations (MICE) algorithm][mice::mice], or `"single-point"` for a trained median.
 #' @importFrom recipes bake remove_role
@@ -719,8 +729,8 @@ predict.certestats_ml <- function(object,
 #' @export
 apply_model_to <- function(object,
                            new_data,
-                           add_certainty = TRUE,
                            only_prediction = FALSE,
+                           only_certainty = FALSE,
                            correct_mistakes = TRUE,
                            impute_algorithm = "mice",
                            ...) {
@@ -810,7 +820,7 @@ apply_model_to <- function(object,
       remove_role(any_of(cols_missing), old_role = "predictor")
   }
   if ("outcome" %in% model_recipe$var_info$variable && !"outcome" %in% colnames(new_data)) {
-    # this will otherwise give an error because of applying step_select() in ml_exec()
+    # this will otherwise give an error because of applying step_rm() in ml_exec()
     new_data$outcome <- model_recipe$ptype$outcome[1]
   }
   # the actual baking
@@ -818,7 +828,7 @@ apply_model_to <- function(object,
   out <- stats::predict(object, new_data, ...) # this includes `type` if coming from predict.certestats_ml()
   
   # return results ----
-  if (isTRUE(add_certainty)) {
+  if (isFALSE(only_prediction)) {
     preds <- stats::predict(object, new_data, type = "prob")
     out <- bind_cols(stats::setNames(out, "predicted"),
                      preds) |> 
@@ -827,13 +837,37 @@ apply_model_to <- function(object,
       out$predicted <- as.logical(out$predicted)
     }
   }
+  names(out)[1] <- "predicted"
   
   if (isTRUE(only_prediction)) {
     out$predicted
+  } else if (isTRUE(only_certainty)) {
+    out$certainty
   } else {
-    as_tibble(out)
+    structure(as_tibble(out),
+              class = c("certestats_pred_outcome", class(out)))
   }
-  
+}
+
+#' @method format certestats_pred_outcome
+#' @noRd
+#' @export
+format.certestats_pred_outcome <- function(x, ...) {
+  out <- rep("", NROW(x))
+  for(i in seq_len(NROW(out))) {
+    if (!is.character(x$predicted) && !is.factor(x$predicted)) {
+      out[i] <- paste0(x$predicted[i], " (", round(x$certainty[i] * 100, 1), "%)")
+    } else {
+      # list all prediction certainties
+      all_predictions <- round(unlist(x[i,-c(1,2)]) * 100, 1)
+      all_predictions <- sort(all_predictions, decreasing = TRUE)[-1] # remove first
+      names(all_predictions) <- gsub("^[.]pred_", "", names(all_predictions))
+      all_predictions <- paste0(names(all_predictions), " = ", all_predictions, "%")
+      all_predictions <- paste0(all_predictions, collapse = ", ")
+      out[i] <- paste0(x$predicted[i], " (", round(x$certainty[i] * 100, 1), "%; ", all_predictions, ")")
+    }
+  }
+  out
 }
 
 #' @method metrics certestats_ml

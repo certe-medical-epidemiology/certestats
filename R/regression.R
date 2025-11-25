@@ -86,6 +86,7 @@ plot.certestats_reg <- function(x, ...) {
 #' @export
 #' @importFrom certestyle colourpicker
 #' @importFrom ggplot2 autoplot ggplot geom_point geom_smooth theme_minimal aes theme element_text
+#' @importFrom broom augment
 #' @rdname regression
 autoplot.certestats_reg <- function(object, ...) {
   x <- object
@@ -95,18 +96,21 @@ autoplot.certestats_reg <- function(object, ...) {
   r2 <- summary(mdl)$`r.squared`
   p <- x$p.value[nrow(x)]
   
-  out <- ggplot(data = mdl,
-         mapping = aes(x = y, y = x)) +
-    geom_point(colour = "steelblue") +
+  out <- mdl |>
+    augment() |>
+    ggplot(mapping = aes(x = y, y = x)) +
+    geom_point(colour = colourpicker("certe")) +
     geom_smooth(method = ifelse(type == "lm", "lm", "loess"),
-                colour = "steelblue", linewidth = 0.5, alpha = 0.25)+
+                formula = if (type == "lm") "y ~ x" else NULL,
+                colour = colourpicker("certe"), linewidth = 0.5, alpha = 0.25)+
     theme_minimal() +
     labs(x = "x",
          y = "y",
          title = parse(text = paste0("R^2==", round(r2, 3))),
          subtitle = parse(text = paste0("p==", round(p, 3))))
   if (p >= 0.05) {
-    out <- out + theme(plot.subtitle = element_text(colour = "red"))
+    out <- out + theme(plot.subtitle = element_text(colour = colourpicker("certeroze")))
   }
+
   out
 }
