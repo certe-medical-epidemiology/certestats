@@ -762,12 +762,12 @@ apply_model_to <- function(object,
         new_val <- attributes(object)$data_original[[col]]
         if (is.numeric(new_val)) {
           # take median
-          message("Adding missing variable as median (= ", new_val, "): ", col)
+          message("Adding missing variable as median: ", col)
           new_val <- median(new_val, na.rm = TRUE)
           new_data[, col] <- new_val
         } else {
           # take mode, value that occurs most often
-          message("Adding missing variable as mode value (= \"", new_val, "\"): ", col)
+          message("Adding missing variable as mode value: ", col)
           new_val <- new_val |> table()
           new_val <- names(new_val[order(new_val, decreasing = TRUE)[1]])
           new_data[, col] <- new_val
@@ -775,7 +775,7 @@ apply_model_to <- function(object,
       }
     } else {
       # is xgboost, make the missings NA
-      message("Missing variables in the data: ", toString(cols_missing))
+      message("Missing variables in the data: ", toString(cols_missing), ", though XGBoost can function nonetheless")
       for (i in cols_missing) {
         new_data[, i] <- attributes(object)$data_original[1, i][2]
       }

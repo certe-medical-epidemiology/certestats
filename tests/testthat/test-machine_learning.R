@@ -70,7 +70,7 @@ test_that("ML works", {
     select(-Petal.Width) |> 
     mutate(Sepal.Width = as.integer(Sepal.Width))
   expect_message(mdl |> apply_model_to(new))
-  expect_silent(mdl2 |> apply_model_to(new))
+  expect_message(mdl2 |> apply_model_to(new))
   
   # get weights
   weights <- model_random_forest |> get_variable_weights()
