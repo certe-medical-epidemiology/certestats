@@ -782,7 +782,6 @@ apply_model_to <- function(object,
     }
   }
   
-  
   # check (2): new_data must not have missing values ----
   
   if (anyNA(new_data) && !is_xgboost(object)) {
@@ -815,19 +814,14 @@ apply_model_to <- function(object,
       new_data[, col] <- FUN(new_data[[col]])
     }
   }
-
+  
   
   # bake recipe and get predictions ----
   model_recipe <- object |> get_recipe()
-  # if (length(cols_missing) > 0 && is_xgboost(object)) {
-  #   # make the missings NA
-  #   for (i in cols_missing) {
-  #     new_data[, cols_missing] <- NA
-  #   }
-  #   print(new_data)
-  #   # model_recipe <- model_recipe |>
-  #   #   remove_role(any_of(cols_missing), old_role = "predictor")
-  # }
+  if (is_xgboost(object) && length(cols_missing) > 0) {
+    model_recipe <- model_recipe |>
+      remove_role(any_of(cols_missing), old_role = "predictor")
+  }
   if ("outcome" %in% model_recipe$var_info$variable && !"outcome" %in% colnames(new_data)) {
     # this will otherwise give an error because of applying step_rm() in ml_exec()
     new_data$outcome <- model_recipe$ptype$outcome[1]
@@ -835,7 +829,6 @@ apply_model_to <- function(object,
   # the actual baking
   new_data <- bake(model_recipe, new_data = new_data)
   out <- stats::predict(object, new_data, ...) # this includes `type` if coming from predict.certestats_ml()
-  
   # return results ----
   if (isFALSE(only_prediction)) {
     preds <- stats::predict(object, new_data, type = "prob")
