@@ -27,22 +27,17 @@ results (that is also \code{factor}). As with \code{truth} this can be
 specified different ways but the primary method is to use an
 unquoted variable name. For \verb{_vec()} functions, a \code{factor} vector.}
 
-\item{na.rm}{a \link{logical} to indicate whether empty must be removed}
+\item{na.rm}{A \link{logical} to indicate whether missing values should be removed.}
 }
 \description{
-Create a confusion matrix and calculate its metrics. This function is an agnostic \code{yardstick} wrapper: it applies all \code{yardstick} functions that are metrics used for confusion matrices without internal hard-coded function names.
+Create a confusion matrix and calculate compatible \code{yardstick} metrics.
 }
-\section{Default values of \code{na.rm}}{
-
-This 'certestats' package supports a global default setting for \code{na.rm} in many mathematical functions. This can be set with \code{options(na.rm = TRUE)} or \code{options(na.rm = FALSE)}.
-
-For \code{\link[=normality]{normality()}}, \code{\link[=quantile]{quantile()}} and \code{\link[=IQR]{IQR()}}, this also applies to the \code{type} argument. The default, \code{type = 7}, is the default of base \R. Use \code{type = 6} to comply with SPSS.
+\details{
+This is a function-agnostic \code{yardstick} wrapper: it discovers metric functions exported by \code{yardstick}, filters them by metric type compatible with the provided data (class / class-probability / numeric), and computes what is applicable.
 }
-
 \examples{
-df <- tibble::tibble(name = c("Predict Yes", "Predict No"),
-                     "Actual Yes" = c(123, 26),
-                     "Actual No" = c(13, 834))
-df
+df <- tibble(name = c("Yes", "No"),
+                      "Yes" = c(123, 26),
+                      "No" = c(13, 834))
 confusion_matrix(df)
 }
