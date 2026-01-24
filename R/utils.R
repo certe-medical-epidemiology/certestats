@@ -55,11 +55,14 @@ check_is_installed <- function(pkgs) {
 }
 
 globalVariables(c(".",
+                  ".class",
+                  ".estimate",
                   ".estimator",
                   ".GenericCallEnv",
                   ".id",
                   ".level",
                   ".metric",
+                  ".metric_name",
                   ".pred_class",
                   "any_flag",
                   "case_days",

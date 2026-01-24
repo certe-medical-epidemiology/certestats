@@ -17,30 +17,53 @@
 #  useful, but it comes WITHOUT ANY WARRANTY OR LIABILITY.              #
 # ===================================================================== #
 
-#' Confusion Matrix Metrics
+#' Confusion Matrix Metrics and Interpretation
 #'
 #' Create a confusion matrix and calculate compatible `yardstick` metrics.
-#' @param na.rm A [logical] to indicate whether missing values should be removed.
+#' Supports class, class-probability, and numeric metrics. For multiclass classification
+#' problems (`n_classes > 2`), this function computes both overall (macro/multiclass)
+#' metrics and one-vs-rest (OvR) metrics per class label. It also add a human-readable
+#' model interpretation.
+#'
+#' @param na.rm A [logical] indicating whether missing values should be removed.
 #' @inheritParams yardstick::f_meas
 #' @inheritParams yardstick::mcc
 #' @inheritParams yardstick::kap
+#'
 #' @details
-#' This is a function-agnostic `yardstick` wrapper: it discovers metric functions exported by `yardstick`, filters them by metric type compatible with the provided data (class / class-probability / numeric), and computes what is applicable.
+#' This is a function-agnostic wrapper around `yardstick`. It automatically discovers metric
+#' functions exported by `yardstick`, filters them by compatibility with the input type
+#' (class labels, class probabilities, or numeric regression), and applies all applicable metrics.
+#'
+#' For multiclass classification (i.e., where the truth and estimate are factors with more than
+#' two levels), both macro/multiclass metrics and per-class OvR versions are computed.
+#' Each per-class column treats the class as the positive label and all others as negative.
+#'
+#' In classification settings, this includes metrics such as accuracy, precision, recall,
+#' specificity, F1, MCC, Kappa, and others, depending on compatibility.
+#'
+#' For binary classification or regression, output is unchanged and includes applicable metrics only.
+#'
 #' @import yardstick
 #' @importFrom tibble tibble as_tibble
 #' @importFrom dplyr across all_of select everything mutate select all_of mutate bind_rows filter
 #' @importFrom hardhat frequency_weights
+#'
 #' @rdname confusion_matrix
 #' @export
+#'
 #' @examples
+#' # From aggregated counts
 #' df <- data.frame(name = c("Yes", "No"),
 #'                  Yes = c(123, 26),
-#'                  No = c(13, 834))
+#'                  No  = c(13, 834))
 #' confusion_matrix(df)
-#' 
+#'
+#' # From predictions on known labels
 #' iris |>
 #'   ml_decision_trees(Species, quiet = TRUE) |>
 #'   confusion_matrix()
+
 confusion_matrix <- function(data, ...) {
   UseMethod("confusion_matrix")
 }
@@ -52,7 +75,6 @@ confusion_matrix.default <- function(data,
                                      estimate,
                                      na.rm = getOption("na.rm", FALSE),
                                      ...) {
-  # 1) normalize inputs to a "df" suitable for yardstick, and (optionally) a confusion matrix table
   conf_tab <- NULL
   df <- NULL
   
@@ -63,58 +85,40 @@ confusion_matrix.default <- function(data,
     if (rlang::quo_is_missing(truth_quo) || rlang::quo_is_missing(estimate_quo)) {
       stop("If `data` is not provided, both `truth` and `estimate` must be provided.", call. = FALSE)
     }
-    # truth and estimate are vectors
     df <- tibble(
       truth = truth,
       estimate = estimate
     )
-    # Prefer factor for class labels if possible; otherwise leave as-is.
     if (!is.numeric(df$truth) && !is.factor(df$truth)) df$truth <- as.factor(df$truth)
     if (!is.numeric(df$estimate) && !is.factor(df$estimate)) df$estimate <- as.factor(df$estimate)
-    
   } else {
-    # data provided: could be (a) table/matrix/square df, (b) wide confusion df, (c) long prediction df
     if (is.table(data)) {
-      # validate 2D square
       d <- dim(data)
       if (length(d) != 2L || d[1] != d[2]) {
         stop("A `table` input must be 2D with nrow == ncol.", call. = FALSE)
       }
       conf_tab <- data
       df <- .table_to_weighted_df(conf_tab)
-      
     } else if (is.matrix(data)) {
       if (length(dim(data)) != 2L || nrow(data) != ncol(data)) {
         stop("A matrix input must be square (nrow == ncol).", call. = FALSE)
       }
       conf_tab <- .square_to_table(data)
       df <- .table_to_weighted_df(conf_tab)
-      
     } else if (is.data.frame(data)) {
-      # Detect "wide confusion" format: first col character and remaining numeric-ish
       if (ncol(data) >= 3 && is.character(data[[1]]) &&
           all(vapply(data[-1], function(x) is.numeric(x) || is.integer(x), logical(1)))) {
         conf_tab <- .wide_df_to_table(data)
-        # For a confusion table, orient as: rows = truth, cols = estimate.
-        # Our wide parser builds rownames from first col and colnames from remaining,
-        # which are typically estimate-by-truth. We will keep as-is and then swap when building df:
-        # .table_to_weighted_df expects tab with dimnames [[1]] = estimate, [[2]] = truth (Var1/Var2 order).
-        # To ensure truth in rows, estimate in cols, we transpose here to match expectation consistently.
         conf_tab <- t(conf_tab)
         df <- .table_to_weighted_df(conf_tab)
-        
       } else {
-        # Treat as regular predictions data.frame
         if (rlang::quo_is_missing(truth_quo) || rlang::quo_is_missing(estimate_quo)) {
           stop("For prediction data.frame input, `truth` and `estimate` must be provided.", call. = FALSE)
         }
-        
         truth_nm <- rlang::as_name(rlang::ensym(truth))
         est_nm <- rlang::as_name(rlang::ensym(estimate))
-        
         if (!(truth_nm %in% names(data))) stop("`truth` column not found in `data`.", call. = FALSE)
         if (!(est_nm %in% names(data))) stop("`estimate` column not found in `data`.", call. = FALSE)
-        
         df <- as_tibble(data) |>
           select(!!truth_nm, !!est_nm, everything()) |>
           mutate(
@@ -122,23 +126,17 @@ confusion_matrix.default <- function(data,
             estimate = data[[est_nm]]
           ) |>
           select(-all_of(c(truth_nm, est_nm)), truth, estimate)
-        
-        # Ensure truth/estimate are factors if they look like class labels (common case)
         if (!is.numeric(df$truth) && !is.factor(df$truth)) df$truth <- as.factor(df$truth)
         if (!is.numeric(df$estimate) && !is.factor(df$estimate)) df$estimate <- as.factor(df$estimate)
-        
         conf_tab <- .df_to_conf_table(df)
       }
-      
     } else {
       stop("Unsupported `data` type. Provide a data.frame, matrix, or table.", call. = FALSE)
     }
   }
   
-  # 2) discover yardstick metrics and filter by compatible metric types
   metrics <- .discover_yardstick_metrics()
   mtype <- attr(metrics, "metric_type")
-  
   compatible <- .compatible_metric_types(df)
   
   if (length(compatible) == 0) {
@@ -156,27 +154,19 @@ confusion_matrix.default <- function(data,
   metrics <- metrics[keep]
   mtype <- mtype[keep]
   
-  if (length(metrics) == 0) {
-    stop("No exported `yardstick` metrics are compatible with the provided data.", call. = FALSE)
-  }
-  
-  # 3) create pretty metric titles (cached) and deduplicate by title (case-insensitive)
   metric_names <- names(metrics)
   titles <- vapply(metric_names, .metric_title_cache, character(1))
-  
   ord <- order(tolower(titles))
   metrics <- metrics[ord]
   mtype <- mtype[ord]
   metric_names <- metric_names[ord]
   titles <- titles[ord]
-  
   dedup <- !duplicated(tolower(titles))
   metrics <- metrics[dedup]
   mtype <- mtype[dedup]
   metric_names <- metric_names[dedup]
   titles <- titles[dedup]
   
-  # 4) run metrics, safely; do not coerce factor<->numeric to force metrics to run
   out <- tibble()
   use_progress <- requireNamespace("progress", quietly = TRUE)
   p <- NULL
@@ -186,11 +176,9 @@ confusion_matrix.default <- function(data,
   
   for (i in seq_along(metrics)) {
     if (use_progress) p$tick()
-    
     fn <- metrics[[i]]
     nm <- names(metrics)[i]
     type <- mtype[[i]]
-
     res <- tryCatch(
       .call_metric(fn, nm, df, type = type, na.rm = na.rm),
       error = function(e) {
@@ -198,30 +186,46 @@ confusion_matrix.default <- function(data,
         NULL
       }
     )
-    
-    if (is.null(res)) {
-      # Silence expected incompatibilities; message only for unexpected ones.
-      # Expected errors are common for metrics that require particular estimators, event_level, etc.
-      next
+    if (!is.null(res) && nrow(res) > 0) {
+      ab <- .title_abbrev(titles[[i]])
+      pretty <- if (nzchar(ab)) paste0(titles[[i]], " (", ab, ")") else titles[[i]]
+      res <- mutate(res, .metric_name = pretty, .class = "overall")
+      out <- bind_rows(out, res)
     }
-    
-    if (nrow(res) == 0) {
-      next
+  }
+  
+  # Add per-class OvR metrics if multiclass
+  if (is.factor(df$truth) && length(levels(df$truth)) > 2) {
+    cls <- levels(df$truth)
+    for (k in cls) {
+      df_k <- df |>
+        mutate(
+          truth = factor(truth == k, levels = c(FALSE, TRUE)),
+          estimate = factor(estimate == k, levels = c(FALSE, TRUE))
+        )
+      for (i in seq_along(metrics)) {
+        fn <- metrics[[i]]
+        nm <- names(metrics)[i]
+        type <- mtype[[i]]
+        if (!identical(type, "class")) next
+        res <- tryCatch(
+          .call_metric(fn, nm, df_k, type = type, na.rm = na.rm),
+          error = function(e) NULL
+        )
+        if (!is.null(res) && nrow(res) > 0) {
+          ab <- .title_abbrev(titles[[i]])
+          pretty <- if (nzchar(ab)) paste0(titles[[i]], " (", ab, ")") else titles[[i]]
+          res <- mutate(res, .metric_name = pretty, .class = k)
+          out <- bind_rows(out, res)
+        }
+      }
     }
-    
-    # Attach a human-readable metric title for printing / downstream formatting
-    # Include abbreviation only if it looks informative.
-    ab <- .title_abbrev(titles[[i]])
-    pretty <- if (nzchar(ab)) paste0(titles[[i]], " (", ab, ")") else titles[[i]]
-    res <- mutate(res, .metric_name = pretty)
-    out <- bind_rows(out, res)
   }
   
   if (NROW(out) > 1) {
     out <- filter(out, !is.na(.metric))
   }
   
-  # 5) ensure confusion matrix table attribute exists when possible
   if (is.null(conf_tab)) conf_tab <- .df_to_conf_table(df)
   
   structure(
@@ -231,9 +235,13 @@ confusion_matrix.default <- function(data,
   )
 }
 
+#' @noRd
 #' @export
 #' @importFrom cli cli_h1
 print.certestats_confusion_matrix <- function(x, ...) {
+  
+  # Confusion Matrix ----
+  
   cli_h1("Confusion Matrix")
   tab <- attributes(x)$data
   if (is.null(tab)) {
@@ -246,40 +254,55 @@ print.certestats_confusion_matrix <- function(x, ...) {
     )
     print(tab)
   }
+  
+  # Model Metrics ----
+  
+  df <- x
+  metric_names <- unique(df$.metric_name)
+  class_labels <- unique(df$.class)
+  
+  if (".estimator" %in% names(df)) {
+    df <- df |> select(-.estimator) 
+  }
+  
+  wide <- tidyr::pivot_wider(
+    df,
+    id_cols = .metric_name,
+    names_from = .class,
+    values_from = .estimate
+  )
+  
+  wide <- wide[order(tolower(wide$.metric_name)), ]
+  is_num <- vapply(wide, is.numeric, logical(1))
+  wide[is_num] <- lapply(wide[is_num], function(x) ifelse(is.finite(x), round(x, 3), x))
+  
+  print_df <- as.data.frame(wide)
+  print_df$.metric_name <- format(print_df$.metric_name, justify = "left")
+  colnames(print_df)[1] <- " "
+  
   cli_h1("Model Metrics")
-  cat("\n")
   
   if (nrow(x) == 0) {
-    cat("(No compatible yardstick metrics could be computed.)\n")
+    cat("(No compatible metrics could be computed.)\n")
     return(invisible(x))
   }
   
-  # Print in a stable order: by .metric_name, then estimator if present
-  df <- x
-  if (".estimator" %in% names(df)) {
-    df <- df[order(tolower(df$.metric_name), tolower(as.character(df$.estimator))), , drop = FALSE]
+  if (length(class_labels) > 1) {
+    cat("\n")
   } else {
-    df <- df[order(tolower(df$.metric_name)), , drop = FALSE]
+    colnames(print_df)[2] <- "  "
   }
+  print(print_df, row.names = FALSE)
   
-  # round for printing
-  est <- df$.estimate
-  est_print <- suppressWarnings(ifelse(is.finite(est), round(est, 3), est))
-  
-  # include estimator column if present and not always identical
-  if (".estimator" %in% names(df) && length(unique(as.character(df$.estimator))) > 1) {
-    lines <- paste(format(df$.metric_name), format(as.character(df$.estimator)), format(est_print))
-  } else {
-    lines <- paste(format(df$.metric_name), format(est_print))
-  }
-  cat(paste(lines, collapse = "\n"), "\n", sep = "")
+  # Model Interpretation ----
   
   cli_h1("Model Interpretation")
   cat("\n")
   .print_confusion_matrix_interpretation(x)
-  
   invisible(x)
 }
+
+
 
 # ---- helpers ---------------------------------------------------------------
 
@@ -349,7 +372,7 @@ print.certestats_confusion_matrix <- function(x, ...) {
   out
 }
 
-# Build a confusion matrix table attribute from a normalized df.
+# Build a confusion matrix table attribute from a normalised df.
 # Uses case weights if present.
 .df_to_conf_table <- function(df) {
   if (!all(c("truth", "estimate") %in% names(df))) {
@@ -459,7 +482,7 @@ print.certestats_confusion_matrix <- function(x, ...) {
   args <- list()
   args$data <- df
   
-  # truth is always a column called "truth" in our normalized data
+  # truth is always a column called "truth" in our normalised data
   if ("truth" %in% fmls) args$truth <- rlang::sym("truth")
   
   # case weights if available and supported
@@ -488,7 +511,7 @@ print.certestats_confusion_matrix <- function(x, ...) {
   do.call(fn, args)
 }
 
-# Determine which metric types are compatible with the normalized data.
+# Determine which metric types are compatible with the normalised data.
 .compatible_metric_types <- function(df) {
   has_truth <- "truth" %in% names(df)
   if (!has_truth) return(character())
@@ -531,7 +554,7 @@ wrap_print <- function(x, width = getOption("width")) {
   paras <- paras[nzchar(paras)]
   
   wrapped <- vapply(paras, FUN.VALUE = character(1), function(p) {
-    # normalize whitespace inside paragraph
+    # normalise whitespace inside paragraph
     p <- gsub("[[:space:]]+", " ", p)
     paste(strwrap(p, width = width), collapse = "\n")
   })
@@ -558,15 +581,78 @@ wrap_print <- function(x, width = getOption("width")) {
   prec <- get("Precision|PPV")
   spec <- get("Specificity")
   npv  <- get("Negative Predictive")
+  f1   <- get("F1")
+  kappa <- get("Kappa")
+  mcc <- get("Matthews")
   
-  c(
-    .interp_overall_granular(acc, bal, pct),
-    .interp_precision_recall_granular(prec, rec, pct),
-    .interp_exclusion_granular(spec, npv, pct),
-    .interp_confusion_structure(attr(x, "data"))
-  ) |> 
-    (\(z) z[!is.na(z) & nzchar(z)])()
+  conf_tab <- attr(x, "data")
+  support <- if (!is.null(conf_tab)) rowSums(conf_tab) else NULL
+  imbalance <- if (!is.null(support)) max(support) / min(support) else NA_real_
+  
+  out <- c()
+  
+  ## Global performance summary
+  out <- c(out, .interp_overall_granular(acc, bal, pct))
+  
+  ## Agreement metrics
+  if (!is.na(kappa) && !is.na(mcc)) {
+    if (pct(kappa) == pct(mcc)) {
+      out <- c(out, sprintf(
+        "Agreement between predicted and true classes is strong (Cohen's Kappa and MCC are both %.1f%%). These account for chance agreement and are robust to class imbalance.",
+        pct(kappa)
+      ))
+    } else {
+      out <- c(out, sprintf(
+        "Agreement between predicted and true classes is strong (Cohen's Kappa = %.1f%%, MCC = %.1f%%). These account for chance agreement and are robust to class imbalance.",
+        pct(kappa),
+        pct(mcc)
+      ))
+    }
+  }
+  
+  ## Precision-recall trade-off
+  out <- c(out, .interp_precision_recall_granular(prec, rec, pct))
+  
+  ## F1 Score (harmonic mean)
+  if (!is.na(f1)) {
+    out <- c(out, sprintf(
+      "The macro-averaged F1 score is %.1f%%, indicating balanced harmonic performance across classes.",
+      pct(f1)
+    ))
+  }
+  
+  ## Specificity / NPV
+  out <- c(out, .interp_exclusion_granular(spec, npv, pct))
+  
+  ## Misclassification structure
+  out <- c(out, .interp_confusion_structure(conf_tab))
+  
+  ## Class imbalance warning
+  if (!is.null(imbalance) && imbalance > 1.5) {
+    out <- c(out, sprintf(
+      "Class imbalance is present (max:minor support ratio = %.2f). While macro-averaging mitigates this, some metrics may still overestimate performance on minority classes.",
+      round(imbalance, 2)
+    ))
+  }
+  
+  ## Sparse error structure
+  if (!is.null(conf_tab)) {
+    sparse_errors <- sum(conf_tab != 0) < 0.5 * length(conf_tab)
+    if (sparse_errors) {
+      out <- c(out, "The confusion matrix is sparsely populated; many class pairs have zero observed errors. Interpret per-class metrics cautiously, as sparse data may inflate estimates.")
+    }
+  }
+  
+  ## High certainty warning (optional, when metrics are near-perfect)
+  if ((!is.na(acc) && acc == 1) || (!is.na(bal) && bal == 1)) {
+    out <- c(out, "Model performance is perfect, which is very suspicious. Consider cross-validation or external validation to avoid overfitting.")
+  } else if (!is.na(acc) && acc > 0.975 && !is.na(bal) && bal > 0.975) {
+    out <- c(out, "Model performance is near-perfect. Consider cross-validation or external validation to confirm generalisability and avoid overfitting.")
+  }
+  
+  out[!is.na(out) & nzchar(out)]
 }
+
 
 .interp_overall_granular <- function(acc, bal, pct) {
   if (all(is.na(c(acc, bal)))) return(NA_character_)
@@ -574,28 +660,36 @@ wrap_print <- function(x, width = getOption("width")) {
   ref <- if (!is.na(bal)) bal else acc
   label <- cut(
     ref,
-    breaks = c(-Inf, 0.55, 0.65, 0.75, 0.85, Inf),
-    labels = c("very weak", "weak", "moderate", "good", "very strong"),
+    breaks = c(-Inf, 0.65, 0.75, 0.85, 0.95, 0.9999, Inf),
+    labels = c("unacceptable", "poor", "limited", "good", "very strong", "perfect, which might indicate overfitting"),
     right = FALSE
   )
   
   sprintf(
-    "Overall classification performance is %s. Accuracy is %.1f%% and balanced accuracy is %.1f%%, indicating %s separation between classes.",
+    "Overall performance is %s. Accuracy (%.1f%%) and balanced accuracy (%.1f%%) indicate %s separation between classes.",
     label,
     pct(acc),
     pct(bal),
-    if (label %in% c("very weak", "weak")) "limited"
-    else if (label == "moderate") "partial"
-    else "consistent"
+    if (label %in% c("unacceptable", "poor", "limited")) "limited"
+    else if (label == "good") "consistent"
+    else if (grepl("perfect", label)) "perfect"
+    else "highly consistent"
   )
 }
 
 .interp_precision_recall_granular <- function(prec, rec, pct) {
-  if (all(is.na(c(prec, rec)))) return(NA_character_)
+  if (any(is.na(c(prec, rec)))) return(NA_character_)
   
   diff <- prec - rec
   
-  if (abs(diff) < 0.05) {
+  if (abs(diff) < 0.0001) {
+    return(
+      sprintf(
+        "Precision and recall (both %.1f%%) are perfectly aligned, indicating an ideally balanced trade-off between false positives and missed true cases.",
+        pct(prec)
+      )
+    )
+  } else if (abs(diff) < 0.025) {
     return(
       sprintf(
         "Precision (%.1f%%) and recall (%.1f%%) are closely aligned, indicating a balanced trade-off between false positives and missed true cases.",
@@ -626,7 +720,7 @@ wrap_print <- function(x, width = getOption("width")) {
     right = FALSE
   )
   sprintf(
-    "Recall (%.1f%%) exceeds precision (%.1f%%), meaning the model %s prioritizes detecting true cases at the cost of more false positives.",
+    "Recall (%.1f%%) exceeds precision (%.1f%%), meaning the model %s prioritises detecting true cases at the cost of more false positives.",
     pct(rec), pct(prec), sev
   )
 }
@@ -671,109 +765,3 @@ wrap_print <- function(x, width = getOption("width")) {
   
   "Misclassifications are distributed across multiple classes, suggesting broader overlap in feature patterns."
 }
-
-
-
-
-# 
-# 
-# 
-# 
-# 
-# .interp_overall <- function(acc, bal, pct) {
-#   if (all(is.na(c(acc, bal)))) return(NA_character_)
-#   
-#   if (!is.na(bal) && !is.na(acc) && bal < acc - 0.05) {
-#     return(
-#       sprintf(
-#         "Overall accuracy is %.1f%%, but balanced accuracy is lower (%.1f%%), indicating that performance is uneven across classes and driven partly by more frequent categories.",
-#         pct(acc), pct(bal)
-#       )
-#     )
-#   }
-#   
-#   if (!is.na(bal) && bal >= 0.85) {
-#     return(
-#       sprintf(
-#         "Overall performance is reasonably consistent across classes, with a balanced accuracy of %.1f%% and an overall accuracy of %.1f%%.",
-#         pct(bal), pct(acc)
-#       )
-#     )
-#   }
-#   
-#   sprintf(
-#     "Overall performance is moderate, with an accuracy of %.1f%% and a balanced accuracy of %.1f%%, suggesting meaningful but imperfect class separation.",
-#     pct(acc), pct(bal)
-#   )
-# }
-# 
-# .interp_precision_recall <- function(prec, rec, pct) {
-#   if (all(is.na(c(prec, rec)))) return(NA_character_)
-#   
-#   if (!is.na(prec) && !is.na(rec) && abs(prec - rec) <= 0.1) {
-#     return(
-#       sprintf(
-#         "Precision (%.1f%%) and recall (%.1f%%) are similar, indicating a balanced trade-off between false positives and missed true cases.",
-#         pct(prec), pct(rec)
-#       )
-#     )
-#   }
-#   
-#   if (!is.na(prec) && !is.na(rec) && prec > rec) {
-#     return(
-#       sprintf(
-#         "Precision (%.1f%%) exceeds recall (%.1f%%), meaning predictions are relatively reliable when made, but some true cases are missed.",
-#         pct(prec), pct(rec)
-#       )
-#     )
-#   }
-#   
-#   sprintf(
-#     "Recall (%.1f%%) exceeds precision (%.1f%%), indicating that most true cases are detected, but at the cost of more false positive predictions.",
-#     pct(rec), pct(prec)
-#   )
-# }
-# 
-# .interp_exclusion_power <- function(spec, npv, pct) {
-#   if (all(is.na(c(spec, npv)))) return(NA_character_)
-#   
-#   if (!is.na(spec) && spec >= 0.9) {
-#     return(
-#       sprintf(
-#         "The model is effective at ruling out incorrect classes, with a specificity of %.1f%% and a negative predictive value of %.1f%%.",
-#         pct(spec), pct(npv)
-#       )
-#     )
-#   }
-#   
-#   sprintf(
-#     "The ability to rule out incorrect classes is moderate, with specificity at %.1f%% and negative predictive value at %.1f%%.",
-#     pct(spec), pct(npv)
-#   )
-# }
-# 
-# .interp_confusion_structure <- function(tab) {
-#   if (is.null(tab) || (!is.matrix(tab) && !is.table(tab))) {
-#     return(NA_character_)
-#   }
-#   
-#   off <- tab
-#   diag(off) <- 0
-#   
-#   nz <- off[off > 0]
-#   
-#   if (length(nz) == 0) {
-#     return(
-#       "The confusion matrix shows no misclassifications; all observations were assigned to the correct class."
-#     )
-#   }
-#   
-#   if (length(nz) <= nrow(tab)) {
-#     return(
-#       "Most misclassifications are concentrated between a small number of class pairs, suggesting overlap between specific categories rather than random errors."
-#     )
-#   }
-#   
-#   "Misclassifications are distributed across multiple classes, indicating broader overlap in feature patterns."
-# }
-# 

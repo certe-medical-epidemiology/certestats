@@ -3,7 +3,7 @@
 \name{confusion_matrix}
 \alias{confusion_matrix}
 \alias{confusion_matrix.default}
-\title{Confusion Matrix Metrics}
+\title{Confusion Matrix Metrics and Interpretation}
 \usage{
 confusion_matrix(data, ...)
 
@@ -27,20 +27,37 @@ results (that is also \code{factor}). As with \code{truth} this can be
 specified different ways but the primary method is to use an
 unquoted variable name. For \verb{_vec()} functions, a \code{factor} vector.}
 
-\item{na.rm}{A \link{logical} to indicate whether missing values should be removed.}
+\item{na.rm}{A \link{logical} indicating whether missing values should be removed.}
 }
 \description{
 Create a confusion matrix and calculate compatible \code{yardstick} metrics.
+Supports class, class-probability, and numeric metrics. For multiclass classification
+problems (\code{n_classes > 2}), this function computes both overall (macro/multiclass)
+metrics and one-vs-rest (OvR) metrics per class label. It also add a human-readable
+model interpretation.
 }
 \details{
-This is a function-agnostic \code{yardstick} wrapper: it discovers metric functions exported by \code{yardstick}, filters them by metric type compatible with the provided data (class / class-probability / numeric), and computes what is applicable.
+This is a function-agnostic wrapper around \code{yardstick}. It automatically discovers metric
+functions exported by \code{yardstick}, filters them by compatibility with the input type
+(class labels, class probabilities, or numeric regression), and applies all applicable metrics.
+
+For multiclass classification (i.e., where the truth and estimate are factors with more than
+two levels), both macro/multiclass metrics and per-class OvR versions are computed.
+Each per-class column treats the class as the positive label and all others as negative.
+
+In classification settings, this includes metrics such as accuracy, precision, recall,
+specificity, F1, MCC, Kappa, and others, depending on compatibility.
+
+For binary classification or regression, output is unchanged and includes applicable metrics only.
 }
 \examples{
+# From aggregated counts
 df <- data.frame(name = c("Yes", "No"),
                  Yes = c(123, 26),
-                 No = c(13, 834))
+                 No  = c(13, 834))
 confusion_matrix(df)
 
+# From predictions on known labels
 iris |>
   ml_decision_trees(Species, quiet = TRUE) |>
   confusion_matrix()

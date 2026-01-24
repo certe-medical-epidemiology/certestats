@@ -30,7 +30,7 @@ weighted_fn(x, w, fun, ...)
 \item{...}{arguments passed on to \code{fun}}
 }
 \description{
-Functions to calculate a weighted mean or any other metric.
+Functions to calculate a weighted mean or any other weighted metric.
 }
 \section{Default values of \code{na.rm}}{
 
