@@ -45,12 +45,13 @@ ml_xg_boost(
   strata = NULL,
   na_threshold = 0.01,
   correlation_threshold = 0.9,
-  centre = TRUE,
-  scale = TRUE,
+  centre = FALSE,
+  scale = FALSE,
   engine = "xgboost",
   mode = c("classification", "regression", "unknown"),
   trees = 15,
-  ...
+  ...,
+  quiet = FALSE
 )
 
 ml_decision_trees(
@@ -61,12 +62,13 @@ ml_decision_trees(
   strata = NULL,
   na_threshold = 0.01,
   correlation_threshold = 0.9,
-  centre = TRUE,
-  scale = TRUE,
+  centre = FALSE,
+  scale = FALSE,
   engine = "rpart",
   mode = c("classification", "regression", "unknown"),
   tree_depth = 30,
-  ...
+  ...,
+  quiet = FALSE
 )
 
 ml_random_forest(
@@ -77,12 +79,13 @@ ml_random_forest(
   strata = NULL,
   na_threshold = 0.01,
   correlation_threshold = 0.9,
-  centre = TRUE,
-  scale = TRUE,
+  centre = FALSE,
+  scale = FALSE,
   engine = "ranger",
   mode = c("classification", "regression", "unknown"),
   trees = 500,
-  ...
+  ...,
+  quiet = FALSE
 )
 
 ml_neural_network(
@@ -99,7 +102,8 @@ ml_neural_network(
   mode = c("classification", "regression", "unknown"),
   penalty = 0,
   epochs = 100,
-  ...
+  ...,
+  quiet = FALSE
 )
 
 ml_nearest_neighbour(
@@ -116,7 +120,8 @@ ml_nearest_neighbour(
   mode = c("classification", "regression", "unknown"),
   neighbors = 5,
   weight_func = "triangular",
-  ...
+  ...,
+  quiet = FALSE
 )
 
 ml_linear_regression(
@@ -131,7 +136,8 @@ ml_linear_regression(
   scale = TRUE,
   engine = "lm",
   mode = "regression",
-  ...
+  ...,
+  quiet = FALSE
 )
 
 ml_logistic_regression(
@@ -147,7 +153,8 @@ ml_logistic_regression(
   engine = "glm",
   mode = "classification",
   penalty = 0.1,
-  ...
+  ...,
+  quiet = FALSE
 )
 
 \method{confusion_matrix}{certestats_ml}(data, ...)
@@ -216,13 +223,33 @@ check_testing_predictions(object)
 \method{autoplot}{certestats_tuning}(object, type = c("marginals", "parameters", "performance"), ...)
 }
 \arguments{
-\item{.data}{Data set to train}
+\item{.data}{A data set used for model training and internal testing.
+The data will be split into training and testing subsets using
+\code{\link[rsample:initial_split]{rsample::initial_split()}}.}
 
-\item{outcome}{Outcome variable, also called the \emph{response variable} or the \emph{dependent variable}; the variable that must be predicted. The value will be evaluated in \code{\link[dplyr:select]{select()}} and thus supports the \code{tidyselect} language. In case of classification prediction, this variable will be coerced to a \link{factor}.}
+\item{outcome}{Outcome variable, also called the \emph{response} or \emph{dependent}
+variable; the variable to be predicted. The value is evaluated using
+\code{\link[dplyr:select]{dplyr::select()}} and therefore supports the \code{tidyselect} language.
 
-\item{predictors}{Explanatory variables, also called the \emph{predictors} or the \emph{independent variables}; the variables that are used to predict \code{outcome}. These variables will be transformed using \code{\link[=as.double]{as.double()}} (\link{factor}s will be transformed to \link{character}s first). This value defaults to \code{\link[tidyselect:everything]{everything()}} and supports the \code{tidyselect} language.}
+For classification models, the outcome will be coerced to a \link{factor}
+if it is not already a factor or character.}
 
-\item{training_fraction}{Fraction of rows to be used for \emph{training}, defaults to 75\%. The rest will be used for \emph{testing}. If given a number over 1, the number will be considered to be the required number of rows for \emph{training}.}
+\item{predictors}{Explanatory variables, also called the \emph{predictors} or
+\emph{independent variables}; the variables used to predict \code{outcome}.
+This argument supports the \code{tidyselect} language and defaults to
+\code{\link[tidyselect:everything]{everything()}}.
+
+Predictors are processed via a \code{\link[recipes:recipe]{recipes::recipe()}}, including dummy
+encoding for nominal variables and optional centring, scaling, and
+correlation filtering.}
+
+\item{training_fraction}{Fraction of rows to be used for \emph{training},
+defaults to \code{0.75}. The remaining rows are used for \emph{testing}.
+
+If a value greater than \code{1} is supplied, it is interpreted as the
+absolute number of rows to include in the training set.
+
+When \code{strata} is supplied, the split is stratified accordingly.}
 
 \item{strata}{A variable in \code{data} (single character or name) used to conduct
 stratified sampling. When not \code{NULL}, each resample is created within the
@@ -238,12 +265,27 @@ stratification variable. Numeric \code{strata} are binned into quartiles.}
 
 \item{engine}{\R package or function name to be used for the model, will be passed on to \code{\link[parsnip:set_engine]{parsnip::set_engine()}}}
 
-\item{mode}{Type of predicted value - defaults to \code{"classification"}, but can also be \code{"unknown"} or \code{"regression"}}
+\item{mode}{Type of predicted value.
+One of \code{"classification"}, \code{"regression"}, or \code{"unknown"}.
+
+If \code{"unknown"}, the mode will be inferred by the underlying \code{parsnip}
+model where possible. Explicitly setting \code{mode} is recommended to avoid
+ambiguity.}
 
 \item{trees}{An integer for the number of trees contained in
 the ensemble.}
 
-\item{...}{Arguments to be passed on to the \code{parsnip} functions, see \emph{Model Functions}.
+\item{...}{Additional arguments passed to the underlying \code{parsnip}
+model specification (e.g. \code{trees}, \code{mtry}, \code{penalty}).
+
+For \code{\link[=tune_parameters]{tune_parameters()}}, these must be \code{dials} parameter objects
+such as \code{dials::trees()} or \code{dials::mtry()}.
+
+For \code{\link[parsnip:predict.model_fit]{predict()}}, these arguments are
+forwarded to \code{\link[parsnip:predict.model_fit]{parsnip::predict.model_fit()}}.
+Also see \emph{Model Functions}.}
+
+\item{quiet}{A \link{logical} to silence console output.
 
 For the \code{\link[=tune_parameters]{tune_parameters()}} function, these must be \code{dials} package calls, such as \code{dials::trees()} (see Examples).
 
@@ -299,17 +341,33 @@ of parameters.}
 \item{plot_type}{the plot type, can be \code{"roc"} (default), \code{"gain"}, \code{"lift"} or \code{"pr"}. These functions rely on \code{\link[yardstick:roc_curve]{yardstick::roc_curve()}}, \code{\link[yardstick:gain_curve]{yardstick::gain_curve()}}, \code{\link[yardstick:lift_curve]{yardstick::lift_curve()}} and \code{\link[yardstick:pr_curve]{yardstick::pr_curve()}} to construct the curves.}
 }
 \value{
-A machine learning model of class \code{certestats_ml} / ... / \code{model_fit}.
+A trained machine learning model of class \code{certestats_ml}, extending
+a \code{\link[parsnip:model_fit]{parsnip::model_fit}} object.
+
+The model object contains additional attributes with training data,
+preprocessing steps, predictions, and performance metrics.
 }
 \description{
-These functions can be used to create a machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around \code{tidymodels} packages (especially \href{https://parsnip.tidymodels.org}{\code{parsnip}}, \href{https://recipes.tidymodels.org}{\code{recipes}}, \href{https://rsample.tidymodels.org}{\code{rsample}}, \href{https://tune.tidymodels.org}{\code{tune}}, and \href{https://yardstick.tidymodels.org}{\code{yardstick}}) created by RStudio.
+These functions create machine learning models using different \code{parsnip}
+model specifications and engines, and provide a unified interface for
+training, evaluating, tuning, and applying those models.
+
+The \verb{ml_*()} functions are structured wrappers around the \code{tidymodels}
+ecosystem, most notably \href{https://parsnip.tidymodels.org}{\code{parsnip}},
+\href{https://recipes.tidymodels.org}{\code{recipes}}, \href{https://rsample.tidymodels.org}{\code{rsample}},
+\href{https://tune.tidymodels.org}{\code{tune}}, and \href{https://yardstick.tidymodels.org}{\code{yardstick}}.
+
+The goal is to reduce boilerplate while preserving access to the underlying
+modeling assumptions, parameters, and diagnostics.
 }
 \details{
 To predict \strong{regression} (numeric values), the function \code{\link[=ml_logistic_regression]{ml_logistic_regression()}} cannot be used.
 
 To predict \strong{classifications} (character values), the function \code{\link[=ml_linear_regression]{ml_linear_regression()}} cannot be used.
 
-The workflow of the \verb{ml_*()} functions is basically like this (thus saving a lot of \code{tidymodels} functions to type):
+The \code{\link[=apply_model_to]{apply_model_to()}} function prioritises successful prediction over strict validation, as \code{correct_mistakes} defaults to \code{TRUE}.
+
+The workflow of the \verb{ml_*()} functions is approximately:
 
 \preformatted{
                        .data
@@ -318,26 +376,28 @@ The workflow of the \verb{ml_*()} functions is basically like this (thus saving 
                      /        \
      rsample::training() rsample::testing()
              |                |
-       recipe::recipe()       |
+     recipes::recipe()        |
              |                |
-      recipe::step_corr()     |
+      recipes::step_corr()    |
              |                |
-     recipe::step_center()    |
+     recipes::step_center()   |
              |                |
-      recipe::step_scale()    |
+      recipes::step_scale()   |
              |                |
-        recipe::prep()        |
+        recipes::prep()       |
          /           \        |
-recipes::bake()       recipes::bake()
+recipes::bake()   recipes::bake()
        |                      |
 generics::fit()      yardstick::metrics()
        |                      |
-    output            attributes(output)
+    model object      attributes(model)
 }
 
 The \code{\link[parsnip:predict.model_fit]{predict()}} function can be used to fit a model on a new data set. Its wrapper \code{\link[=apply_model_to]{apply_model_to()}} works in the same way, but can also detects and fixes missing variables, missing data points, and data type differences between the trained data and the input data.
 
-Use \code{\link[=feature_importances]{feature_importances()}} to get the importance of all features/variables. Use \code{\link[=autoplot]{autoplot()}} afterwards to plot the results. These two functions are combined in \code{\link[=feature_importance_plot]{feature_importance_plot()}}.
+Use \code{\link[=feature_importances]{feature_importances()}} to get the importance of all features/variables. Use \code{\link[=autoplot]{autoplot()}} afterwards to plot the results. These two functions are combined in \code{\link[=feature_importance_plot]{feature_importance_plot()}}. Feature importance values are model-specific heuristics and are not comparable across model types.
+
+Use The \code{\link[=tree_plot]{tree_plot()}} to plot the decision tree. For XGBoost models, \code{\link[xgboost:xgb.plot.tree]{xgboost::xgb.plot.tree()}} will be used. For all other tree models, \code{\link[rpart.plot:rpart.plot]{rpart.plot::rpart.plot()}} will be used.
 
 Use \code{\link[=correlation_plot]{correlation_plot()}} to plot the correlation between all variables, even characters. If the input is a \code{certestats} ML model, the training data of the model will be plotted.
 
@@ -353,28 +413,31 @@ Use \code{\link[=autoplot]{autoplot()}} on a model to plot the receiver operatin
 }
 \section{Attributes}{
 
-The \verb{ml_*()} functions return the following \link[base:attributes]{attributes}:
+The \verb{ml_*()} functions return a model object with the following
+\link[base:attributes]{attributes}:
 \itemize{
-\item \code{properties}: a \link{list} with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as \code{tree_depth} in \code{\link[=ml_decision_trees]{ml_decision_trees()}})
-\item \code{recipe}: a \link[recipes:recipe]{recipe} as generated with \code{\link[recipes:prep]{recipes::prep()}}, to be used for training and testing
-\item \code{data_original}: a \link{data.frame} containing the original data, possibly without invalid strata
-\item \code{data_structure}: a \link{data.frame} containing the original data structure (only trained variables) with zero rows
-\item \code{data_means}: a \link{data.frame} containing the means of the original data (only trained variables)
-\item \code{data_training}: a \link{data.frame} containing the training data of \code{data_original}
-\item \code{data_testing}: a \link{data.frame} containing the testing data of \code{data_original}
-\item \code{rows_training}: an \link{integer} vector of rows used for training in \code{data_original}
-\item \code{rows_testing}: an \link{integer} vector of rows used for training in \code{data_original}
-\item \code{predictions}: a \link{data.frame} containing predicted values based on the testing data
-\item \code{metrics}: a \link{data.frame} with model metrics as returned by \code{\link[yardstick:metrics]{yardstick::metrics()}}
-\item \code{correlation_threshold}: a \link{logical} indicating whether \code{\link[recipes:step_corr]{recipes::step_corr()}} has been applied
-\item \code{centre}: a \link{logical} indicating whether \code{\link[recipes:step_center]{recipes::step_center()}} has been applied
-\item \code{scale}: a \link{logical} indicating whether \code{\link[recipes:step_scale]{recipes::step_scale()}} has been applied
+\item \code{properties}: a \link{list} containing model metadata, including the ML
+function used, engine, mode, training/testing sizes, and model-specific
+parameters (e.g. \code{trees}, \code{tree_depth})
+\item \code{recipe}: a prepped \code{\link[recipes:recipe]{recipes::recipe()}} used for training and testing
+\item \code{data_original}: the original input data (after removal of invalid strata)
+\item \code{data_structure}: a zero-row \link{data.frame} containing the trained variables
+\item \code{data_means}: column means of numeric training variables
+\item \code{data_training}: processed training data after recipe baking
+\item \code{data_testing}: processed testing data after recipe baking
+\item \code{rows_training}: integer indices of training rows in \code{data_original}
+\item \code{rows_testing}: integer indices of testing rows in \code{data_original}
+\item \code{predictions}: predictions on the testing data
+\item \code{metrics}: performance metrics returned by \code{\link[yardstick:metrics]{yardstick::metrics()}}
+\item \code{correlation_threshold}: numeric correlation threshold used in preprocessing
+\item \code{centre}: logical indicating whether centring was applied
+\item \code{scale}: logical indicating whether scaling was applied
 }
 }
 
 \section{Model Functions}{
 
-These are the called functions from the \code{parsnip} package. Arguments set in \code{...} will be passed on to these \code{parsnip} functions:
+These functions wrap \code{parsnip} model specifications. Arguments set in \code{...} will be passed on to these \code{parsnip} functions.
 \itemize{
 \item \code{ml_decision_trees}: \code{\link[parsnip:decision_tree]{parsnip::decision_tree()}}
 \item \code{ml_linear_regression}: \code{\link[parsnip:linear_reg]{parsnip::linear_reg()}}
@@ -382,7 +445,7 @@ These are the called functions from the \code{parsnip} package. Arguments set in
 \item \code{ml_neural_network}: \code{\link[parsnip:mlp]{parsnip::mlp()}}
 \item \code{ml_nearest_neighbour}: \code{\link[parsnip:nearest_neighbor]{parsnip::nearest_neighbor()}}
 \item \code{ml_random_forest}: \code{\link[parsnip:rand_forest]{parsnip::rand_forest()}}
-\item \code{ml_xg_boost}: \code{\link[parsnip:xgb_train]{parsnip::xgb_train()}}
+\item \code{ml_xg_boost}: \code{\link[parsnip:boost_tree]{parsnip::boost_tree()}}
 }
 }
 
@@ -467,7 +530,7 @@ to_predict <- data.frame(Sepal.Length = 5,
                          Petal.Width = 0.5)
 to_predict
 
-# should be 'setosa' in the 'predicted' column with huge certainty:
+# should be 'setosa' in the 'predicted' column with high certainty:
 iris_model |> apply_model_to(to_predict)
 
 # API formatting:
@@ -496,6 +559,7 @@ iris_model_rf |> apply_model_to(to_predict)
 # train model to predict genus based on MICs:
 genus <- esbl_tests |> ml_xg_boost(genus, everything())
 genus |> get_metrics()
+genus |> confusion_matrix()
 genus |> feature_importance_plot()
 genus |> autoplot()
 genus |> autoplot(plot_type = "gain")

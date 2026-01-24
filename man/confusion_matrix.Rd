@@ -36,8 +36,12 @@ Create a confusion matrix and calculate compatible \code{yardstick} metrics.
 This is a function-agnostic \code{yardstick} wrapper: it discovers metric functions exported by \code{yardstick}, filters them by metric type compatible with the provided data (class / class-probability / numeric), and computes what is applicable.
 }
 \examples{
-df <- tibble(name = c("Yes", "No"),
-                      "Yes" = c(123, 26),
-                      "No" = c(13, 834))
+df <- data.frame(name = c("Yes", "No"),
+                 Yes = c(123, 26),
+                 No = c(13, 834))
 confusion_matrix(df)
+
+iris |>
+  ml_decision_trees(Species, quiet = TRUE) |>
+  confusion_matrix()
 }
