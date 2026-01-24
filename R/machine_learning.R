@@ -19,19 +19,67 @@
 
 #' Create a Machine Learning (ML) Model
 #'
-#' These functions can be used to create a machine learning model based on different 'engines' and to generalise predicting outcomes based on such models. These functions are wrappers around `tidymodels` packages (especially [`parsnip`](https://parsnip.tidymodels.org), [`recipes`](https://recipes.tidymodels.org), [`rsample`](https://rsample.tidymodels.org), [`tune`](https://tune.tidymodels.org), and [`yardstick`](https://yardstick.tidymodels.org)) created by RStudio.
-#' @param .data Data set to train
-#' @param outcome Outcome variable, also called the *response variable* or the *dependent variable*; the variable that must be predicted. The value will be evaluated in [`select()`][dplyr::select()] and thus supports the `tidyselect` language. In case of classification prediction, this variable will be coerced to a [factor].
-#' @param predictors Explanatory variables, also called the *predictors* or the *independent variables*; the variables that are used to predict `outcome`. These variables will be transformed using [as.double()] ([factor]s will be transformed to [character]s first). This value defaults to [`everything()`][tidyselect::everything()] and supports the `tidyselect` language.
-#' @param training_fraction Fraction of rows to be used for *training*, defaults to 75%. The rest will be used for *testing*. If given a number over 1, the number will be considered to be the required number of rows for *training*.
+#' @description
+#' These functions create machine learning models using different `parsnip`
+#' model specifications and engines, and provide a unified interface for
+#' training, evaluating, tuning, and applying those models.
+#'
+#' The `ml_*()` functions are structured wrappers around the `tidymodels`
+#' ecosystem, most notably [`parsnip`](https://parsnip.tidymodels.org),
+#' [`recipes`](https://recipes.tidymodels.org), [`rsample`](https://rsample.tidymodels.org),
+#' [`tune`](https://tune.tidymodels.org), and [`yardstick`](https://yardstick.tidymodels.org).
+#'
+#' The goal is to reduce boilerplate while preserving access to the underlying
+#' modeling assumptions, parameters, and diagnostics.
+#' @param .data A data set used for model training and internal testing.
+#'   The data will be split into training and testing subsets using
+#'   [`rsample::initial_split()`].
+#'
+#' @param outcome Outcome variable, also called the *response* or *dependent*
+#'   variable; the variable to be predicted. The value is evaluated using
+#'   [`dplyr::select()`] and therefore supports the `tidyselect` language.
+#'
+#'   For classification models, the outcome will be coerced to a [factor]
+#'   if it is not already a factor or character.
+#'
+#' @param predictors Explanatory variables, also called the *predictors* or
+#'   *independent variables*; the variables used to predict `outcome`.
+#'   This argument supports the `tidyselect` language and defaults to
+#'   [`everything()`][tidyselect::everything()].
+#'
+#'   Predictors are processed via a [`recipes::recipe()`], including dummy
+#'   encoding for nominal variables and optional centring, scaling, and
+#'   correlation filtering.
+#' @param training_fraction Fraction of rows to be used for *training*,
+#'   defaults to `0.75`. The remaining rows are used for *testing*.
+#'
+#'   If a value greater than `1` is supplied, it is interpreted as the
+#'   absolute number of rows to include in the training set.
+#'
+#'   When `strata` is supplied, the split is stratified accordingly.
 #' @param correlation_threshold A value (default 0.9) to indicate the correlation threshold. Predictors with a correlation higher than this value with be removed from the model, using [recipes::step_corr()]
 # @param na_filter A [logical] to remove rows where the `predictors` contain `NA`, using [recipes::step_naomit()]
 #' @param centre A [logical] to indicate whether the `predictors` should be transformed so that their mean will be `0`, using [recipes::step_center()]. Binary columns will be skipped.
 #' @param scale A [logical] to indicate whether the `predictors` should be transformed so that their standard deviation will be `1`, using [recipes::step_scale()]. Binary columns will be skipped.
 #' @param na_threshold Maximum fraction of `NA` values (defaults to `0.01`) of the `predictors` before they are removed from the model, using [recipes::step_rm()]
-#' @param mode Type of predicted value - defaults to `"classification"`, but can also be `"unknown"` or `"regression"`
+#' @param mode Type of predicted value.
+#'   One of `"classification"`, `"regression"`, or `"unknown"`.
+#'
+#'   If `"unknown"`, the mode will be inferred by the underlying `parsnip`
+#'   model where possible. Explicitly setting `mode` is recommended to avoid
+#'   ambiguity.
 #' @param engine \R package or function name to be used for the model, will be passed on to [parsnip::set_engine()]
-#' @param ... Arguments to be passed on to the `parsnip` functions, see *Model Functions*.
+#' @param ... Additional arguments passed to the underlying `parsnip`
+#'   model specification (e.g. `trees`, `mtry`, `penalty`).
+#'
+#'   For [tune_parameters()], these must be `dials` parameter objects
+#'   such as `dials::trees()` or `dials::mtry()`.
+#'
+#'   For [`predict()`][parsnip::predict.model_fit()], these arguments are
+#'   forwarded to [`parsnip::predict.model_fit()`].
+
+#'   Also see *Model Functions*.
+#' @param quiet A [logical] to silence console output.
 #' 
 #' For the [tune_parameters()] function, these must be `dials` package calls, such as `dials::trees()` (see Examples).
 #' 
@@ -49,8 +97,10 @@
 #'
 #' To predict **classifications** (character values), the function [ml_linear_regression()] cannot be used.
 #' 
-#' The workflow of the `ml_*()` functions is basically like this (thus saving a lot of `tidymodels` functions to type):
+#' The [apply_model_to()] function prioritises successful prediction over strict validation, as `correct_mistakes` defaults to `TRUE`.
 #' 
+#' The workflow of the `ml_*()` functions is approximately:
+#'
 #' \preformatted{
 #'                        .data
 #'                          |
@@ -58,52 +108,60 @@
 #'                      /        \
 #'      rsample::training() rsample::testing()
 #'              |                |
-#'        recipe::recipe()       |
+#'      recipes::recipe()        |
 #'              |                |
-#'       recipe::step_corr()     |
+#'       recipes::step_corr()    |
 #'              |                |
-#'      recipe::step_center()    |
+#'      recipes::step_center()   |
 #'              |                |
-#'       recipe::step_scale()    |
+#'       recipes::step_scale()   |
 #'              |                |
-#'         recipe::prep()        |
+#'         recipes::prep()       |
 #'          /           \        |
-#' recipes::bake()       recipes::bake()
+#' recipes::bake()   recipes::bake()
 #'        |                      |
 #' generics::fit()      yardstick::metrics()
 #'        |                      |
-#'     output            attributes(output)
+#'     model object      attributes(model)
 #' }
-#' @return A machine learning model of class `certestats_ml` / ... / `model_fit`.
+#' @return
+#' A trained machine learning model of class `certestats_ml`, extending
+#' a [`parsnip::model_fit`] object.
+#'
+#' The model object contains additional attributes with training data,
+#' preprocessing steps, predictions, and performance metrics.
 #' 
 #' @section Attributes:
-#' The `ml_*()` functions return the following [attributes][base::attributes()]:
-#' 
-#' * `properties`: a [list] with model properties: the ML function, engine package, training size, testing size, strata size, mode, and the different ML function-specific properties (such as `tree_depth` in [ml_decision_trees()])
-#' * `recipe`: a [recipe][recipes::recipe()] as generated with [recipes::prep()], to be used for training and testing
-#' * `data_original`: a [data.frame] containing the original data, possibly without invalid strata
-#' * `data_structure`: a [data.frame] containing the original data structure (only trained variables) with zero rows
-#' * `data_means`: a [data.frame] containing the means of the original data (only trained variables)
-#' * `data_training`: a [data.frame] containing the training data of `data_original`
-#' * `data_testing`: a [data.frame] containing the testing data of `data_original`
-#' * `rows_training`: an [integer] vector of rows used for training in `data_original`
-#' * `rows_testing`: an [integer] vector of rows used for training in `data_original`
-#' * `predictions`: a [data.frame] containing predicted values based on the testing data
-#' * `metrics`: a [data.frame] with model metrics as returned by [yardstick::metrics()]
-#' * `correlation_threshold`: a [logical] indicating whether [recipes::step_corr()] has been applied
-#' * `centre`: a [logical] indicating whether [recipes::step_center()] has been applied
-#' * `scale`: a [logical] indicating whether [recipes::step_scale()] has been applied
+#' The `ml_*()` functions return a model object with the following
+#' [attributes][base::attributes()]:
+#'
+#' * `properties`: a [list] containing model metadata, including the ML
+#'   function used, engine, mode, training/testing sizes, and model-specific
+#'   parameters (e.g. `trees`, `tree_depth`)
+#' * `recipe`: a prepped [`recipes::recipe()`] used for training and testing
+#' * `data_original`: the original input data (after removal of invalid strata)
+#' * `data_structure`: a zero-row [data.frame] containing the trained variables
+#' * `data_means`: column means of numeric training variables
+#' * `data_training`: processed training data after recipe baking
+#' * `data_testing`: processed testing data after recipe baking
+#' * `rows_training`: integer indices of training rows in `data_original`
+#' * `rows_testing`: integer indices of testing rows in `data_original`
+#' * `predictions`: predictions on the testing data
+#' * `metrics`: performance metrics returned by [`yardstick::metrics()`]
+#' * `correlation_threshold`: numeric correlation threshold used in preprocessing
+#' * `centre`: logical indicating whether centring was applied
+#' * `scale`: logical indicating whether scaling was applied
 #' 
 #' @section Model Functions:
-#' These are the called functions from the `parsnip` package. Arguments set in `...` will be passed on to these `parsnip` functions:
-#' 
-#'  * `ml_decision_trees`: [parsnip::decision_tree()]
-#'  * `ml_linear_regression`: [parsnip::linear_reg()]
-#'  * `ml_logistic_regression`: [parsnip::logistic_reg()]
-#'  * `ml_neural_network`: [parsnip::mlp()]
-#'  * `ml_nearest_neighbour`: [parsnip::nearest_neighbor()]
-#'  * `ml_random_forest`: [parsnip::rand_forest()]
-#'  * `ml_xg_boost`: [parsnip::xgb_train()]
+#' These functions wrap `parsnip` model specifications. Arguments set in `...` will be passed on to these `parsnip` functions.
+#'
+#' * `ml_decision_trees`: [`parsnip::decision_tree()`]
+#' * `ml_linear_regression`: [`parsnip::linear_reg()`]
+#' * `ml_logistic_regression`: [`parsnip::logistic_reg()`]
+#' * `ml_neural_network`: [`parsnip::mlp()`]
+#' * `ml_nearest_neighbour`: [`parsnip::nearest_neighbor()`]
+#' * `ml_random_forest`: [`parsnip::rand_forest()`]
+#' * `ml_xg_boost`: [`parsnip::boost_tree()`]
 #' @name machine_learning
 #' @rdname machine_learning
 #' @export
@@ -188,7 +246,7 @@
 #'                          Petal.Width = 0.5)
 #' to_predict
 #' 
-#' # should be 'setosa' in the 'predicted' column with huge certainty:
+#' # should be 'setosa' in the 'predicted' column with high certainty:
 #' iris_model |> apply_model_to(to_predict)
 #' 
 #' # API formatting:
@@ -217,6 +275,7 @@
 #' # train model to predict genus based on MICs:
 #' genus <- esbl_tests |> ml_xg_boost(genus, everything())
 #' genus |> get_metrics()
+#' genus |> confusion_matrix()
 #' genus |> feature_importance_plot()
 #' genus |> autoplot()
 #' genus |> autoplot(plot_type = "gain")
@@ -228,12 +287,13 @@ ml_xg_boost <- function(.data,
                         strata = NULL,
                         na_threshold = 0.01,
                         correlation_threshold = 0.9,
-                        centre = TRUE,
-                        scale = TRUE,
+                        centre = FALSE, # scaling and centring are not necessary for any tree-based learners
+                        scale = FALSE,  # scaling and centring are not necessary for any tree-based learners
                         engine = "xgboost",
                         mode = c("classification", "regression", "unknown"),
                         trees = 15,
-                        ...) {
+                        ...,
+                        quiet = FALSE) {
   ml_exec(FUN = parsnip::boost_tree,
           .data = .data,
           outcome = {{ outcome }},
@@ -247,7 +307,8 @@ ml_xg_boost <- function(.data,
           engine = engine,
           mode = mode[1L],
           trees = trees,
-          ...)
+          ...,
+          quiet = quiet)
 }
 
 #' @rdname machine_learning
@@ -259,12 +320,13 @@ ml_decision_trees <- function(.data,
                               strata = NULL,
                               na_threshold = 0.01,
                               correlation_threshold = 0.9,
-                              centre = TRUE,
-                              scale = TRUE,
+                              centre = FALSE, # scaling and centring are not necessary for any tree-based learners
+                              scale = FALSE,  # scaling and centring are not necessary for any tree-based learners
                               engine = "rpart",
                               mode = c("classification", "regression", "unknown"),
                               tree_depth = 30,
-                              ...) {
+                              ...,
+                              quiet = FALSE) {
   ml_exec(FUN = parsnip::decision_tree,
           .data = .data,
           outcome = {{ outcome }},
@@ -278,7 +340,8 @@ ml_decision_trees <- function(.data,
           engine = engine,
           mode = mode[1L],
           tree_depth = tree_depth,
-          ...)
+          ...,
+          quiet = quiet)
 }
 
 #' @rdname machine_learning
@@ -290,12 +353,13 @@ ml_random_forest <- function(.data,
                              strata = NULL,
                              na_threshold = 0.01,
                              correlation_threshold = 0.9,
-                             centre = TRUE,
-                             scale = TRUE,
+                             centre = FALSE, # scaling and centring are not necessary any tree-based learners
+                             scale = FALSE,  # scaling and centring are not necessary any tree-based learners
                              engine = "ranger",
                              mode = c("classification", "regression", "unknown"),
                              trees = 500,
-                             ...) {
+                             ...,
+                             quiet = FALSE) {
   ml_exec(FUN = parsnip::rand_forest,
           .data = .data,
           outcome = {{ outcome }},
@@ -309,7 +373,8 @@ ml_random_forest <- function(.data,
           engine = engine,
           mode = mode[1L],
           trees = trees,
-          ...)
+          ...,
+          quiet = quiet)
 }
 
 #' @rdname machine_learning
@@ -327,7 +392,8 @@ ml_neural_network <- function(.data,
                               mode = c("classification", "regression", "unknown"),
                               penalty = 0,
                               epochs = 100,
-                              ...) {
+                              ...,
+                              quiet = FALSE) {
   ml_exec(FUN = parsnip::mlp,
           .data = .data,
           outcome = {{ outcome }},
@@ -342,7 +408,8 @@ ml_neural_network <- function(.data,
           mode = mode[1L],
           penalty = penalty,
           epochs = epochs,
-          ...)
+          ...,
+          quiet = quiet)
 }
 
 #' @rdname machine_learning
@@ -360,7 +427,8 @@ ml_nearest_neighbour <- function(.data,
                                  mode = c("classification", "regression", "unknown"),
                                  neighbors = 5,
                                  weight_func = "triangular",
-                                 ...) {
+                                 ...,
+                                 quiet = FALSE) {
   ml_exec(FUN = parsnip::nearest_neighbor,
           .data = .data,
           outcome = {{ outcome }},
@@ -375,7 +443,8 @@ ml_nearest_neighbour <- function(.data,
           mode = mode[1L],
           neighbors = neighbors,
           weight_func = weight_func,
-          ...)
+          ...,
+          quiet = quiet)
 }
 
 #' @rdname machine_learning
@@ -391,7 +460,8 @@ ml_linear_regression <- function(.data,
                                  scale = TRUE,
                                  engine = "lm",
                                  mode = "regression",
-                                 ...) {
+                                 ...,
+                                 quiet = FALSE) {
   ml_exec(FUN = parsnip::linear_reg,
           .data = .data,
           outcome = {{ outcome }},
@@ -404,7 +474,8 @@ ml_linear_regression <- function(.data,
           scale = scale,
           engine = engine,
           mode = mode,
-          ...)
+          ...,
+          quiet = quiet)
 }
 
 #' @rdname machine_learning
@@ -421,7 +492,8 @@ ml_logistic_regression <- function(.data,
                                    engine = "glm",
                                    mode = "classification",
                                    penalty = 0.1,
-                                   ...) {
+                                   ...,
+                                   quiet = FALSE) {
   ml_exec(FUN = parsnip::logistic_reg,
           .data = .data,
           outcome = {{ outcome }},
@@ -435,7 +507,8 @@ ml_logistic_regression <- function(.data,
           engine = engine,
           mode = mode,
           penalty = penalty,
-          ...)
+          ...,
+          quiet = quiet)
 }
 
 #' @importFrom dplyr mutate select across filter bind_cols all_of slice summarise mutate_all where
@@ -456,21 +529,17 @@ ml_exec <- function(FUN,
                     centre,
                     scale,
                     engine,
-                    ...) {
+                    ...,
+                    quiet) {
   
   start_the_clock <- Sys.time()
-  
-  if (!engine %in% c("lm", "glm")) {
-    # this will ask to install packages like ranger or rpart
-    check_is_installed(engine)
-  }
   
   # show which arguments are useful to set in the function:
   args_function <- formals(FUN)
   args_given <- list(...)
   # update function arguments with given arguments
   args_to_note <- utils::modifyList(args_function, args_given)
-  if (length(args_to_note) > 0 && interactive()) {
+  if (length(args_to_note) > 0 && isFALSE(quiet)) {
     args_msg <- paste("- ", names(args_to_note), "=", sapply(args_to_note, function(x) if (!is.null(x)) deparse(x) else "NULL"), collapse = "\n")
     message("Arguments currently set for `", deparse(substitute(FUN)), "()`:\n", args_msg)
   }
@@ -546,7 +615,7 @@ ml_exec <- function(FUN,
   
   suppressWarnings(
     properties <- c(list(ml_function = deparse(substitute(FUN)),
-                         engine_package = engine,
+                         engine = engine,
                          data_size = nrow(df),
                          training_fraction = training_fraction,
                          training_size = round(training_fraction * nrow(df)),
@@ -592,11 +661,11 @@ ml_exec <- function(FUN,
   
   # create actual model
   mdl <- FUN(...) |> set_engine(engine)
-  if (interactive()) {
+  if (isFALSE(quiet)) {
     message("\n[", format2(Sys.time(), "HH:MM:SS"), "] Fitting model...", appendLF = FALSE)
   }
   mdl <- mdl |> fit(outcome ~ ., data = df_training)
-  if (interactive()) {
+  if (isFALSE(quiet)) {
     message("Done.")
   }
   
@@ -631,7 +700,7 @@ ml_exec <- function(FUN,
   
   run_time <- Sys.time() - start_the_clock
   
-  if (interactive()) {
+  if (isFALSE(quiet)) {
     message("\nCreated ML model with these metrics:\n",
             paste("-", metrics$.metric, "=", round(metrics$.estimate, 3), collapse = "\n"))
     message("\nModel trained in ~", format(round(run_time)), ".\n")
@@ -659,10 +728,12 @@ ml_exec <- function(FUN,
 }
 
 is_xgboost <- function(object) {
-  identical(attributes(object)$properties$engine_package, "xgboost")
+  spec <- tryCatch(object$spec, error = function(e) NULL)
+  inherits(spec, "boost_tree") && spec$engine == "xgboost"
 }
 is_decisiontree <- function(object) {
-  identical(attributes(object)$properties$engine_package, "rpart")
+  spec <- tryCatch(object$spec, error = function(e) NULL)
+  inherits(spec, "decision_tree") || is_xgboost(object)
 }
 
 #' @method print certestats_ml
@@ -697,7 +768,7 @@ print.certestats_ml <- function(x, ...) {
 #' @export
 confusion_matrix.certestats_ml <- function(data, ...) {
   attributes(data)$predictions |>
-  confusion_matrix(truth:predicted)
+  confusion_matrix(truth = truth, estimate = predicted)
 }
 
 #' @rdname machine_learning
@@ -882,7 +953,7 @@ metrics.certestats_ml <- function(data, ...) {
 #' @rdname machine_learning
 #' @importFrom dplyr select mutate as_tibble tibble arrange desc
 #' @details
-#' Use [feature_importances()] to get the importance of all features/variables. Use [autoplot()] afterwards to plot the results. These two functions are combined in [feature_importance_plot()].
+#' Use [feature_importances()] to get the importance of all features/variables. Use [autoplot()] afterwards to plot the results. These two functions are combined in [feature_importance_plot()]. Feature importance values are model-specific heuristics and are not comparable across model types.
 #' @export
 feature_importances <- function(object, ...) {
   if (!inherits(object, "certestats_ml")) {
@@ -897,6 +968,7 @@ feature_importances <- function(object, ...) {
       arrange(desc(importance))
     
   } else if (is_decisiontree(object)) {
+    # another tree-based model
     out <- object$fit$variable.importance
     out <- tibble(feature = names(out), importance = out / sum(out, na.rm = TRUE))
     
@@ -926,12 +998,59 @@ gain_plot <- function(object, ...) {
 }
 
 #' @rdname machine_learning
+#' @details Use The [tree_plot()] to plot the decision tree. For XGBoost models, [xgboost::xgb.plot.tree()] will be used. For all other tree models, [rpart.plot::rpart.plot()] will be used.
+#' @importFrom certestyle colourpicker
 #' @export
 tree_plot <- function(object, ...) {
   if (!is_decisiontree(object)) {
     stop("Tree plots only work for decision tree models.")
   }
-  rpart.plot::rpart.plot(object$fit, roundint = FALSE, ...)
+  
+  args <- list(...)
+  
+  if (is_xgboost(object)) {
+    rlang::check_installed("DiagrammeR")
+    rlang::check_installed("xgboost")
+    
+    if (is.null(args$tree)) {
+      stop("For XGBoost models, you must provide `tree` to indicate which tree to print.\n",
+           "The current model has ", as.double(gsub("[^0-9]", "", deparse(object$spec$args$trees))), " trees.", call. = FALSE)
+    } else {
+      args$trees <- args$tree - 1 # the xgboost::xgb.plot.tree() function is zero-indexed
+      args <- args$tree <- NULL
+    }
+    args$model <- object$fit
+    fn <- xgboost::xgb.plot.tree
+    fn_name <- "xgboost::xgb.plot.tree"
+    
+  } else {
+    rlang::check_installed("rpart.plot")
+    
+    # another tree-based model
+    if ("package:certeplot2" %in% search()) {
+      args$box.palette <- as.list(colourpicker("certe3", 36))
+    }
+    if (is.null(args$roundint)) {
+    args$roundint <- FALSE
+    }
+    if (is.null(args$type)) {
+      args$type <- 4
+    }
+    if (is.null(args$extra)) {
+      args$extra <- 8
+    }
+    args$x <- object$fit
+    fn <- rpart.plot::rpart.plot
+    fn_name <- "rpart.plot::rpart.plot"
+  }
+  
+  valid_args <- names(args)[names(args) %in% names(formals(fn))]
+  if (any(!names(args) %in% valid_args)) {
+    warning("Ignoring unknown argument(s) in `tree_plot()` for `", fn_name, "()`: ", toString(names(args)[!names(args) %in% valid_args]),
+            call. = FALSE)
+  }
+  args <- args[names(args) %in% valid_args]
+  do.call(fn, args)
 }
 
 #' @rdname machine_learning
@@ -1270,7 +1389,7 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   
   # (re)create the model specification
   model_spec <- do.call(FUN, args = params) |> 
-    set_engine(model_prop$properties$engine_package) |> 
+    set_engine(model_prop$properties$engine) |> 
     set_mode(model_prop$properties$mode)
   
   # create the worflow, using the tuning specification
