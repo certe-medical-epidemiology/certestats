@@ -237,6 +237,8 @@ confusion_matrix.default <- function(data,
 
 #' @noRd
 #' @export
+#' @importFrom dplyr select mutate_all mutate arrange
+#' @importFrom tidyr pivot_wider
 #' @importFrom cli cli_h1
 print.certestats_confusion_matrix <- function(x, ...) {
   
@@ -265,7 +267,7 @@ print.certestats_confusion_matrix <- function(x, ...) {
     df <- df |> select(-.estimator) 
   }
   
-  wide <- tidyr::pivot_wider(
+  wide <- pivot_wider(
     df,
     id_cols = .metric_name,
     names_from = .class,
@@ -275,6 +277,16 @@ print.certestats_confusion_matrix <- function(x, ...) {
   wide <- wide[order(tolower(wide$.metric_name)), ]
   is_num <- vapply(wide, is.numeric, logical(1))
   wide[is_num] <- lapply(wide[is_num], function(x) ifelse(is.finite(x), round(x, 3), x))
+  wide <- wide |>
+    mutate_all(function(x) gsub("NA", "  ", format(x))) |>
+    arrange(.metric_name)
+  if (length(class_labels) > 1) {
+    wide <- wide |>
+      mutate(is_classwise = nzchar(trimws(wide[[3]]))) |>
+      arrange(!is_classwise, .metric_name) |>
+      select(-is_classwise)
+  }
+  
   
   print_df <- as.data.frame(wide)
   print_df$.metric_name <- format(print_df$.metric_name, justify = "left")
@@ -399,23 +411,23 @@ print.certestats_confusion_matrix <- function(x, ...) {
 .discover_yardstick_metrics <- function() {
   ns <- asNamespace("yardstick")
   ex <- getNamespaceExports("yardstick")
+  ex <- ex[!ex %in% c("roc_aunp", "roc_aunu")]
   objs <- mget(ex, envir = ns, inherits = TRUE)
   fns <- Filter(is.function, objs)
   
   # Keep only metric functions created by yardstick constructors; they carry classes like
-  # "class_metric", "class_prob_metric", "numeric_metric", etc.
+  # "class_metric", "prob_metric", "numeric_metric", etc.
   is_metric <- vapply(fns, function(fn) any(grepl("_metric$", class(fn))), logical(1))
   fns <- fns[is_metric]
   
   mtype <- vapply(fns, function(fn) {
     cls <- class(fn)
-    if (any(cls == "class_prob_metric")) return("class_prob")
+    if (any(cls == "prob_metric")) return("prob")
     if (any(cls == "class_metric")) return("class")
     if (any(cls == "numeric_metric")) return("numeric")
-    if (any(cls == "survival_metric")) return("survival")
+    if (any(cls == "static_survival_metric")) return("survival")
+    if (any(cls == "integrated_survival_metric")) return("survival")
     if (any(cls == "dynamic_survival_metric")) return("dynamic_survival")
-    if (any(cls == "ordered_prob_metric")) return("ordered_prob")
-    if (any(cls == "ordered_metric")) return("ordered")
     "other"
   }, character(1))
   
@@ -465,6 +477,9 @@ print.certestats_confusion_matrix <- function(x, ...) {
 
 # Create a short abbreviation from a title (capital letters). Only used if informative.
 .title_abbrev <- function(title) {
+  if (title %like% "Brier Score|Costs Function") return("")
+  if (title %like% "Area under the Precision Recall") return("AUCPR")
+  if (title %like% "Area under the Receiver Operator") return("AUROC")
   ab <- gsub("[^A-Z]", "", title)
   if (nchar(ab) >= 3) ab else ""
 }
@@ -492,14 +507,12 @@ print.certestats_confusion_matrix <- function(x, ...) {
   
   if ("na_rm" %in% fmls) args$na_rm <- na.rm
   
-  
   if (identical(type, "class")) {
     if (!("estimate" %in% names(df))) stop("Internal: missing estimate column.", call. = FALSE)
     if ("estimate" %in% fmls) args$estimate <- rlang::sym("estimate")
-  } else if (identical(type, "class_prob")) {
-    prob_cols <- names(df)[grepl("^\\.pred_", names(df)) & names(df) != ".pred_class"]
-    if (length(prob_cols) == 0) stop("Internal: missing probability columns.", call. = FALSE)
-    if ("estimate" %in% fmls) args$estimate <- all_of(prob_cols)
+  } else if (identical(type, "prob")) {
+    args$estimate <- NULL
+    args <- c(args, list(str2lang('starts_with(".pred_")')))
   } else if (identical(type, "numeric")) {
     if (!("estimate" %in% names(df))) stop("Internal: missing estimate column.", call. = FALSE)
     if ("estimate" %in% fmls) args$estimate <- rlang::sym("estimate")
@@ -529,7 +542,7 @@ print.certestats_confusion_matrix <- function(x, ...) {
   out <- character()
   
   if (truth_is_factor && estimate_is_factor) out <- c(out, "class")
-  if (truth_is_factor && has_prob) out <- c(out, "class_prob")
+  if (truth_is_factor && has_prob) out <- c(out, "prob")
   if (truth_is_numeric && estimate_is_numeric) out <- c(out, "numeric")
   
   unique(out)
