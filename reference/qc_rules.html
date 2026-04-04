@@ -147,14 +147,14 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Quality Control Rules According to Nelson</span> <span style="color: #00BBBB;">───────────────────────────────────</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  n    =  250 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  mean =  0.02021577 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  sd   =  0.9490678 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  mean =  0.02393559 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  sd   =  0.9504695 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">QC Rule 1: One Point is more than 3 Standard Deviations from the Mean</span> ──</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 172</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 173</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.905545</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -169,21 +169,21 @@
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">QC Rule 4: 14 (or more) Points in a Row Alternate in Direction, Increasing then Decreasing</span> ──</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 175</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 176</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -0.0398931</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">QC Rule 5: 2 Out of 3 Points in a Row are &gt;2 Sd from the Mean</span> ──</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 22</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] -2.638728</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">QC Rule 6: 4 Out of 5 Points in a Row are &gt;1 Sd from the Mean</span> ──</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting position:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 127</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 128</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Violation on starting value:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1.419601</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -198,12 +198,12 @@
 <span class="r-in"><span><span class="co"># turn into data.frame, e.g. for export</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   index      value rule_1 rule_2 rule_3 rule_4 rule_5 rule_6 rule_7 rule_8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  0.9161857     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2 -0.1437104     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3  0.6700570     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4 -0.9903091     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5  0.4734276     NA     NA     NA     NA     NA     NA     NA     NA</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6 -1.2799332     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1     1  0.8435145     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2     2  0.9161857     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3     3 -0.1437104     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4     4  0.6700570     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5     5 -0.9903091     NA     NA     NA     NA     NA     NA     NA     NA</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6     6  0.4734276     NA     NA     NA     NA     NA     NA     NA     NA</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span></span></span>
@@ -221,7 +221,7 @@
 
 
       <footer><div class="copyright">
-  <p></p><p>Developed by Matthijs S. Berends, Erwin Dijkstra, Certe Medical Diagnostics &amp; Advice Foundation.</p>
+  <p></p><p>Developed by Matthijs S. Berends, Erwin E. A. Hassing, Erwin Dijkstra, Certe Medical Diagnostics &amp; Advice Foundation.</p>
 </div>
 
 <div class="pkgdown">
