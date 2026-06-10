@@ -1,6 +1,6 @@
 Package: certestats
 Title: A Certe R Package for Statistical Modelling
-Version: 1.24.7
+Version: 1.25.0
 Authors@R: c(
   person(given = c("Matthijs", "S."), 
          family = "Berends",
@@ -56,6 +56,7 @@ Suggests:
   rlang,
   rpart,
   rpart.plot,
+  surveillance (>= 1.25.0),
   survival,
   testthat (>= 2.0.0),
   xgboost
