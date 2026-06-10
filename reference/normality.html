@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.24.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.25.0</span>
       </span>
     </div>
 
@@ -116,10 +116,10 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   statistic    p.value method                             interpretation suggest</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>    0.960   6.03<span style="color: #949494;">e</span><span style="color: #BB0000;">- 16</span> Shapiro-Wilk normality test        Not normally … <span style="color: #BB0000;">NA</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>    0.500   1.03<span style="color: #949494;">e</span><span style="color: #BB0000;">-217</span> Asymptotic one-sample Kolmogorov-… Not normally … <span style="color: #BB0000;">NA</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>    0.014<span style="text-decoration: underline;">9</span> <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>     Skewness                           0 in normal d… <span style="color: #BB0000;">NA</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>    1.85   <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>     Kurtosis                           3 in normal d… <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>   0.958    2.72<span style="color: #949494;">e</span><span style="color: #BB0000;">- 16</span> Shapiro-Wilk normality test        Not normally … <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>   0.501    4.49<span style="color: #949494;">e</span><span style="color: #BB0000;">-218</span> Asymptotic one-sample Kolmogorov-… Not normally … <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>  -<span style="color: #BB0000;">0.003</span><span style="color: #BB0000; text-decoration: underline;">79</span> <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>     Skewness                           0 in normal d… <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>   1.83    <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>     Kurtosis                           3 in normal d… <span style="color: #BB0000;">NA</span>     </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">normality</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
@@ -127,10 +127,10 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   statistic p.value method                                interpretation suggest</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                                 <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>   0.998     0.387 Shapiro-Wilk normality test           Normally dist… (as is)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>   0.029<span style="text-decoration: underline;">1</span>    0.365 Asymptotic one-sample Kolmogorov-Smi… Normally dist… (as is)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>   0.004<span style="text-decoration: underline;">68</span>  <span style="color: #BB0000;">NA</span>     Skewness                              0 in normal d… <span style="color: #BB0000;">NA</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>   2.77     <span style="color: #BB0000;">NA</span>     Kurtosis                              3 in normal d… <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>    0.999    0.726 Shapiro-Wilk normality test           Normally dist… (as is)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>    0.036<span style="text-decoration: underline;">7</span>   0.134 Asymptotic one-sample Kolmogorov-Smi… Normally dist… (as is)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>    0.016<span style="text-decoration: underline;">9</span>  <span style="color: #BB0000;">NA</span>     Skewness                              0 in normal d… <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>    2.94    <span style="color: #BB0000;">NA</span>     Kurtosis                              3 in normal d… <span style="color: #BB0000;">NA</span>     </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Exponential.html" class="external-link">rexp</a></span><span class="op">(</span><span class="fl">1000</span>, rate <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">normality</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
@@ -138,10 +138,10 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 4 × 5</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   statistic    p.value method                             interpretation suggest</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                              <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>     0.820  5.55<span style="color: #949494;">e</span><span style="color: #BB0000;">- 32</span> Shapiro-Wilk normality test        Not normally … <span style="color: #BB0000;">NA</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>     0.500  1.34<span style="color: #949494;">e</span><span style="color: #BB0000;">-217</span> Asymptotic one-sample Kolmogorov-… Not normally … <span style="color: #BB0000;">NA</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>     1.93  <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>     Skewness                           0 in normal d… <span style="color: #BB0000;">NA</span>     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>     8.87  <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>     Kurtosis                           3 in normal d… <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>     0.837  8.64<span style="color: #949494;">e</span><span style="color: #BB0000;">- 31</span> Shapiro-Wilk normality test        Not normally … <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">2</span>     0.501  4.98<span style="color: #949494;">e</span><span style="color: #BB0000;">-218</span> Asymptotic one-sample Kolmogorov-… Not normally … <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">3</span>     1.75  <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>     Skewness                           0 in normal d… <span style="color: #BB0000;">NA</span>     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">4</span>     6.89  <span style="color: #BB0000;">NA</span>   <span style="color: #949494;"> </span>     Kurtosis                           3 in normal d… <span style="color: #BB0000;">NA</span>     </span>
 </code></pre></div>
     </div>
   </div>

@@ -21,7 +21,7 @@ model interpretation."><meta property="og:image" content="https://certe-medical-
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.24.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.25.0</span>
       </span>
     </div>
 
@@ -152,20 +152,25 @@ specificity, F1, MCC, Kappa, and others, depending on compatibility.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    No   13 834</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Model Metrics</span> <span style="color: #00BBBB;">───────────────────────────────────────────────────────────────</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Accuracy                               0.961</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Balanced Accuracy                      0.937</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  F1 Score                               0.863</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  J-Index                                0.874</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Kappa                                  0.840</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Matthews Correlation Coefficient (MCC) 0.842</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Negative Predictive Value (NPV)        0.985</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Positive Predictive Value (PPV)        0.826</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Precision                              0.826</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Prevalence                             0.150</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Recall                                 0.904</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Sensitivity                            0.904</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  Specificity                            0.970</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Accuracy                                   0.961</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Balanced Accuracy                          0.937</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Distance to ROC Corner (DROCC)             0.100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  F1 Score                                   0.863</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Fall-Out (False Positive Rate) (FOFPR)     0.030</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  J-Index                                    0.874</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Kappa                                      0.840</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Markedness                                 0.810</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Matthews Correlation Coefficient (MCC)     0.842</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Miss Rate (False Negative Rate) (MRFNR)    0.096</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Negative Predictive Value (NPV)            0.985</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Positive Predictive Value (PPV)            0.826</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Precision                                  0.826</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Prevalence                                 0.150</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Recall                                     0.904</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Sensitivity                                0.904</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Specificity                                0.970</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Symmetric Extremal Dependence Index (SEDI) 0.956</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Model Interpretation</span> <span style="color: #00BBBB;">────────────────────────────────────────────────────────</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -201,10 +206,14 @@ specificity, F1, MCC, Kappa, and others, depending on compatibility.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                 overall setosa versicolor</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Accuracy                                         0.947  1.000      0.947</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Balanced Accuracy                                0.962  1.000      0.946</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Distance to ROC Corner (DROCC)                   0.056  0.000      0.077</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  F1 Score                                         0.951  1.000      0.955</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Fall-Out (False Positive Rate) (FOFPR)           0.028  0.000      0.062</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  J-Index                                          0.923  1.000      0.892</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Kappa                                            0.919  1.000      0.892</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Markedness                                       0.923  1.000      0.892</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Matthews Correlation Coefficient (MCC)           0.919  1.000      0.892</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Miss Rate (False Negative Rate) (MRFNR)          0.049  0.000      0.045</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Negative Predictive Value (NPV)                  0.972  1.000      0.938</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Positive Predictive Value (PPV)                  0.951  1.000      0.955</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Precision                                        0.951  1.000      0.955</span>
@@ -212,6 +221,7 @@ specificity, F1, MCC, Kappa, and others, depending on compatibility.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Recall                                           0.951  1.000      0.955</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Sensitivity                                      0.951  1.000      0.955</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Specificity                                      0.972  1.000      0.938</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Symmetric Extremal Dependence Index (SEDI)       0.973  1.000      0.963</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Area under the Precision Recall Curve (AUCPR)    0.930                  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Area under the Receiver Operator Curve (AUROC)   0.976                  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  Brier Score for Classification Models            0.050                  </span>
@@ -221,10 +231,14 @@ specificity, F1, MCC, Kappa, and others, depending on compatibility.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  virginica</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.947</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.939</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.092</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.962</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.083</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.878</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.878</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.878</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.878</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.038</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.917</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.962</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.962</span>
@@ -232,6 +246,7 @@ specificity, F1, MCC, Kappa, and others, depending on compatibility.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.962</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.962</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.917</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      0.957</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           </span>
