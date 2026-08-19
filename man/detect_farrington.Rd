@@ -14,6 +14,7 @@ detect_farrington(
   df,
   column_date = NULL,
   column_patientid = NULL,
+  population = NULL,
   method = "farrington",
   frequency = 52,
   years_back = 5,
@@ -56,6 +57,13 @@ first date column will be used.}
 \item{column_patientid}{Name of the column to use for patient IDs. If left
 blank, the first column resembling \code{"patient|patid"} will be used.}
 
+\item{population}{A \link{data.frame} with columns \code{date} and \code{population},
+giving the denominator over time, such as patient-days per week for a
+hospital ward. Required when \code{population_offset = TRUE}. It is supplied
+separately from \code{df} because periods with zero cases still need a
+denominator, so it cannot be derived from the line list. Values are
+carried forward to each epoch of the aggregated time series.}
+
 \item{method}{Detection method to use. One of:
 \itemize{
 \item \code{"farrington"} (default): the improved Farrington Flexible method
@@ -90,8 +98,7 @@ GLM (Farrington only). Defaults to \code{TRUE}.}
 
 \item{population_offset}{A \link{logical} indicating whether to include a
 population offset in the GLM (Farrington only). Defaults to \code{FALSE}. If
-\code{TRUE}, a \code{column_population} must be provided or the \code{sts} object must
-have a populated \code{populationFrac} slot.}
+\code{TRUE}, \code{population} must be provided.}
 
 \item{n_periods}{Number of reference periods in the factor variable for the
 baseline (Farrington Flexible only). Defaults to \code{1}, which corresponds to

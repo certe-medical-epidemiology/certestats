@@ -68,8 +68,13 @@
 #'   GLM (Farrington only). Defaults to `TRUE`.
 #' @param population_offset A [logical] indicating whether to include a
 #'   population offset in the GLM (Farrington only). Defaults to `FALSE`. If
-#'   `TRUE`, a `column_population` must be provided or the `sts` object must
-#'   have a populated `populationFrac` slot.
+#'   `TRUE`, `population` must be provided.
+#' @param population A [data.frame] with columns `date` and `population`,
+#'   giving the denominator over time, such as patient-days per week for a
+#'   hospital ward. Required when `population_offset = TRUE`. It is supplied
+#'   separately from `df` because periods with zero cases still need a
+#'   denominator, so it cannot be derived from the line list. Values are
+#'   carried forward to each epoch of the aggregated time series.
 #' @param n_periods Number of reference periods in the factor variable for the
 #'   baseline (Farrington Flexible only). Defaults to `1`, which corresponds to
 #'   the original Farrington et al. (1996) definition. Setting this to e.g. `10`
@@ -188,6 +193,7 @@
 detect_farrington <- function(df,
                               column_date = NULL,
                               column_patientid = NULL,
+                              population = NULL,
                               method = "farrington",
                               frequency = 52,
                               years_back = 5,
@@ -266,6 +272,28 @@ detect_farrington <- function(df,
     aggregate.by = aggregate_by
   )
   
+  # --- attach the population denominator, if given ---
+  if (!is.null(population)) {
+    if (!is.data.frame(population) ||
+        !all(c("date", "population") %in% colnames(population))) {
+      stop("`population` must be a data.frame with columns 'date' and 'population'.",
+           call. = FALSE)
+    }
+    pop <- population[order(as.Date(population$date)), , drop = FALSE]
+    all_epochs <- surveillance::epoch(sts_obj, as.Date = TRUE)
+    ind <- findInterval(all_epochs, as.Date(pop$date))
+    ind[ind == 0] <- 1L
+    pop_vec <- as.numeric(pop$population)[ind]
+    if (anyNA(pop_vec) || any(pop_vec <= 0)) {
+      stop("`population` must be positive and cover all periods in the data.",
+           call. = FALSE)
+    }
+    surveillance::population(sts_obj) <- matrix(pop_vec, ncol = 1)
+  } else if (isTRUE(population_offset)) {
+    stop("`population_offset = TRUE` requires a `population` data.frame.",
+         call. = FALSE)
+  }
+  
   n_obs <- nrow(sts_obj)
   
   # --- determine range to evaluate ---
@@ -323,6 +351,12 @@ detect_farrington <- function(df,
       thresholdMethod = threshold_method
     )
     
+    # allow the caller to override or extend the control list
+    extra <- list(...)
+    if (length(extra) > 0) {
+      control[names(extra)] <- extra
+    }
+    
     sts_result <- surveillance::farringtonFlexible(sts_obj, control = control)
     
   } else {
@@ -339,6 +373,12 @@ detect_farrington <- function(df,
       minSigma = 0,
       alpha = alpha  # NULL is handled by earsC itself
     )
+    
+    # allow the caller to override or extend the control list
+    extra <- list(...)
+    if (length(extra) > 0) {
+      control[names(extra)] <- extra
+    }
     
     sts_result <- surveillance::earsC(sts_obj, control = control)
   }
@@ -515,7 +555,6 @@ print.farrington_clusters <- function(x, ...) {
     }
   }
   
-  print(n_cl)
   intro <- "=> Detected {cli::no(n_cl)} cluster{?s} using {method_label} ({n_aberrations} aberration{?s} across {nrow(x$details)} evaluated time point{?s})"
   
   if (n_cl > 0) {
