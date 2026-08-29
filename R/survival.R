@@ -24,7 +24,6 @@
 #'
 #' Perform survival analysis using tidymodels
 #' @importFrom dplyr transmute
-#' @importFrom parsnip set_engine set_mode
 #' @noRd
 survival_exec <- function(.data,
                           days,
@@ -35,9 +34,10 @@ survival_exec <- function(.data,
                           engine,
                           FUN,
                           ...) {
-  check_is_installed(c("censored", "survival"))
+  check_is_installed(c("censored", "survival", "parsnip"))
   # support mode 'censored regression' for different engines:
   loadNamespace("censored")
+  loadNamespace("parsnip")
   
   df <- .data |>
     select(days = {{ days }},
@@ -63,8 +63,8 @@ survival_exec <- function(.data,
   df_test <- df[-rows_train, , drop = FALSE]
   
   mdl_recipe <- FUN(...) |>
-    set_engine(engine) |>
-    set_mode("censored regression")
+    parsnip::set_engine(engine) |>
+    parsnip::set_mode("censored regression")
   
   fit <- mdl_recipe |>
     fit(survival::Surv(days, status) ~ ., data = df_train)

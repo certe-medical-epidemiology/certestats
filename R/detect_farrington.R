@@ -146,7 +146,6 @@
 #' @importFrom dplyr n_distinct group_by summarise filter mutate ungroup select
 #'   arrange tibble
 #' @importFrom lubridate days
-#' @importFrom AMR get_episode
 #' @importFrom certestyle format2
 #' @seealso [detect_disease_clusters()], [surveillance::farringtonFlexible()],
 #'   [surveillance::earsC()]
@@ -225,7 +224,8 @@ detect_farrington <- function(df,
          "Install it with: install.packages('surveillance')",
          call. = FALSE)
   }
-  
+  check_is_installed("AMR")
+
   # --- resolve column names ---
   if (is.null(column_date)) {
     date_cols <- vapply(df, FUN.VALUE = logical(1),
@@ -409,7 +409,7 @@ detect_farrington <- function(df,
       upperbound = aberration_upper
     ) |>
       arrange(date) |>
-      mutate(cluster = get_episode(date, case_free_days = case_free_days))
+      mutate(cluster = AMR::get_episode(date, case_free_days = case_free_days))
   }
   
   # --- build cluster summary ---

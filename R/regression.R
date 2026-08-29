@@ -27,7 +27,6 @@
 #' @param family only used for [glm()]
 #' @param object data to plot
 #' @param ... arguments for [lm()] or [glm()]
-#' @importFrom broom tidy
 #' @rdname regression
 #' @export
 #' @examples 
@@ -49,6 +48,7 @@ regression <- function(x, ...) {
 #' @export
 #' @rdname regression
 regression.default <- function(x, y = NULL, type = "lm", family = stats::gaussian, ...) {
+  check_is_installed("broom")
   if (is.null(y)) {
     y <- seq_len(length(x))
   }
@@ -57,7 +57,7 @@ regression.default <- function(x, y = NULL, type = "lm", family = stats::gaussia
   } else {
     mdl <- stats::glm(y ~ x, family = family, ...)
   }
-  out <- tidy(mdl)
+  out <- broom::tidy(mdl)
   structure(out,
             mdl = mdl,
             type = type,
@@ -86,18 +86,18 @@ plot.certestats_reg <- function(x, ...) {
 #' @export
 #' @importFrom certestyle colourpicker
 #' @importFrom ggplot2 autoplot ggplot geom_point geom_smooth theme_minimal aes theme element_text
-#' @importFrom broom augment
 #' @rdname regression
 autoplot.certestats_reg <- function(object, ...) {
+  check_is_installed("broom")
   x <- object
   mdl <- attributes(x)$mdl
   type <- attributes(x)$type
-  
+
   r2 <- summary(mdl)$`r.squared`
   p <- x$p.value[nrow(x)]
-  
+
   out <- mdl |>
-    augment() |>
+    broom::augment() |>
     ggplot(mapping = aes(x = y, y = x)) +
     geom_point(colour = colourpicker("certe")) +
     geom_smooth(method = ifelse(type == "lm", "lm", "loess"),

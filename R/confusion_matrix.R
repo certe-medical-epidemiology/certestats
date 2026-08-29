@@ -47,7 +47,6 @@
 #' @import yardstick
 #' @importFrom tibble tibble as_tibble
 #' @importFrom dplyr across all_of select everything mutate select all_of mutate bind_rows filter
-#' @importFrom hardhat frequency_weights
 #'
 #' @rdname confusion_matrix
 #' @export
@@ -376,7 +375,7 @@ print.certestats_confusion_matrix <- function(x, ...) {
   
   # case weights (preferred; avoids row replication)
   if (requireNamespace("hardhat", quietly = TRUE)) {
-    out$.w <- frequency_weights(freq)
+    out$.w <- hardhat::frequency_weights(freq)
   } else {
     # fallback: replicate (can be large)
     out <- out[rep(seq_len(nrow(out)), freq), , drop = FALSE]

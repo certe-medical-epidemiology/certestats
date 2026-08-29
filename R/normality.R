@@ -23,24 +23,24 @@
 #' @param x vector of values
 #' @param na.rm Remove empty values
 #' @inheritParams stats::quantile
-#' @importFrom broom tidy
 #' @importFrom dplyr bind_rows
 #' @inheritSection math_functions Default values of `na.rm`
 #' @export
-#' @examples 
+#' @examples
 #' x <- runif(1000)
 #' normality(x)
-#' 
+#'
 #' x <- rnorm(1000)
 #' normality(x)
-#' 
+#'
 #' x <- rexp(1000, rate = 3)
 #' normality(x)
 normality <- function(x, na.rm = getOption("na.rm", FALSE), type = getOption("quantile.type", 7)) {
+   check_is_installed("broom")
    x <- as.double(x)
    y <- seq_len(length(x))
-   
-   kolmogorov_smirnov <- tidy(stats::ks.test(x, y = "pnorm"))
+
+   kolmogorov_smirnov <- broom::tidy(stats::ks.test(x, y = "pnorm"))
    kolmogorov_smirnov$interpretation <- ifelse(kolmogorov_smirnov$p.value < 0.05,
                                                "Not normally distributed",
                                                "Normally distributed")
@@ -48,7 +48,7 @@ normality <- function(x, na.rm = getOption("na.rm", FALSE), type = getOption("qu
    stat_tests <- kolmogorov_smirnov[, colnames(kolmogorov_smirnov)[colnames(kolmogorov_smirnov) != "alternative"]]
    
    if (length(x) <= 5000) {
-     shapiro_wilk <- tidy(stats::shapiro.test(x))
+     shapiro_wilk <- broom::tidy(stats::shapiro.test(x))
      shapiro_wilk$interpretation <- ifelse(shapiro_wilk$p.value < 0.05,
                                            "Not normally distributed",
                                            "Normally distributed")
@@ -72,12 +72,11 @@ normality <- function(x, na.rm = getOption("na.rm", FALSE), type = getOption("qu
    bind_rows(stat_tests, skew, kurt)
 }
 
-#' @importFrom broom tidy
 #' @importFrom dplyr case_when
 suggest <- function(fn, x, ...) {
   tryCatch({
     suppressWarnings(
-      p <- function(x) tidy(fn(x, ...))$p.value
+      p <- function(x) broom::tidy(fn(x, ...))$p.value
     )
     suppressWarnings(
       case_when(
