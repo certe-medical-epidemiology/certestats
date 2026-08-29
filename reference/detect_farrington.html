@@ -21,7 +21,7 @@ available as a fallback via the method argument."><meta property="og:image" cont
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">certestats</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.25.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">1.26.0</span>
       </span>
     </div>
 
@@ -88,6 +88,7 @@ available as a fallback via the <code>method</code> argument.</p>
 <span>  <span class="va">df</span>,</span>
 <span>  column_date <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  column_patientid <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  population <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  method <span class="op">=</span> <span class="st">"farrington"</span>,</span>
 <span>  frequency <span class="op">=</span> <span class="fl">52</span>,</span>
 <span>  years_back <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -141,6 +142,15 @@ first date column will be used.</p></dd>
 blank, the first column resembling <code>"patient|patid"</code> will be used.</p></dd>
 
 
+<dt id="arg-population">population<a class="anchor" aria-label="anchor" href="#arg-population"></a></dt>
+<dd><p>A <a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a> with columns <code>date</code> and <code>population</code>,
+giving the denominator over time, such as patient-days per week for a
+hospital ward. Required when <code>population_offset = TRUE</code>. It is supplied
+separately from <code>df</code> because periods with zero cases still need a
+denominator, so it cannot be derived from the line list. Values are
+carried forward to each epoch of the aggregated time series.</p></dd>
+
+
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
 <dd><p>Detection method to use. One of:</p><ul><li><p><code>"farrington"</code> (default): the improved Farrington Flexible method
 (Noufaily et al., 2012), suitable when &gt;= 3 years of historic data are
@@ -188,8 +198,7 @@ GLM (Farrington only). Defaults to <code>TRUE</code>.</p></dd>
 <dt id="arg-population-offset">population_offset<a class="anchor" aria-label="anchor" href="#arg-population-offset"></a></dt>
 <dd><p>A <a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a> indicating whether to include a
 population offset in the GLM (Farrington only). Defaults to <code>FALSE</code>. If
-<code>TRUE</code>, a <code>column_population</code> must be provided or the <code>sts</code> object must
-have a populated <code>populationFrac</code> slot.</p></dd>
+<code>TRUE</code>, <code>population</code> must be provided.</p></dd>
 
 
 <dt id="arg-n-periods">n_periods<a class="anchor" aria-label="anchor" href="#arg-n-periods"></a></dt>
@@ -355,7 +364,6 @@ Software</em>, <strong>70</strong>(10), 1-35.</p></li>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'date' for dates</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'patient' for patient IDs</span>
 <span class="r-in"><span><span class="va">result</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected 3 clusters using Farrington Flexible (3 aberrations across 52</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> evaluated time points) with a total of 13 cases.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
@@ -416,7 +424,6 @@ Software</em>, <strong>70</strong>(10), 1-35.</p></li>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'date' for dates</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'patient' for patient IDs</span>
 <span class="r-in"><span><span class="va">result_ears</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected 1 cluster using EARS C2 (2 aberrations across 19 evaluated time</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> points) with a total of 7 cases.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
@@ -448,7 +455,6 @@ Software</em>, <strong>70</strong>(10), 1-35.</p></li>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'date' for dates</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Using column 'patient' for patient IDs</span>
 <span class="r-in"><span><span class="va">result_large</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> =&gt; Detected 3 clusters using Farrington Flexible (3 aberrations across 52</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> evaluated time points) with a total of 13 cases.</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
@@ -496,7 +502,7 @@ Software</em>, <strong>70</strong>(10), 1-35.</p></li>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>
