@@ -513,9 +513,6 @@ ml_logistic_regression <- function(.data,
 
 #' @importFrom dplyr mutate select across filter bind_cols all_of slice summarise mutate_all where
 #' @importFrom yardstick metrics
-#' @importFrom parsnip set_engine
-#' @importFrom recipes recipe step_corr step_center step_scale step_rm step_naomit all_predictors all_outcomes prep bake step_mutate_at step_dummy all_nominal_predictors all_numeric_predictors
-#' @importFrom rsample initial_split training testing
 #' @importFrom certestyle format2
 #' @importFrom generics fit
 ml_exec <- function(FUN,
@@ -531,7 +528,8 @@ ml_exec <- function(FUN,
                     engine,
                     ...,
                     quiet) {
-  
+  check_is_installed(c("recipes", "rsample", "parsnip", "hardhat"))
+
   start_the_clock <- Sys.time()
   
   # show which arguments are useful to set in the function:
@@ -624,43 +622,43 @@ ml_exec <- function(FUN,
                     list(...))
   )
   
-  df_split <- initial_split(df, strata = all_of(.strata), prop = training_fraction)
-  df_split_train <- df_split |> training() |> select(-all_of(.strata))
-  df_split_test <- df_split |> testing() |> select(-all_of(.strata))
-  
+  df_split <- rsample::initial_split(df, strata = all_of(.strata), prop = training_fraction)
+  df_split_train <- df_split |> rsample::training() |> select(-all_of(.strata))
+  df_split_test <- df_split |> rsample::testing() |> select(-all_of(.strata))
+
   ## Create recipe ----
-  mdl_recipe <- df_split_train |> recipe(outcome ~ .)
-  
+  mdl_recipe <- df_split_train |> recipes::recipe(outcome ~ .)
+
   # make dummies for all characters/factors
-  mdl_recipe <- mdl_recipe |> step_dummy(all_nominal_predictors())
+  mdl_recipe <- mdl_recipe |> recipes::step_dummy(recipes::all_nominal_predictors())
   # flag all binary columns
-  mdl_recipe <- mdl_recipe |> step_mutate_at(all_predictors(), fn = try_binary)
+  mdl_recipe <- mdl_recipe |> recipes::step_mutate_at(recipes::all_predictors(), fn = try_binary)
   # unselect columns with too many NAs
-  mdl_recipe <- mdl_recipe |> step_rm(where(function(x) sum(is.na(x)) / length(x) > !!na_threshold))
+  mdl_recipe <- mdl_recipe |> recipes::step_rm(where(function(x) sum(is.na(x)) / length(x) > !!na_threshold))
   # unselect columns that correlate too much
-  mdl_recipe <- mdl_recipe |> step_corr(all_predictors(), -where(is.binary), threshold = correlation_threshold)
+  mdl_recipe <- mdl_recipe |> recipes::step_corr(recipes::all_predictors(), -where(is.binary), threshold = correlation_threshold)
   # filter rows with NA
-  mdl_recipe <- mdl_recipe |> step_naomit(all_predictors())
+  mdl_recipe <- mdl_recipe |> recipes::step_naomit(recipes::all_predictors())
   # centre out numeric features
   if (isTRUE(centre)) {
-    mdl_recipe <- mdl_recipe |> step_center(all_predictors(), -all_outcomes(), -where(is.binary))
+    mdl_recipe <- mdl_recipe |> recipes::step_center(recipes::all_predictors(), -recipes::all_outcomes(), -where(is.binary))
   }
   # scale out numeric features
   if (isTRUE(scale)) {
-    mdl_recipe <- mdl_recipe |> step_scale(all_predictors(), -all_outcomes(), -where(is.binary))
+    mdl_recipe <- mdl_recipe |> recipes::step_scale(recipes::all_predictors(), -recipes::all_outcomes(), -where(is.binary))
   }
-  mdl_recipe <- mdl_recipe |> prep()
-  
+  mdl_recipe <- mdl_recipe |> recipes::prep()
+
   ## Fit model ----
-  
+
   # train
-  df_training <- mdl_recipe |> bake(new_data = NULL)
-  
+  df_training <- mdl_recipe |> recipes::bake(new_data = NULL)
+
   # test
-  df_testing <- mdl_recipe |> bake(df_split_test)
-  
+  df_testing <- mdl_recipe |> recipes::bake(df_split_test)
+
   # create actual model
-  mdl <- FUN(...) |> set_engine(engine)
+  mdl <- FUN(...) |> parsnip::set_engine(engine)
   if (isFALSE(quiet)) {
     message("\n[", format2(Sys.time(), "HH:MM:SS"), "] Fitting model...", appendLF = FALSE)
   }
@@ -795,7 +793,6 @@ predict.certestats_ml <- function(object,
 #' @param only_certainty a [logical] to indicate whether certainties must be returned as [vector], otherwise returns a [data.frame]
 #' @param correct_mistakes a [logical] to indicate whether missing variables and missing values should be added to `new_data`
 #' @param impute_algorithm the algorithm to use in [impute()] if `correct_mistakes = TRUE`. Can be `"mice"` (default) for the [Multivariate Imputations by Chained Equations (MICE) algorithm][mice::mice], or `"single-point"` for a trained median.
-#' @importFrom recipes bake remove_role
 #' @importFrom dplyr bind_cols mutate filter pull as_tibble select any_of
 #' @export
 apply_model_to <- function(object,
@@ -808,6 +805,9 @@ apply_model_to <- function(object,
   if (!inherits(object, "certestats_ml")) {
     stop("Only output from certestats::ml_*() functions can be used.")
   }
+  check_is_installed(c("recipes", "parsnip"))
+  # ensure the parsnip S3 methods (e.g. predict.model_fit) are registered:
+  loadNamespace("parsnip")
 
   # remove class so there will not be an infinite loop
   class(object) <- setdiff(class(object), "certestats_ml")
@@ -891,14 +891,14 @@ apply_model_to <- function(object,
   model_recipe <- object |> get_recipe()
   if (is_xgboost(object) && length(cols_missing) > 0) {
     model_recipe <- model_recipe |>
-      remove_role(any_of(cols_missing), old_role = "predictor")
+      recipes::remove_role(any_of(cols_missing), old_role = "predictor")
   }
   if ("outcome" %in% model_recipe$var_info$variable && !"outcome" %in% colnames(new_data)) {
     # this will otherwise give an error because of applying step_rm() in ml_exec()
     new_data$outcome <- model_recipe$ptype$outcome[1]
   }
   # the actual baking
-  new_data <- bake(model_recipe, new_data = new_data)
+  new_data <- recipes::bake(model_recipe, new_data = new_data)
   out <- stats::predict(object, new_data, ...) # this includes `type` if coming from predict.certestats_ml()
   # return results ----
   if (isFALSE(only_prediction)) {
@@ -1318,12 +1318,6 @@ get_variable_weights <- function(object) {
 #' @inheritParams rsample::vfold_cv
 #' @param k The number of partitions of the data set
 #' @details Use the [tune_parameters()] function to analyse tune parameters of any `ml_*()` function. Without any parameters manually defined, it will try to tune all parameters of the underlying ML model. The tuning will be based on a [K-fold cross-validation][rsample::vfold_cv()], of which the number of partitions can be set with `k`. The number of `levels` will be used to split the range of the parameters. For example, a range of 1-10 with `levels = 2` will lead to `[1, 10]`, while `levels = 5` will lead to `[1, 3, 5, 7, 9]`. The resulting [data.frame] will be sorted from best to worst. These results can also be plotted using [autoplot()].
-#' @importFrom parsnip set_engine set_mode
-#' @importFrom dials grid_regular
-#' @importFrom workflows workflow add_model add_formula
-#' @importFrom rsample vfold_cv
-#' @importFrom tune tune_grid collect_metrics
-#' @importFrom hardhat tune
 #' @importFrom dplyr arrange desc across starts_with rename_with everything
 #' @importFrom tidyr pivot_wider
 #' @export
@@ -1331,7 +1325,8 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   if (!inherits(object, "certestats_ml")) {
     stop("Only output from certestats::ml_*() functions can be used.")
   }
-  
+  check_is_installed(c("dials", "workflows", "rsample", "tune", "hardhat", "parsnip"))
+
   model_prop <- attributes(object)
   dots <- list(...)
   
@@ -1348,7 +1343,7 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   if (isTRUE(only_params_in_model)) {
     params <- params[params %in% names(model_prop$properties)]
   }
-  params <- lapply(stats::setNames(as.list(params), params), function(x) tune())
+  params <- lapply(stats::setNames(as.list(params), params), function(x) hardhat::tune())
   
   # create the grid
   if (length(dots) > 0) {
@@ -1384,21 +1379,21 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
       dials_fn()
     })
   }
-  tree_grid <- do.call(grid_regular,
+  tree_grid <- do.call(dials::grid_regular,
                        args = c(dials_fns, list(levels = levels)))
-  
+
   # (re)create the model specification
-  model_spec <- do.call(FUN, args = params) |> 
-    set_engine(model_prop$properties$engine) |> 
-    set_mode(model_prop$properties$mode)
-  
+  model_spec <- do.call(FUN, args = params) |>
+    parsnip::set_engine(model_prop$properties$engine) |>
+    parsnip::set_mode(model_prop$properties$mode)
+
   # create the worflow, using the tuning specification
-  tree_wf <- workflow() |>
-    add_model(model_spec) |>
-    add_formula(outcome ~ .)
-  
+  tree_wf <- workflows::workflow() |>
+    workflows::add_model(model_spec) |>
+    workflows::add_formula(outcome ~ .)
+
   # create the K-fold cross-validation (also known as v-fold cross-validation)
-  k_fold <- vfold_cv(model_prop$data_training, v = k)
+  k_fold <- rsample::vfold_cv(model_prop$data_training, v = k)
   
   # show a message the prints the overview of all tuning values
   vals <- vapply(FUN.VALUE = character(1), tree_grid, function(x) paste0(trimws(format(unique(x), scientific = FALSE)), collapse = ", "))
@@ -1433,11 +1428,11 @@ tune_parameters <- function(object, ..., only_params_in_model = FALSE, levels = 
   }
   suppressWarnings(
     tree_res <- tree_wf |>
-      tune_grid(resamples = k_fold,
-                grid = tree_grid)
+      tune::tune_grid(resamples = k_fold,
+                      grid = tree_grid)
   )
   out <- tree_res |>
-    collect_metrics() 
+    tune::collect_metrics()
   message("[", round(Sys.time()), "] Done.")
   
   out <- out |> 

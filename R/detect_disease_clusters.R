@@ -44,7 +44,6 @@
 #' @importFrom lubridate interval days years year<- `%m-%`
 #' @importFrom tidyr fill complete
 #' @importFrom certestyle format2
-#' @importFrom AMR get_episode
 #' @seealso [detect_biomarker_changes()]
 #' @rdname detect_disease_clusters
 #' @export
@@ -99,7 +98,8 @@ detect_disease_clusters <- function(df,
                                     moving_average_side = "left",
                                     case_free_days = 14,
                                     ...) {
-  
+  check_is_installed("AMR")
+
   year <- function(x) as.integer(format(x, "%Y"))
   unify_years <- function(x) {
     max_date <- max(x, na.rm = TRUE)
@@ -247,7 +247,7 @@ detect_disease_clusters <- function(df,
     df_clusters <- empty_output$clusters
   } else {
     df_clusters <- df_current_period |> 
-      mutate(cluster = get_episode(date, case_free_days = case_free_days)) |> 
+      mutate(cluster = AMR::get_episode(date, case_free_days = case_free_days)) |> 
       group_by(cluster) |> 
       filter(n_distinct(date) >= minimum_case_days,
              sum(cases, na.rm = TRUE) >= minimum_cases,
@@ -259,7 +259,7 @@ detect_disease_clusters <- function(df,
     } else {
       df_clusters <- df_clusters |> 
         # determine episodes again, since some might have been filtered
-        mutate(cluster = get_episode(date, case_free_days = case_free_days)) |> 
+        mutate(cluster = AMR::get_episode(date, case_free_days = case_free_days)) |> 
         group_by(cluster) |> 
         mutate(case_days = row_number()) |> 
         complete(date = seq(from = min(as.Date(date), na.rm = TRUE),
